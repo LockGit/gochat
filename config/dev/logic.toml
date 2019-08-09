@@ -1,0 +1,15 @@
+[logic.base]
+pidfile = "/tmp/logic.pid"
+RPCAddrs = "tcp@localhost:6924"
+certPath = ""
+keyPath = ""
+
+[logic.redis]
+RedisAddr = "localhost:6379"
+redisPw = ""
+
+[logic.zookeeper]
+host = "127.0.0.1:2181"
+basePath = "/im_logic_rpc_server"
+ServerId = "1"
+

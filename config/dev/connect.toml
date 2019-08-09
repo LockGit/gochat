@@ -1,0 +1,38 @@
+[connect-base]
+serverId = 1
+certPath = ""
+keyPath = ""
+
+#[connect-test]
+#    [[connect-test.item]]
+#        name="lock"
+#        age=18
+#
+#    [[connect-test.item]]
+#        name="test"
+#        age=20
+
+[connect-websocket]
+bind = "0.0.0.0:8911"
+
+[connect-zookeeper]
+host = "127.0.0.1:2181"
+basePath = "/im_logic_rpc_server"
+serverPathLogic = "LogicRpc"
+ServerId = "1"
+
+[connect-rpcLogicAddrs]
+key = 1
+addr = "tcp@0.0.0.0:6912"
+
+[connect-bucket]
+num = 4
+channel = 1024
+room = 1024
+svrProto = 80
+routineAmount = 32
+routineSize = 20
+
+
+
+
