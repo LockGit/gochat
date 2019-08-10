@@ -77,17 +77,22 @@ type ConnectBase struct {
 }
 
 type ConnectBucket struct {
-	Num           int `mapstructure:"num"`
-	Channel       int `mapstructure:"channel"`
-	Room          int `mapstructure:"room"`
-	SrvProto      int `mapstructure:"svrProto"`
-	RoutineAmount int `mapstructure:"routineAmount"`
-	RoutineSize   int `mapstructure:"routineSize"`
+	Num           int    `mapstructure:"num"`
+	Channel       int    `mapstructure:"channel"`
+	Room          int    `mapstructure:"room"`
+	SrvProto      int    `mapstructure:"svrProto"`
+	RoutineAmount uint64 `mapstructure:"routineAmount"`
+	RoutineSize   int    `mapstructure:"routineSize"`
+}
+
+type ConnectWebsocket struct {
+	Bind string `mapstructure:"bind"`
 }
 
 type ConnectConfig struct {
-	ConnectBase   ConnectBase   `mapstructure:"connect-base"`
-	ConnectBucket ConnectBucket `mapstructure:"connect-bucket"`
+	ConnectBase      ConnectBase      `mapstructure:"connect-base"`
+	ConnectBucket    ConnectBucket    `mapstructure:"connect-bucket"`
+	ConnectWebsocket ConnectWebsocket `mapstructure:"connect-websocket"`
 }
 
 type JobBase struct {

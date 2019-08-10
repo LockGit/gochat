@@ -4,3 +4,6 @@
  * Time: 15:18
  */
 package connect
+
+type Room struct {
+}
