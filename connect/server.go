@@ -6,6 +6,11 @@
 package connect
 
 import (
+	"encoding/json"
+	"github.com/gorilla/websocket"
+	"github.com/prometheus/common/log"
+	"gochat/config"
+	"gochat/proto"
 	"im/libs/hash/cityhash"
 	"time"
 )
@@ -21,7 +26,7 @@ type ServerOptions struct {
 	WriteWait       time.Duration
 	PongWait        time.Duration
 	PingPeriod      time.Duration
-	MaxMessageSize  int
+	MaxMessageSize  int64
 	ReadBufferSize  int
 	WriteBufferSize int
 	BroadcastSize   int
@@ -37,7 +42,108 @@ func NewServer(b []*Bucket, o Operator, options ServerOptions) *Server {
 }
 
 //reduce lock competition, use city hash insert to different bucket
-func (server *Server) Bucket(uid string) *Bucket {
-	idx := cityhash.CityHash32([]byte(uid), uint32(len(uid))) % server.bucketIdx
-	return server.Buckets[idx]
+func (s *Server) Bucket(uid string) *Bucket {
+	idx := cityhash.CityHash32([]byte(uid), uint32(len(uid))) % s.bucketIdx
+	return s.Buckets[idx]
+}
+
+func (s *Server) writePump(ch *Channel) {
+	//PingPeriod default eq 54s
+	ticker := time.NewTicker(s.Options.PingPeriod)
+	defer func() {
+		ticker.Stop()
+		ch.conn.Close()
+	}()
+
+	for {
+		select {
+		case message, ok := <-ch.broadcast:
+			//write data dead time , like http timeout , default 10s
+			ch.conn.SetWriteDeadline(time.Now().Add(s.Options.WriteWait))
+			if !ok {
+				log.Warn("SetWriteDeadline not ok")
+				ch.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+			w, err := ch.conn.NextWriter(websocket.TextMessage)
+			if err != nil {
+				log.Warn(" ch.conn.NextWriter err :%s  ", err.Error())
+				return
+			}
+			log.Infof("message write body:%s", message.Body)
+			w.Write(message.Body)
+			if err := w.Close(); err != nil {
+				return
+			}
+		case <-ticker.C:
+			//heartbeat，if ping error will exit and close current websocket conn
+			ch.conn.SetWriteDeadline(time.Now().Add(s.Options.WriteWait))
+			log.Infof("websocket.PingMessage :%v", websocket.PingMessage)
+			if err := ch.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		}
+	}
+}
+
+func (s *Server) readPump(ch *Channel) {
+	defer func() {
+		disConnectRequest := new(proto.DisConnectRequest)
+		disConnectRequest.RoomId = ch.Room.Id
+		if ch.uid != "" {
+			disConnectRequest.Uid = ch.uid
+		}
+		s.Bucket(ch.uid).DeleteChannel(ch)
+		if err := s.operator.DisConnect(disConnectRequest); err != nil {
+			log.Warnf("Disconnect err :%s", err.Error())
+		}
+		ch.conn.Close()
+	}()
+
+	ch.conn.SetReadLimit(s.Options.MaxMessageSize)
+	ch.conn.SetReadDeadline(time.Now().Add(s.Options.PongWait))
+	ch.conn.SetPongHandler(func(string) error {
+		ch.conn.SetReadDeadline(time.Now().Add(s.Options.PongWait))
+		return nil
+	})
+
+	for {
+		_, message, err := ch.conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Errorf("readPump ReadMessage err:%s", err.Error())
+				return
+			}
+		}
+		if message == nil {
+			return
+		}
+		var connReq *proto.ConnectRequest
+		log.Infof("get a message :%s", message)
+		if err := json.Unmarshal([]byte(message), &connReq); err != nil {
+			log.Errorf("message struct %b", connReq)
+		}
+		connReq.ServerId = config.Conf.Connect.ConnectBase.ServerId
+		uid, err := s.operator.Connect(connReq)
+		if err != nil {
+			log.Errorf("s.operator.Connect error %s", err.Error())
+			return
+		}
+		if uid == "" {
+			log.Error("Invalid Auth ,uid empty")
+			return
+		}
+		log.Infof("websocket rpc call return uid:%s,RoomId:%d", uid, connReq.RoomId)
+		b := s.Bucket(uid)
+		// rpc 操作获取uid 存入ch 存入Server 未写
+		// b.broadcast <- message
+
+		//insert into a bucket
+		err = b.Put(uid, connReq.RoomId, ch)
+		if err != nil {
+			log.Errorf("conn close err: %s", err.Error())
+			ch.conn.Close()
+		}
+		log.Infof("read message:%s", message)
+	}
 }

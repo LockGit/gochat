@@ -23,9 +23,10 @@ func (c *Connect) InitWebsocket() error {
 func (c *Connect) serveWs(server *Server, w http.ResponseWriter, r *http.Request) {
 
 	var upGrader = websocket.Upgrader{
-		ReadBufferSize:  DefaultServer.Options.ReadBufferSize,
-		WriteBufferSize: DefaultServer.Options.WriteBufferSize,
+		ReadBufferSize:  server.Options.ReadBufferSize,
+		WriteBufferSize: server.Options.WriteBufferSize,
 	}
+	//cross origin domain support
 	upGrader.CheckOrigin = func(r *http.Request) bool { return true }
 
 	conn, err := upGrader.Upgrade(w, r, nil)
@@ -35,10 +36,11 @@ func (c *Connect) serveWs(server *Server, w http.ResponseWriter, r *http.Request
 		return
 	}
 	var ch *Channel
-	// 写入配置
+	//default broadcast size eq 512
 	ch = NewChannel(server.Options.BroadcastSize)
 	ch.conn = conn
-
+	//send data to websocket conn
 	go server.writePump(ch)
+	//get data from websocket conn
 	go server.readPump(ch)
 }
