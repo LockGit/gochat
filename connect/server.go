@@ -135,9 +135,6 @@ func (s *Server) readPump(ch *Channel) {
 		}
 		log.Infof("websocket rpc call return uid:%s,RoomId:%d", uid, connReq.RoomId)
 		b := s.Bucket(uid)
-		// rpc 操作获取uid 存入ch 存入Server 未写
-		// b.broadcast <- message
-
 		//insert into a bucket
 		err = b.Put(uid, connReq.RoomId, ch)
 		if err != nil {
