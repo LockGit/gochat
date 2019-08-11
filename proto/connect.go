@@ -12,7 +12,7 @@ type Msg struct {
 	Body      []byte `json:"body"` // binary body bytes
 }
 
-type PushMsgArg struct {
+type PushMsgRequest struct {
 	Uid string
 	Msg Msg
 }
@@ -22,7 +22,7 @@ type RoomMsgRequest struct {
 	Msg    Msg
 }
 
-type RoomCountArg struct {
+type RoomCountRequest struct {
 	RoomId int32
 	Count  int
 }
