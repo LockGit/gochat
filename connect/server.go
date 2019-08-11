@@ -144,6 +144,5 @@ func (s *Server) readPump(ch *Channel) {
 			log.Errorf("conn close err: %s", err.Error())
 			ch.conn.Close()
 		}
-		log.Infof("read message:%s", message)
 	}
 }
