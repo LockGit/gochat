@@ -19,4 +19,9 @@ func (c *Chat) Run() {
 	//CheckAuth
 	//Logout
 
+	//Push
+	//PushRoom
+	//Count
+	//GetRoomInfo
+
 }

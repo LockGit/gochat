@@ -29,7 +29,9 @@ func (c *Connect) Run() {
 	runtime.GOMAXPROCS(connectConfig.ConnectBucket.CpuNum)
 
 	//init logic layer rpc client, call logic layer rpc server
-
+	if err := InitLogicRpcClient(); err != nil {
+		logrus.Panicf("InitLogicRpcClient err:%s", err.Error())
+	}
 	//init connect layer rpc server, logic client will call this
 	Buckets := make([]*Bucket, connectConfig.ConnectBucket.CpuNum)
 	for i := 0; i < connectConfig.ConnectBucket.CpuNum; i++ {

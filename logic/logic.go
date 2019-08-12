@@ -25,8 +25,8 @@ func (logic *Logic) Run() {
 	runtime.GOMAXPROCS(logicConfig.LogicBase.CpuNum)
 
 	//init publish redis
-	if err := logic.InitPublish(); err != nil {
-		log.Panicf("logic init publish fail")
+	if err := logic.InitPublishRedisClient(); err != nil {
+		log.Panicf("logic init publishRedisClient fail,err:%s", err.Error())
 	}
 
 	//init rpc server

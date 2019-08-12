@@ -8,16 +8,22 @@ package logic
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/go-redis/redis"
+	"github.com/rcrowley/go-metrics"
 	"github.com/sirupsen/logrus"
+	"github.com/smallnest/rpcx/server"
+	"github.com/smallnest/rpcx/serverplugin"
 	"gochat/config"
 	"gochat/proto"
 	"gochat/tools"
+	"strings"
+	"time"
 )
 
 var RedisClient *redis.Client
 
-func (logic *Logic) InitPublish() (err error) {
+func (logic *Logic) InitPublishRedisClient() (err error) {
 	redisOpt := tools.RedisOption{
 		Host:     "",
 		Port:     0,
@@ -29,6 +35,42 @@ func (logic *Logic) InitPublish() (err error) {
 		logrus.Infof("RedisCli Ping Result pong: %s,  err: %s", pong, err)
 	}
 	return err
+}
+
+func (logic *Logic) InitRpcServer() (err error) {
+	var network, addr string
+	// a host multi port case
+	rpcAddressList := strings.Split(config.Conf.Logic.LogicBase.RpcAddress, ",")
+	for _, bind := range rpcAddressList {
+		if network, addr, err = tools.ParseNetwork(bind); err != nil {
+			logrus.Panicf("InitLogicRpc ParseNetwork error : %s", err.Error())
+		}
+		go logic.createRpcServer(network, addr)
+	}
+	return
+}
+
+func (logic *Logic) createRpcServer(network string, addr string) {
+	s := server.NewServer()
+	logic.addRegistryPlugin(s, network, addr)
+	// serverId must be unique
+	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathLogic, new(RpcLogic), fmt.Sprintf("%d", config.Conf.Common.CommonEtcd.ServerId))
+	s.Serve(network, addr)
+}
+
+func (logic *Logic) addRegistryPlugin(s *server.Server, network string, addr string) {
+	r := &serverplugin.EtcdRegisterPlugin{
+		ServiceAddress: network + "@" + addr,
+		EtcdServers:    []string{config.Conf.Common.CommonEtcd.Host},
+		BasePath:       config.Conf.Common.CommonEtcd.BasePath,
+		Metrics:        metrics.NewRegistry(),
+		UpdateInterval: time.Minute,
+	}
+	err := r.Start()
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	s.Plugins.Add(r)
 }
 
 func (logic *Logic) RedisPublishRoomInfo(roomId int, count int, RoomUserInfo map[string]string) (err error) {

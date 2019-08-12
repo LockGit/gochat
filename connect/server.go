@@ -95,7 +95,7 @@ func (s *Server) readPump(ch *Channel) {
 		}
 		s.Bucket(ch.uid).DeleteChannel(ch)
 		if err := s.operator.DisConnect(disConnectRequest); err != nil {
-			logrus.Warnf("Disconnect err :%s", err.Error())
+			logrus.Warnf("DisConnect err :%s", err.Error())
 		}
 		ch.conn.Close()
 	}()

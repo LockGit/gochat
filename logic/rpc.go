@@ -8,58 +8,17 @@ package logic
 import (
 	"context"
 	"fmt"
-	"github.com/rcrowley/go-metrics"
 	"github.com/sirupsen/logrus"
-	"github.com/smallnest/rpcx/server"
-	"github.com/smallnest/rpcx/serverplugin"
 	"gochat/config"
 	"gochat/proto"
-	"gochat/tools"
 	"strconv"
-	"strings"
 	"time"
 )
 
-type LogicRpc struct {
+type RpcLogic struct {
 }
 
-func (logic *Logic) InitRpcServer() (err error) {
-	var network, addr string
-	// a host multi port case
-	rpcAddressList := strings.Split(config.Conf.Logic.LogicBase.RpcAddress, ",")
-	for _, bind := range rpcAddressList {
-		if network, addr, err = tools.ParseNetwork(bind); err != nil {
-			logrus.Panicf("InitLogicRpc ParseNetwork error : %s", err.Error())
-		}
-		go logic.createRpcServer(network, addr)
-	}
-	return
-}
-
-func (logic *Logic) createRpcServer(network string, addr string) {
-	s := server.NewServer()
-	logic.addRegistryPlugin(s, network, addr)
-	// serverId must be unique
-	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathLogic, new(LogicRpc), fmt.Sprintf("%d", config.Conf.Common.CommonEtcd.ServerId))
-	s.Serve(network, addr)
-}
-
-func (logic *Logic) addRegistryPlugin(s *server.Server, network string, addr string) {
-	r := &serverplugin.EtcdRegisterPlugin{
-		ServiceAddress: network + "@" + addr,
-		EtcdServers:    []string{config.Conf.Common.CommonEtcd.Host},
-		BasePath:       config.Conf.Common.CommonEtcd.BasePath,
-		Metrics:        metrics.NewRegistry(),
-		UpdateInterval: time.Minute,
-	}
-	err := r.Start()
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	s.Plugins.Add(r)
-}
-
-func (rpc *LogicRpc) Connect(ctx context.Context, args *proto.ConnectRequest, reply *proto.ConnectReply) (err error) {
+func (rpc *RpcLogic) Connect(ctx context.Context, args *proto.ConnectRequest, reply *proto.ConnectReply) (err error) {
 	if args == nil {
 		logrus.Errorf("Connect() error(%v)", err)
 		return
@@ -90,15 +49,13 @@ func (rpc *LogicRpc) Connect(ctx context.Context, args *proto.ConnectRequest, re
 	return
 }
 
-func (rpc *LogicRpc) Disconnect(ctx context.Context, args *proto.DisConnectRequest, reply *proto.DisConnectReply) (err error) {
+func (rpc *RpcLogic) DisConnect(ctx context.Context, args *proto.DisConnectRequest, reply *proto.DisConnectReply) (err error) {
 	logic := new(Logic)
-	roomUserKey := logic.getRoomUserKey(strconv.Itoa(int(args.RoomId)))
-
+	roomUserKey := logic.getRoomUserKey(strconv.Itoa(args.RoomId))
 	// room user count --
 	if args.RoomId > 0 {
 		RedisClient.Decr(logic.getRoomOnlineCountKey(fmt.Sprintf("%d", args.RoomId))).Result()
 	}
-
 	// room login user--
 	if args.Uid != config.NoAuth {
 		err = RedisClient.HDel(roomUserKey, args.Uid).Err()
@@ -106,12 +63,13 @@ func (rpc *LogicRpc) Disconnect(ctx context.Context, args *proto.DisConnectReque
 			logrus.Warnf("HDel getRoomUserKey err : %s", err)
 		}
 	}
+	//below code can optimize send a signal to queue,another process get a signal from queue,then push event to websocket
 	roomUserInfo, err := RedisClient.HGetAll(roomUserKey).Result()
 	if err != nil {
 		logrus.Warnf("RedisCli HGetAll roomUserInfo key:%s, err: %s", roomUserKey, err)
 	}
 	if err = logic.RedisPublishRoomInfo(args.RoomId, len(roomUserInfo), roomUserInfo); err != nil {
-		logrus.Warnf("Count redis RedisPublishRoomCount err: %s", err)
+		logrus.Warnf("publish RedisPublishRoomCount err: %s", err.Error())
 		return
 	}
 	return
