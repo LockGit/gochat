@@ -6,8 +6,8 @@
 package connect
 
 import (
+	"github.com/sirupsen/logrus"
 	"gochat/config"
-	"log"
 	"runtime"
 	"time"
 )
@@ -53,6 +53,6 @@ func (c *Connect) Run() {
 
 	//start connect layer server handler persistent connection
 	if err := c.InitWebsocket(); err != nil {
-		log.Panicf("connect layer InitWebsocket() error:  %s \n", err.Error())
+		logrus.Panicf("connect layer InitWebsocket() error:  %s \n", err.Error())
 	}
 }

@@ -7,7 +7,7 @@ package connect
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/prometheus/common/log"
+	"github.com/sirupsen/logrus"
 	"gochat/config"
 	"net/http"
 )
@@ -32,7 +32,7 @@ func (c *Connect) serveWs(server *Server, w http.ResponseWriter, r *http.Request
 	conn, err := upGrader.Upgrade(w, r, nil)
 
 	if err != nil {
-		log.Errorf("serverWs err:%s", err.Error())
+		logrus.Errorf("serverWs err:%s", err.Error())
 		return
 	}
 	var ch *Channel

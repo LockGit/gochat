@@ -8,7 +8,7 @@ package connect
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
-	"github.com/prometheus/common/log"
+	"github.com/sirupsen/logrus"
 	"gochat/config"
 	"gochat/proto"
 	"im/libs/hash/cityhash"
@@ -61,16 +61,16 @@ func (s *Server) writePump(ch *Channel) {
 			//write data dead time , like http timeout , default 10s
 			ch.conn.SetWriteDeadline(time.Now().Add(s.Options.WriteWait))
 			if !ok {
-				log.Warn("SetWriteDeadline not ok")
+				logrus.Warn("SetWriteDeadline not ok")
 				ch.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 			w, err := ch.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				log.Warn(" ch.conn.NextWriter err :%s  ", err.Error())
+				logrus.Warn(" ch.conn.NextWriter err :%s  ", err.Error())
 				return
 			}
-			log.Infof("message write body:%s", message.Body)
+			logrus.Infof("message write body:%s", message.Body)
 			w.Write(message.Body)
 			if err := w.Close(); err != nil {
 				return
@@ -78,7 +78,7 @@ func (s *Server) writePump(ch *Channel) {
 		case <-ticker.C:
 			//heartbeat，if ping error will exit and close current websocket conn
 			ch.conn.SetWriteDeadline(time.Now().Add(s.Options.WriteWait))
-			log.Infof("websocket.PingMessage :%v", websocket.PingMessage)
+			logrus.Infof("websocket.PingMessage :%v", websocket.PingMessage)
 			if err := ch.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
@@ -95,7 +95,7 @@ func (s *Server) readPump(ch *Channel) {
 		}
 		s.Bucket(ch.uid).DeleteChannel(ch)
 		if err := s.operator.DisConnect(disConnectRequest); err != nil {
-			log.Warnf("Disconnect err :%s", err.Error())
+			logrus.Warnf("Disconnect err :%s", err.Error())
 		}
 		ch.conn.Close()
 	}()
@@ -111,7 +111,7 @@ func (s *Server) readPump(ch *Channel) {
 		_, message, err := ch.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Errorf("readPump ReadMessage err:%s", err.Error())
+				logrus.Errorf("readPump ReadMessage err:%s", err.Error())
 				return
 			}
 		}
@@ -119,26 +119,26 @@ func (s *Server) readPump(ch *Channel) {
 			return
 		}
 		var connReq *proto.ConnectRequest
-		log.Infof("get a message :%s", message)
+		logrus.Infof("get a message :%s", message)
 		if err := json.Unmarshal([]byte(message), &connReq); err != nil {
-			log.Errorf("message struct %b", connReq)
+			logrus.Errorf("message struct %b", connReq)
 		}
 		connReq.ServerId = config.Conf.Connect.ConnectBase.ServerId
 		uid, err := s.operator.Connect(connReq)
 		if err != nil {
-			log.Errorf("s.operator.Connect error %s", err.Error())
+			logrus.Errorf("s.operator.Connect error %s", err.Error())
 			return
 		}
 		if uid == "" {
-			log.Error("Invalid Auth ,uid empty")
+			logrus.Error("Invalid Auth ,uid empty")
 			return
 		}
-		log.Infof("websocket rpc call return uid:%s,RoomId:%d", uid, connReq.RoomId)
+		logrus.Infof("websocket rpc call return uid:%s,RoomId:%d", uid, connReq.RoomId)
 		b := s.Bucket(uid)
 		//insert into a bucket
 		err = b.Put(uid, connReq.RoomId, ch)
 		if err != nil {
-			log.Errorf("conn close err: %s", err.Error())
+			logrus.Errorf("conn close err: %s", err.Error())
 			ch.conn.Close()
 		}
 	}

@@ -9,7 +9,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/rcrowley/go-metrics"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/server"
 	"github.com/smallnest/rpcx/serverplugin"
 	"gochat/config"
@@ -29,7 +29,7 @@ func (logic *Logic) InitRpcServer() (err error) {
 	rpcAddressList := strings.Split(config.Conf.Logic.LogicBase.RpcAddress, ",")
 	for _, bind := range rpcAddressList {
 		if network, addr, err = tools.ParseNetwork(bind); err != nil {
-			log.Panicf("InitLogicRpc ParseNetwork error : %s", err.Error())
+			logrus.Panicf("InitLogicRpc ParseNetwork error : %s", err.Error())
 		}
 		go logic.createRpcServer(network, addr)
 	}
@@ -54,21 +54,21 @@ func (logic *Logic) addRegistryPlugin(s *server.Server, network string, addr str
 	}
 	err := r.Start()
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 	s.Plugins.Add(r)
 }
 
 func (rpc *LogicRpc) Connect(ctx context.Context, args *proto.ConnectRequest, reply *proto.ConnectReply) (err error) {
 	if args == nil {
-		log.Errorf("Connect() error(%v)", err)
+		logrus.Errorf("Connect() error(%v)", err)
 		return
 	}
 	logic := new(Logic)
 	key := logic.getKey(args.Auth)
 	userInfo, err := RedisClient.HGetAll(key).Result()
 	if err != nil {
-		log.Infof("RedisCli HGetAll key :%s , err:%s", key, err)
+		logrus.Infof("RedisCli HGetAll key :%s , err:%s", key, err)
 	}
 	reply.Uid = userInfo["UserId"]
 	roomUserKey := logic.getRoomUserKey(strconv.Itoa(args.RoomId))
@@ -76,17 +76,17 @@ func (rpc *LogicRpc) Connect(ctx context.Context, args *proto.ConnectRequest, re
 		reply.Uid = config.NoAuth
 	} else {
 		userKey := logic.getKey(reply.Uid)
-		log.Infof("logic redis set userKey:%s, serverId : %s", userKey, args.ServerId)
+		logrus.Infof("logic redis set userKey:%s, serverId : %s", userKey, args.ServerId)
 		validTime := config.RedisBaseValidTime * time.Second
 		err = RedisClient.Set(userKey, args.ServerId, validTime).Err()
 		if err != nil {
-			log.Warnf("logic set err:%s", err)
+			logrus.Warnf("logic set err:%s", err)
 		}
 		RedisClient.HSet(roomUserKey, reply.Uid, userInfo["UserName"])
 		// add room user count ++
 		RedisClient.Incr(logic.getRoomOnlineCountKey(fmt.Sprintf("%d", args.RoomId)))
 	}
-	log.Infof("logic rpc uid:%s", reply.Uid)
+	logrus.Infof("logic rpc uid:%s", reply.Uid)
 	return
 }
 
@@ -103,15 +103,15 @@ func (rpc *LogicRpc) Disconnect(ctx context.Context, args *proto.DisConnectReque
 	if args.Uid != config.NoAuth {
 		err = RedisClient.HDel(roomUserKey, args.Uid).Err()
 		if err != nil {
-			log.Warnf("HDel getRoomUserKey err : %s", err)
+			logrus.Warnf("HDel getRoomUserKey err : %s", err)
 		}
 	}
 	roomUserInfo, err := RedisClient.HGetAll(roomUserKey).Result()
 	if err != nil {
-		log.Warnf("RedisCli HGetAll roomUserInfo key:%s, err: %s", roomUserKey, err)
+		logrus.Warnf("RedisCli HGetAll roomUserInfo key:%s, err: %s", roomUserKey, err)
 	}
 	if err = logic.RedisPublishRoomInfo(args.RoomId, len(roomUserInfo), roomUserInfo); err != nil {
-		log.Warnf("Count redis RedisPublishRoomCount err: %s", err)
+		logrus.Warnf("Count redis RedisPublishRoomCount err: %s", err)
 		return
 	}
 	return
