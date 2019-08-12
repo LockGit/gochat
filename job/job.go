@@ -13,5 +13,6 @@ func New() *Job {
 }
 
 func (job *Job) Run() {
-
+	//read from redis queue
+	//rpc call connect layer send msg
 }
