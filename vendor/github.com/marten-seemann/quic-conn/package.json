@@ -1,0 +1,16 @@
+{
+  "author": "marten-seemann",
+  "bugs": {
+    "url": "github.com/marten-seemann/quic-conn"
+  },
+  "gx": {
+    "dvcsimport": "github.com/marten-seemann/quic-conn"
+  },
+  "gxVersion": "0.11.0",
+  "language": "go",
+  "license": "",
+  "name": "quic-conn",
+  "releaseCmd": "git commit -a -m \"gx publish $VERSION\"",
+  "version": "0.1.0"
+}
+

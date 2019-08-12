@@ -1,0 +1,245 @@
+# github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+github.com/alecthomas/template
+github.com/alecthomas/template/parse
+# github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4
+github.com/alecthomas/units
+# github.com/anacrolix/missinggo v1.1.0
+github.com/anacrolix/missinggo
+github.com/anacrolix/missinggo/inproc
+github.com/anacrolix/missinggo/pproffd
+github.com/anacrolix/missinggo/perf
+# github.com/anacrolix/sync v0.0.0-20180808010631-44578de4e778
+github.com/anacrolix/sync
+# github.com/anacrolix/utp v0.0.0-20180219060659-9e0e1d1d0572
+github.com/anacrolix/utp
+# github.com/apache/thrift v0.12.0
+github.com/apache/thrift/lib/go/thrift
+# github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
+github.com/armon/go-metrics
+# github.com/cenkalti/backoff v2.1.1+incompatible
+github.com/cenkalti/backoff
+# github.com/cheekybits/genny v1.0.0
+github.com/cheekybits/genny/generic
+# github.com/coreos/etcd v3.3.13+incompatible
+github.com/coreos/etcd/client
+github.com/coreos/etcd/pkg/pathutil
+github.com/coreos/etcd/pkg/srv
+github.com/coreos/etcd/pkg/types
+github.com/coreos/etcd/version
+# github.com/coreos/go-semver v0.3.0
+github.com/coreos/go-semver/semver
+# github.com/docker/libkv v0.2.1
+github.com/docker/libkv/store/etcd
+github.com/docker/libkv
+github.com/docker/libkv/store
+github.com/docker/libkv/store/consul
+github.com/docker/libkv/store/zookeeper
+# github.com/fatih/color v1.7.0
+github.com/fatih/color
+# github.com/fsnotify/fsnotify v1.4.7
+github.com/fsnotify/fsnotify
+# github.com/go-redis/redis v6.15.2+incompatible
+github.com/go-redis/redis
+github.com/go-redis/redis/internal
+github.com/go-redis/redis/internal/consistenthash
+github.com/go-redis/redis/internal/hashtag
+github.com/go-redis/redis/internal/pool
+github.com/go-redis/redis/internal/proto
+github.com/go-redis/redis/internal/util
+# github.com/gogo/protobuf v1.2.1
+github.com/gogo/protobuf/proto
+# github.com/golang/protobuf v1.3.1
+github.com/golang/protobuf/proto
+# github.com/gorilla/websocket v1.4.0
+github.com/gorilla/websocket
+# github.com/grandcat/zeroconf v0.0.0-20190424104450-85eadb44205c
+github.com/grandcat/zeroconf
+# github.com/hashicorp/consul/api v1.0.1
+github.com/hashicorp/consul/api
+# github.com/hashicorp/go-cleanhttp v0.5.1
+github.com/hashicorp/go-cleanhttp
+# github.com/hashicorp/go-immutable-radix v1.0.0
+github.com/hashicorp/go-immutable-radix
+# github.com/hashicorp/go-rootcerts v1.0.0
+github.com/hashicorp/go-rootcerts
+# github.com/hashicorp/golang-lru v0.5.1
+github.com/hashicorp/golang-lru
+github.com/hashicorp/golang-lru/simplelru
+# github.com/hashicorp/hcl v1.0.0
+github.com/hashicorp/hcl
+github.com/hashicorp/hcl/hcl/printer
+github.com/hashicorp/hcl/hcl/ast
+github.com/hashicorp/hcl/hcl/parser
+github.com/hashicorp/hcl/hcl/token
+github.com/hashicorp/hcl/json/parser
+github.com/hashicorp/hcl/hcl/scanner
+github.com/hashicorp/hcl/hcl/strconv
+github.com/hashicorp/hcl/json/scanner
+github.com/hashicorp/hcl/json/token
+# github.com/hashicorp/serf v0.8.2
+github.com/hashicorp/serf/coordinate
+# github.com/huandu/xstrings v1.0.0
+github.com/huandu/xstrings
+# github.com/influxdata/influxdb1-client v0.0.0-20190402204710-8ff2fc3824fc
+github.com/influxdata/influxdb1-client
+github.com/influxdata/influxdb1-client/models
+github.com/influxdata/influxdb1-client/pkg/escape
+# github.com/json-iterator/go v1.1.6
+github.com/json-iterator/go
+# github.com/juju/ratelimit v1.0.1
+github.com/juju/ratelimit
+# github.com/julienschmidt/httprouter v1.2.0
+github.com/julienschmidt/httprouter
+# github.com/kavu/go_reuseport v1.4.0
+github.com/kavu/go_reuseport
+# github.com/klauspost/cpuid v1.2.1
+github.com/klauspost/cpuid
+# github.com/klauspost/reedsolomon v1.9.1
+github.com/klauspost/reedsolomon
+# github.com/konsorten/go-windows-terminal-sequences v1.0.1
+github.com/konsorten/go-windows-terminal-sequences
+# github.com/lucas-clemente/quic-go v0.11.0
+github.com/lucas-clemente/quic-go
+github.com/lucas-clemente/quic-go/internal/ackhandler
+github.com/lucas-clemente/quic-go/internal/congestion
+github.com/lucas-clemente/quic-go/internal/flowcontrol
+github.com/lucas-clemente/quic-go/internal/handshake
+github.com/lucas-clemente/quic-go/internal/protocol
+github.com/lucas-clemente/quic-go/internal/qerr
+github.com/lucas-clemente/quic-go/internal/utils
+github.com/lucas-clemente/quic-go/internal/wire
+# github.com/magiconair/properties v1.8.0
+github.com/magiconair/properties
+# github.com/marten-seemann/qtls v0.2.3
+github.com/marten-seemann/qtls
+# github.com/marten-seemann/quic-conn v0.0.0-20190404134349-539f7de6a079
+github.com/marten-seemann/quic-conn
+# github.com/mattn/go-colorable v0.1.1
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.7
+github.com/mattn/go-isatty
+# github.com/miekg/dns v1.1.9
+github.com/miekg/dns
+# github.com/mitchellh/go-homedir v1.0.0
+github.com/mitchellh/go-homedir
+# github.com/mitchellh/mapstructure v1.1.2
+github.com/mitchellh/mapstructure
+# github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
+github.com/modern-go/concurrent
+# github.com/modern-go/reflect2 v1.0.1
+github.com/modern-go/reflect2
+# github.com/opentracing/opentracing-go v1.1.0
+github.com/opentracing/opentracing-go
+github.com/opentracing/opentracing-go/ext
+github.com/opentracing/opentracing-go/log
+# github.com/pelletier/go-toml v1.2.0
+github.com/pelletier/go-toml
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
+# github.com/prometheus/common v0.6.0
+github.com/prometheus/common/log
+# github.com/rcrowley/go-metrics v0.0.0-20190706150252-9beb055b7962
+github.com/rcrowley/go-metrics
+github.com/rcrowley/go-metrics/exp
+# github.com/rs/cors v1.6.0
+github.com/rs/cors
+# github.com/samuel/go-zookeeper v0.0.0-20180130194729-c4fab1ac1bec
+github.com/samuel/go-zookeeper/zk
+# github.com/sirupsen/logrus v1.4.2
+github.com/sirupsen/logrus
+# github.com/smallnest/rpcx v0.0.0-20190809021744-cc2386c077e6
+github.com/smallnest/rpcx/server
+github.com/smallnest/rpcx/serverplugin
+github.com/smallnest/rpcx/errors
+github.com/smallnest/rpcx/log
+github.com/smallnest/rpcx/protocol
+github.com/smallnest/rpcx/share
+github.com/smallnest/rpcx/util
+github.com/smallnest/rpcx/codec
+# github.com/soheilhy/cmux v0.1.4
+github.com/soheilhy/cmux
+# github.com/spf13/afero v1.1.2
+github.com/spf13/afero
+github.com/spf13/afero/mem
+# github.com/spf13/cast v1.3.0
+github.com/spf13/cast
+# github.com/spf13/jwalterweatherman v1.0.0
+github.com/spf13/jwalterweatherman
+# github.com/spf13/pflag v1.0.3
+github.com/spf13/pflag
+# github.com/spf13/viper v1.4.0
+github.com/spf13/viper
+# github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161
+github.com/templexxx/cpufeat
+# github.com/templexxx/xor v0.0.0-20181023030647-4e92f724b73b
+github.com/templexxx/xor
+# github.com/tjfoc/gmsm v1.0.1
+github.com/tjfoc/gmsm/sm4
+# github.com/vmihailenco/msgpack v4.0.4+incompatible
+github.com/vmihailenco/msgpack
+github.com/vmihailenco/msgpack/codes
+# github.com/xtaci/kcp-go v5.2.8+incompatible
+github.com/xtaci/kcp-go
+# go.opencensus.io v0.21.0
+go.opencensus.io/trace
+go.opencensus.io/internal
+go.opencensus.io/trace/internal
+go.opencensus.io/trace/tracestate
+go.opencensus.io
+# golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+golang.org/x/crypto/blowfish
+golang.org/x/crypto/cast5
+golang.org/x/crypto/pbkdf2
+golang.org/x/crypto/salsa20
+golang.org/x/crypto/tea
+golang.org/x/crypto/twofish
+golang.org/x/crypto/xtea
+golang.org/x/crypto/internal/subtle
+golang.org/x/crypto/salsa20/salsa
+golang.org/x/crypto/ed25519
+golang.org/x/crypto/hkdf
+golang.org/x/crypto/ed25519/internal/edwards25519
+golang.org/x/crypto/chacha20poly1305
+golang.org/x/crypto/cryptobyte
+golang.org/x/crypto/curve25519
+golang.org/x/crypto/internal/chacha20
+golang.org/x/crypto/poly1305
+golang.org/x/crypto/cryptobyte/asn1
+# golang.org/x/net v0.0.0-20190613194153-d28f0bde5980
+golang.org/x/net/context
+golang.org/x/net/trace
+golang.org/x/net/http2
+golang.org/x/net/http2/hpack
+golang.org/x/net/ipv4
+golang.org/x/net/ipv6
+golang.org/x/net/internal/timeseries
+golang.org/x/net/http/httpguts
+golang.org/x/net/idna
+golang.org/x/net/bpf
+golang.org/x/net/internal/iana
+golang.org/x/net/internal/socket
+# golang.org/x/sys v0.0.0-20190422165155-953cdadca894
+golang.org/x/sys/windows/svc/eventlog
+golang.org/x/sys/unix
+golang.org/x/sys/windows
+golang.org/x/sys/windows/registry
+golang.org/x/sys/cpu
+# golang.org/x/text v0.3.0
+golang.org/x/text/transform
+golang.org/x/text/unicode/norm
+golang.org/x/text/secure/bidirule
+golang.org/x/text/unicode/bidi
+# google.golang.org/appengine v1.4.0
+google.golang.org/appengine/datastore
+google.golang.org/appengine
+google.golang.org/appengine/internal
+google.golang.org/appengine/internal/datastore
+google.golang.org/appengine/internal/app_identity
+google.golang.org/appengine/internal/modules
+google.golang.org/appengine/internal/base
+google.golang.org/appengine/internal/log
+google.golang.org/appengine/internal/remote_api
+# gopkg.in/alecthomas/kingpin.v2 v2.2.6
+gopkg.in/alecthomas/kingpin.v2
+# gopkg.in/yaml.v2 v2.2.2
+gopkg.in/yaml.v2
