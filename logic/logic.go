@@ -33,7 +33,4 @@ func (logic *Logic) Run() {
 	if err := logic.InitRpcServer(); err != nil {
 		log.Panicf("logic init rpc server fail")
 	}
-
-	//init http server
-
 }

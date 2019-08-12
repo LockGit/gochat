@@ -12,7 +12,7 @@ import (
 	"gochat/connect"
 	"gochat/job"
 	"gochat/logic"
-	"gochat/web"
+	"gochat/site"
 )
 
 func main() {
@@ -29,8 +29,8 @@ func main() {
 		job.New().Run()
 	case "api":
 		api.New().Run()
-	case "web":
-		web.New().Run()
+	case "site":
+		site.New().Run()
 	default:
 		fmt.Println("exiting,module param error!")
 		return
