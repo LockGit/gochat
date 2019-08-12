@@ -17,10 +17,25 @@ var once sync.Once
 var realPath string
 var Conf *Config
 
+const (
+	QueueName             = "gochat_sub"
+	NoAuth                = "NoAuth"
+	RedisBaseValidTime    = 86400
+	RedisPrefix           = "gochat_"
+	RedisRoomPrefix       = "gochat_room_"
+	RedisRoomOnlinePrefix = "gochat_room_online_count_"
+	OpSend                = 1 //
+	OpSingleSend          = 2 // single user
+	OpRoomSend            = 3 // send to room
+	OpRoomCountSend       = 4 // get online user count
+	OpRoomInfoSend        = 5 // send info to room
+)
+
 type Config struct {
+	Common  Common
 	Connect ConnectConfig
-	Job     JobConfig
 	Logic   LogicConfig
+	Job     JobConfig
 }
 
 func init() {
@@ -45,6 +60,11 @@ func Init() {
 		if err != nil {
 			panic(err)
 		}
+		viper.SetConfigName("/common")
+		err = viper.MergeInConfig()
+		if err != nil {
+			panic(err)
+		}
 		viper.SetConfigName("/job")
 		err = viper.MergeInConfig()
 		if err != nil {
@@ -56,6 +76,7 @@ func Init() {
 			panic(err)
 		}
 		Conf = new(Config)
+		viper.Unmarshal(&Conf.Common)
 		viper.Unmarshal(&Conf.Connect)
 		viper.Unmarshal(&Conf.Job)
 		viper.Unmarshal(&Conf.Logic)
@@ -70,6 +91,24 @@ func GetMode() string {
 	return env
 }
 
+type CommonEtcd struct {
+	Host            string `mapstructure:"host"`
+	BasePath        string `mapstructure:"basePath"`
+	ServerPathLogic string `mapstructure:"serverPathLogic"`
+	ServerId        int    `mapstructure:"serverId"`
+}
+
+type CommonRedis struct {
+	RedisAddress  string `mapstructure:"redisAddress"`
+	RedisPassword string `mapstructure:"redisPassword"`
+	Db            int    `mapstructure:"db"`
+}
+
+type Common struct {
+	CommonEtcd  CommonEtcd  `mapstructure:"common-etcd"`
+	CommonRedis CommonRedis `mapstructure:"common-redis"`
+}
+
 type ConnectBase struct {
 	ServerId int    `mapstructure:"serverId"`
 	CertPath string `mapstructure:"certPath"`
@@ -77,7 +116,7 @@ type ConnectBase struct {
 }
 
 type ConnectBucket struct {
-	Num           int    `mapstructure:"num"`
+	CpuNum        int    `mapstructure:"cpuNum"`
 	Channel       int    `mapstructure:"channel"`
 	Room          int    `mapstructure:"room"`
 	SrvProto      int    `mapstructure:"svrProto"`
@@ -95,6 +134,30 @@ type ConnectConfig struct {
 	ConnectWebsocket ConnectWebsocket `mapstructure:"connect-websocket"`
 }
 
+type LogicBase struct {
+	CpuNum     int    `mapstructure:"cpuNum"`
+	RpcAddress string `mapstructure:"rpcAddress"`
+	CertPath   string `mapstructure:"certPath"`
+	KeyPath    string `mapstructure:"keyPath"`
+}
+
+type LogicRedis struct {
+	RedisAddress  string `mapstructure:"redisAddress"`
+	RedisPassword string `mapstructure:"redisPassword"`
+}
+
+type LogicEtcd struct {
+	Host     string `mapstructure:"host"`
+	BasePath string `mapstructure:"basePath"`
+	ServerId string `mapstructure:"serverId"`
+}
+
+type LogicConfig struct {
+	LogicBase  LogicBase  `mapstructure:"logic-base"`
+	LogicRedis LogicRedis `mapstructure:"logic-redis"`
+	LogicEtcd  LogicEtcd  `mapstructure:"logic-etcd"`
+}
+
 type JobBase struct {
 	RedisAddr     string `mapstructure:"redisAddr"`
 	RedisPassword string `mapstructure:"redisPassword"`
@@ -105,7 +168,4 @@ type JobBase struct {
 
 type JobConfig struct {
 	JobBase JobBase `mapstructure:"job-base"`
-}
-
-type LogicConfig struct {
 }

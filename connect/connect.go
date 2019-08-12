@@ -26,13 +26,13 @@ func (c *Connect) Run() {
 	connectConfig := config.Conf.Connect
 
 	//set the maximum number of CPUs that can be executing
-	runtime.GOMAXPROCS(connectConfig.ConnectBucket.Num)
+	runtime.GOMAXPROCS(connectConfig.ConnectBucket.CpuNum)
 
 	//init logic layer rpc client, call logic layer rpc server
 
 	//init connect layer rpc server, logic client will call this
-	Buckets := make([]*Bucket, connectConfig.ConnectBucket.Num)
-	for i := 0; i < connectConfig.ConnectBucket.Num; i++ {
+	Buckets := make([]*Bucket, connectConfig.ConnectBucket.CpuNum)
+	for i := 0; i < connectConfig.ConnectBucket.CpuNum; i++ {
 		Buckets[i] = NewBucket(BucketOptions{
 			ChannelSize:   connectConfig.ConnectBucket.Channel,
 			RoomSize:      connectConfig.ConnectBucket.Room,

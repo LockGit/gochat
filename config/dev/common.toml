@@ -1,0 +1,10 @@
+[common-etcd]
+host = "127.0.0.1:2181"
+basePath = "/im_logic_rpc_srv"
+serverPathLogic = "LogicRpc"
+serverId = "1"
+
+[common-redis]
+redisAddress = "127.0.0.1:6379"
+redisPassword = ""
+db = 0

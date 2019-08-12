@@ -8,9 +8,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"gochat/api"
 	"gochat/connect"
 	"gochat/job"
 	"gochat/logic"
+	"gochat/web"
 )
 
 func main() {
@@ -25,6 +27,10 @@ func main() {
 		logic.New().Run()
 	case "job":
 		job.New().Run()
+	case "api":
+		api.New().Run()
+	case "web":
+		web.New().Run()
 	default:
 		fmt.Println("exiting,module param error!")
 		return
