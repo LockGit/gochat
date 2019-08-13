@@ -25,10 +25,9 @@ var RedisClient *redis.Client
 
 func (logic *Logic) InitPublishRedisClient() (err error) {
 	redisOpt := tools.RedisOption{
-		Host:     "",
-		Port:     0,
-		Password: "",
-		Db:       0,
+		Address:  config.Conf.Common.CommonRedis.RedisAddress,
+		Password: config.Conf.Common.CommonRedis.RedisPassword,
+		Db:       config.Conf.Common.CommonRedis.Db,
 	}
 	RedisClient = tools.GetRedisInstance(redisOpt)
 	if pong, err := RedisClient.Ping().Result(); err != nil {

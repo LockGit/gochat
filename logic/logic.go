@@ -6,8 +6,8 @@
 package logic
 
 import (
+	"github.com/sirupsen/logrus"
 	"gochat/config"
-	"log"
 	"runtime"
 )
 
@@ -26,11 +26,11 @@ func (logic *Logic) Run() {
 
 	//init publish redis
 	if err := logic.InitPublishRedisClient(); err != nil {
-		log.Panicf("logic init publishRedisClient fail,err:%s", err.Error())
+		logrus.Panicf("logic init publishRedisClient fail,err:%s", err.Error())
 	}
 
 	//init rpc server
 	if err := logic.InitRpcServer(); err != nil {
-		log.Panicf("logic init rpc server fail")
+		logrus.Panicf("logic init rpc server fail")
 	}
 }

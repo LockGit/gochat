@@ -16,18 +16,16 @@ var once sync.Once
 var RedisClientMap = map[string]*redis.Client{}
 
 type RedisOption struct {
-	Host     string
-	Port     int
+	Address  string
 	Password string
 	Db       int
 }
 
 func GetRedisInstance(redisOpt RedisOption) *redis.Client {
-	host := redisOpt.Host
-	port := redisOpt.Port
+	address := redisOpt.Address
 	db := redisOpt.Db
 	password := redisOpt.Password
-	addr := fmt.Sprintf("%s:%d:%d", host, port, db)
+	addr := fmt.Sprintf("%s:%d", address, db)
 	if redisCli, ok := RedisClientMap[addr]; ok {
 		return redisCli
 	}

@@ -159,6 +159,7 @@ type LogicConfig struct {
 }
 
 type TaskBase struct {
+	CpuNum        int    `mapstructure:"cpuNum"`
 	RedisAddr     string `mapstructure:"redisAddr"`
 	RedisPassword string `mapstructure:"redisPassword"`
 	RpcAddress    string `mapstructure:"rpcAddress"`
