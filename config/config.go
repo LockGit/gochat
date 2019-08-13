@@ -35,7 +35,7 @@ type Config struct {
 	Common  Common
 	Connect ConnectConfig
 	Logic   LogicConfig
-	Job     JobConfig
+	Task    TaskConfig
 }
 
 func init() {
@@ -65,7 +65,7 @@ func Init() {
 		if err != nil {
 			panic(err)
 		}
-		viper.SetConfigName("/job")
+		viper.SetConfigName("/task")
 		err = viper.MergeInConfig()
 		if err != nil {
 			panic(err)
@@ -78,7 +78,7 @@ func Init() {
 		Conf = new(Config)
 		viper.Unmarshal(&Conf.Common)
 		viper.Unmarshal(&Conf.Connect)
-		viper.Unmarshal(&Conf.Job)
+		viper.Unmarshal(&Conf.Task)
 		viper.Unmarshal(&Conf.Logic)
 	})
 }
@@ -158,7 +158,7 @@ type LogicConfig struct {
 	LogicEtcd  LogicEtcd  `mapstructure:"logic-etcd"`
 }
 
-type JobBase struct {
+type TaskBase struct {
 	RedisAddr     string `mapstructure:"redisAddr"`
 	RedisPassword string `mapstructure:"redisPassword"`
 	RpcAddress    string `mapstructure:"rpcAddress"`
@@ -166,6 +166,6 @@ type JobBase struct {
 	PushChanSize  int    `mapstructure:"pushChanSize"`
 }
 
-type JobConfig struct {
-	JobBase JobBase `mapstructure:"job-base"`
+type TaskConfig struct {
+	TaskBase TaskBase `mapstructure:"task-base"`
 }

@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"gochat/api"
 	"gochat/connect"
-	"gochat/job"
 	"gochat/logic"
 	"gochat/site"
+	"gochat/task"
 )
 
 func main() {
@@ -25,8 +25,8 @@ func main() {
 		connect.New().Run()
 	case "logic":
 		logic.New().Run()
-	case "job":
-		job.New().Run()
+	case "task":
+		task.New().Run()
 	case "api":
 		api.New().Run()
 	case "site":

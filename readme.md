@@ -11,7 +11,7 @@ connect层
             channel (会话)
     setOnline--->redis
 
-job层
+task层
     getMsg--->redis
     sendMsg--->rpc call connect
 

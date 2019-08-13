@@ -3,16 +3,16 @@
  * Date: 2019-08-09
  * Time: 18:22
  */
-package job
+package task
 
-type Job struct {
+type Task struct {
 }
 
-func New() *Job {
-	return new(Job)
+func New() *Task {
+	return new(Task)
 }
 
-func (job *Job) Run() {
+func (task *Task) Run() {
 	//read from redis queue
 	//rpc call connect layer send msg
 }
