@@ -6,9 +6,11 @@
 package task
 
 import (
+	"context"
 	"github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/client"
 	"gochat/config"
+	"gochat/proto"
 	"strconv"
 	"strings"
 )
@@ -36,7 +38,15 @@ func (task *Task) InitConnectRpcClient() (err error) {
 }
 
 func (task *Task) pushSingleToConnect(serverId int, userId string, msg []byte) {
-
+	logrus.Infof("pushSingleToConnect Body %s", string(msg))
+	pushMsgArg := &proto.PushMsgRequest{Uid: userId, Msg: proto.Msg{Ver: 1, Operation: config.OpSingleSend, Body: msg}}
+	reply := &proto.SuccessReply{}
+	//todo lock
+	err := RpcConnectClientList[serverId].Call(context.Background(), "PushSingleMsg", pushMsgArg, reply)
+	if err != nil {
+		logrus.Infof(" pushSingleToConnect Call err %v", err)
+	}
+	logrus.Infof("reply %s", reply.Msg)
 }
 
 func (task *Task) broadcastRoomToConnect(roomId int, msg []byte) {

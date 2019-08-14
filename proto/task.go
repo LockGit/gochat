@@ -21,3 +21,8 @@ type RedisRoomInfo struct {
 	Count        int               `json:"count,omitempty"`
 	RoomUserInfo map[string]string `json:"roomUserInfo"`
 }
+
+type SuccessReply struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+}
