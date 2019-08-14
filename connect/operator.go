@@ -17,14 +17,14 @@ type DefaultOperator struct {
 
 //rpc call logic layer
 func (o *DefaultOperator) Connect(conn *proto.ConnectRequest) (uid string, err error) {
-	rpcConnect := new(RpcConnect)
+	rpcConnect := new(RpcLogic)
 	uid, err = rpcConnect.connect(conn)
 	return
 }
 
 //rpc call logic layer
 func (o *DefaultOperator) DisConnect(disConn *proto.DisConnectRequest) (err error) {
-	rpcConnect := new(RpcConnect)
+	rpcConnect := new(RpcLogic)
 	err = rpcConnect.disConnect(disConn)
 	return
 }

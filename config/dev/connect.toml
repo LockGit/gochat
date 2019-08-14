@@ -3,22 +3,11 @@ serverId = 1
 certPath = ""
 keyPath = ""
 
-#[connect-test]
-#    [[connect-test.item]]
-#        name="lock"
-#        age=18
-#
-#    [[connect-test.item]]
-#        name="test"
-#        age=20
-
 [connect-websocket]
 bind = "0.0.0.0:7000"
 
-
-[connect-rpcLogicAddrs]
-key = 1
-addr = "tcp@0.0.0.0:6912"
+[connect-rpcAddress]
+address = "tcp@0.0.0.0:6912,tcp@0.0.0.0:6913"
 
 [connect-bucket]
 cpuNum = 4

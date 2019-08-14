@@ -35,7 +35,7 @@ func (task *Task) InitSubscribeRedisClient() (err error) {
 				logrus.Debugf("redisSub Channel !ok: %v", ok)
 				break
 			}
-			push(msg.Payload)
+			task.Push(msg.Payload)
 		}
 	}()
 	return

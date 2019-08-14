@@ -1,8 +1,9 @@
 [common-etcd]
 host = "127.0.0.1:2181"
-basePath = "/im_logic_rpc_srv"
+basePath = "/gochat_srv"
 serverPathLogic = "LogicRpc"
-serverId = "1"
+serverPathConnect = "ConnectRpc"
+serverId = 1
 
 [common-redis]
 redisAddress = "127.0.0.1:6379"

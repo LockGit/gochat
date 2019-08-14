@@ -92,10 +92,11 @@ func GetMode() string {
 }
 
 type CommonEtcd struct {
-	Host            string `mapstructure:"host"`
-	BasePath        string `mapstructure:"basePath"`
-	ServerPathLogic string `mapstructure:"serverPathLogic"`
-	ServerId        int    `mapstructure:"serverId"`
+	Host              string `mapstructure:"host"`
+	BasePath          string `mapstructure:"basePath"`
+	ServerPathLogic   string `mapstructure:"serverPathLogic"`
+	ServerPathConnect string `mapstructure:"serverPathConnect"`
+	ServerId          int    `mapstructure:"serverId"`
 }
 
 type CommonRedis struct {
@@ -115,6 +116,10 @@ type ConnectBase struct {
 	KeyPath  string `mapstructure:"keyPath"`
 }
 
+type ConnectRpcAddress struct {
+	Address string `mapstructure:"address"`
+}
+
 type ConnectBucket struct {
 	CpuNum        int    `mapstructure:"cpuNum"`
 	Channel       int    `mapstructure:"channel"`
@@ -129,9 +134,10 @@ type ConnectWebsocket struct {
 }
 
 type ConnectConfig struct {
-	ConnectBase      ConnectBase      `mapstructure:"connect-base"`
-	ConnectBucket    ConnectBucket    `mapstructure:"connect-bucket"`
-	ConnectWebsocket ConnectWebsocket `mapstructure:"connect-websocket"`
+	ConnectBase       ConnectBase       `mapstructure:"connect-base"`
+	ConnectRpcAddress ConnectRpcAddress `mapstructure:"connect-rpcAddress"`
+	ConnectBucket     ConnectBucket     `mapstructure:"connect-bucket"`
+	ConnectWebsocket  ConnectWebsocket  `mapstructure:"connect-websocket"`
 }
 
 type LogicBase struct {

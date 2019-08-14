@@ -29,7 +29,7 @@ func (c *Connect) Run() {
 	runtime.GOMAXPROCS(connectConfig.ConnectBucket.CpuNum)
 
 	//init logic layer rpc client, call logic layer rpc server
-	if err := InitLogicRpcClient(); err != nil {
+	if err := c.InitLogicRpcClient(); err != nil {
 		logrus.Panicf("InitLogicRpcClient err:%s", err.Error())
 	}
 	//init connect layer rpc server, logic client will call this
@@ -52,6 +52,11 @@ func (c *Connect) Run() {
 		WriteBufferSize: 1024,
 		BroadcastSize:   512,
 	})
+
+	//init connect layer rpc server ,job layer will call this
+	if err := c.InitConnectRpcServer(); err != nil {
+		logrus.Panicf("InitConnectRpcServer Fatal error: %s \n", err)
+	}
 
 	//start connect layer server handler persistent connection
 	if err := c.InitWebsocket(); err != nil {
