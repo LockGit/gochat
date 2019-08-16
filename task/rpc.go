@@ -24,25 +24,25 @@ func (task *Task) InitConnectRpcClient() (err error) {
 		logrus.Panicf("no etcd server find!")
 	}
 	RpcConnectClientList = make(map[int]client.XClient, len(d.GetServices()))
-	for _, cometConf := range d.GetServices() {
-		cometConf.Value = strings.Replace(cometConf.Value, "=&tps=0", "", 1)
-		serverId, error := strconv.ParseInt(cometConf.Value, 10, 8)
+	for _, connectConf := range d.GetServices() {
+		connectConf.Value = strings.Replace(connectConf.Value, "=&tps=0", "", 1)
+		serverId, error := strconv.ParseInt(connectConf.Value, 10, 8)
 		if error != nil {
 			logrus.Panicf("InitComets err，Can't find serverId. error: %s", error)
 		}
-		d := client.NewPeer2PeerDiscovery(cometConf.Key, "")
+		d := client.NewPeer2PeerDiscovery(connectConf.Key, "")
 		RpcConnectClientList[int(serverId)] = client.NewXClient(etcdConfig.ServerPathConnect, client.Failtry, client.RandomSelect, d, client.DefaultOption)
-		logrus.Infof("InitConnectRpcClient addr %s, v %v", cometConf.Key, RpcConnectClientList[int(serverId)])
+		logrus.Infof("InitConnectRpcClient addr %s, v %v", connectConf.Key, RpcConnectClientList[int(serverId)])
 	}
 	return
 }
 
 func (task *Task) pushSingleToConnect(serverId int, userId string, msg []byte) {
 	logrus.Infof("pushSingleToConnect Body %s", string(msg))
-	pushMsgArg := &proto.PushMsgRequest{Uid: userId, Msg: proto.Msg{Ver: 1, Operation: config.OpSingleSend, Body: msg}}
+	pushMsgReq := &proto.PushMsgRequest{Uid: userId, Msg: proto.Msg{Ver: 1, Operation: config.OpSingleSend, Body: msg}}
 	reply := &proto.SuccessReply{}
 	//todo lock
-	err := RpcConnectClientList[serverId].Call(context.Background(), "PushSingleMsg", pushMsgArg, reply)
+	err := RpcConnectClientList[serverId].Call(context.Background(), "PushSingleMsg", pushMsgReq, reply)
 	if err != nil {
 		logrus.Infof(" pushSingleToConnect Call err %v", err)
 	}
@@ -50,7 +50,7 @@ func (task *Task) pushSingleToConnect(serverId int, userId string, msg []byte) {
 }
 
 func (task *Task) broadcastRoomToConnect(roomId int, msg []byte) {
-
+	pushRoomMsgReq := &proto.PushMsgRequest{}
 }
 
 func (task *Task) broadcastRoomCountToConnect(roomId, count int) {

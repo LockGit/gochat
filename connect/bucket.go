@@ -15,7 +15,7 @@ type Bucket struct {
 	chs           map[string]*Channel // map sub key to a channel
 	bucketOptions BucketOptions
 	rooms         map[int]*Room // bucket room channels
-	routines      []chan *proto.RoomMsgRequest
+	routines      []chan *proto.PushRoomMsgRequest
 	routinesNum   uint64
 	broadcast     chan []byte
 }
@@ -31,10 +31,10 @@ func NewBucket(bucketOptions BucketOptions) (b *Bucket) {
 	b = new(Bucket)
 	b.chs = make(map[string]*Channel, bucketOptions.ChannelSize)
 	b.bucketOptions = bucketOptions
-	b.routines = make([]chan *proto.RoomMsgRequest, bucketOptions.RoutineAmount)
+	b.routines = make([]chan *proto.PushRoomMsgRequest, bucketOptions.RoutineAmount)
 	b.rooms = make(map[int]*Room, bucketOptions.RoomSize)
 	for i := uint64(0); i < b.bucketOptions.RoutineAmount; i++ {
-		c := make(chan *proto.RoomMsgRequest, bucketOptions.RoutineSize)
+		c := make(chan *proto.PushRoomMsgRequest, bucketOptions.RoutineSize)
 		b.routines[i] = c
 		go b.PushRoom(c)
 	}
@@ -84,6 +84,6 @@ func (b *Bucket) DeleteChannel(ch *Channel) {
 	b.cLock.RUnlock()
 }
 
-func (b *Bucket) PushRoom(c chan *proto.RoomMsgRequest) {
+func (b *Bucket) PushRoom(c chan *proto.PushRoomMsgRequest) {
 
 }

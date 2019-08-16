@@ -17,12 +17,12 @@ type PushMsgRequest struct {
 	Msg Msg
 }
 
-type RoomMsgRequest struct {
-	RoomId int32
+type PushRoomMsgRequest struct {
+	RoomId int
 	Msg    Msg
 }
 
-type RoomCountRequest struct {
-	RoomId int32
+type PushRoomCountRequest struct {
+	RoomId int
 	Count  int
 }
