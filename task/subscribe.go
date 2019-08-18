@@ -10,7 +10,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"gochat/config"
 	"gochat/tools"
-	"im/libs/define"
 )
 
 var RedisClient *redis.Client
@@ -27,7 +26,7 @@ func (task *Task) InitSubscribeRedisClient() (err error) {
 	}
 
 	go func() {
-		redisSub := RedisClient.Subscribe(define.REDIS_SUB)
+		redisSub := RedisClient.Subscribe(config.QueueName)
 		ch := redisSub.Channel()
 		for {
 			msg, ok := <-ch
