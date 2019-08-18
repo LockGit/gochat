@@ -1,8 +1,3 @@
-# github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-github.com/alecthomas/template
-github.com/alecthomas/template/parse
-# github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4
-github.com/alecthomas/units
 # github.com/anacrolix/missinggo v1.1.0
 github.com/anacrolix/missinggo
 github.com/anacrolix/missinggo/inproc
@@ -16,6 +11,10 @@ github.com/anacrolix/utp
 github.com/apache/thrift/lib/go/thrift
 # github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 github.com/armon/go-metrics
+# github.com/bwmarrin/snowflake v0.3.0
+github.com/bwmarrin/snowflake
+# github.com/cenk/backoff v2.1.1+incompatible
+github.com/cenk/backoff
 # github.com/cenkalti/backoff v2.1.1+incompatible
 github.com/cenkalti/backoff
 # github.com/cheekybits/genny v1.0.0
@@ -28,12 +27,18 @@ github.com/coreos/etcd/pkg/types
 github.com/coreos/etcd/version
 # github.com/coreos/go-semver v0.3.0
 github.com/coreos/go-semver/semver
+# github.com/dgryski/go-jump v0.0.0-20170409065014-e1f439676b57
+github.com/dgryski/go-jump
 # github.com/docker/libkv v0.2.1
-github.com/docker/libkv/store/etcd
 github.com/docker/libkv
 github.com/docker/libkv/store
 github.com/docker/libkv/store/consul
+github.com/docker/libkv/store/etcd
 github.com/docker/libkv/store/zookeeper
+# github.com/edwingeng/doublejump v0.0.0-20190102103700-461a0155c7be
+github.com/edwingeng/doublejump
+# github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a
+github.com/facebookgo/clock
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.7
@@ -56,10 +61,14 @@ github.com/gorilla/websocket
 github.com/grandcat/zeroconf
 # github.com/hashicorp/consul/api v1.0.1
 github.com/hashicorp/consul/api
+# github.com/hashicorp/errwrap v1.0.0
+github.com/hashicorp/errwrap
 # github.com/hashicorp/go-cleanhttp v0.5.1
 github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-immutable-radix v1.0.0
 github.com/hashicorp/go-immutable-radix
+# github.com/hashicorp/go-multierror v1.0.0
+github.com/hashicorp/go-multierror
 # github.com/hashicorp/go-rootcerts v1.0.0
 github.com/hashicorp/go-rootcerts
 # github.com/hashicorp/golang-lru v0.5.1
@@ -136,18 +145,19 @@ github.com/opentracing/opentracing-go/log
 github.com/pelletier/go-toml
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
-# github.com/prometheus/common v0.6.0
-github.com/prometheus/common/log
 # github.com/rcrowley/go-metrics v0.0.0-20190706150252-9beb055b7962
 github.com/rcrowley/go-metrics
 github.com/rcrowley/go-metrics/exp
 # github.com/rs/cors v1.6.0
 github.com/rs/cors
+# github.com/rubyist/circuitbreaker v2.2.1+incompatible
+github.com/rubyist/circuitbreaker
 # github.com/samuel/go-zookeeper v0.0.0-20180130194729-c4fab1ac1bec
 github.com/samuel/go-zookeeper/zk
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
 # github.com/smallnest/rpcx v0.0.0-20190809021744-cc2386c077e6
+github.com/smallnest/rpcx/client
 github.com/smallnest/rpcx/server
 github.com/smallnest/rpcx/serverplugin
 github.com/smallnest/rpcx/errors
@@ -169,12 +179,16 @@ github.com/spf13/jwalterweatherman
 github.com/spf13/pflag
 # github.com/spf13/viper v1.4.0
 github.com/spf13/viper
+# github.com/tatsushid/go-fastping v0.0.0-20160109021039-d7bb493dee3e
+github.com/tatsushid/go-fastping
 # github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161
 github.com/templexxx/cpufeat
 # github.com/templexxx/xor v0.0.0-20181023030647-4e92f724b73b
 github.com/templexxx/xor
 # github.com/tjfoc/gmsm v1.0.1
 github.com/tjfoc/gmsm/sm4
+# github.com/valyala/fastrand v1.0.0
+github.com/valyala/fastrand
 # github.com/vmihailenco/msgpack v4.0.4+incompatible
 github.com/vmihailenco/msgpack
 github.com/vmihailenco/msgpack/codes
@@ -194,11 +208,11 @@ golang.org/x/crypto/salsa20
 golang.org/x/crypto/tea
 golang.org/x/crypto/twofish
 golang.org/x/crypto/xtea
+golang.org/x/crypto/ed25519
 golang.org/x/crypto/internal/subtle
 golang.org/x/crypto/salsa20/salsa
-golang.org/x/crypto/ed25519
-golang.org/x/crypto/hkdf
 golang.org/x/crypto/ed25519/internal/edwards25519
+golang.org/x/crypto/hkdf
 golang.org/x/crypto/chacha20poly1305
 golang.org/x/crypto/cryptobyte
 golang.org/x/crypto/curve25519
@@ -206,23 +220,22 @@ golang.org/x/crypto/internal/chacha20
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/cryptobyte/asn1
 # golang.org/x/net v0.0.0-20190613194153-d28f0bde5980
-golang.org/x/net/context
 golang.org/x/net/trace
-golang.org/x/net/http2
-golang.org/x/net/http2/hpack
+golang.org/x/net/context
 golang.org/x/net/ipv4
 golang.org/x/net/ipv6
+golang.org/x/net/icmp
+golang.org/x/net/http2
+golang.org/x/net/http2/hpack
 golang.org/x/net/internal/timeseries
-golang.org/x/net/http/httpguts
-golang.org/x/net/idna
 golang.org/x/net/bpf
 golang.org/x/net/internal/iana
 golang.org/x/net/internal/socket
+golang.org/x/net/http/httpguts
+golang.org/x/net/idna
 # golang.org/x/sys v0.0.0-20190422165155-953cdadca894
-golang.org/x/sys/windows/svc/eventlog
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-golang.org/x/sys/windows/registry
 golang.org/x/sys/cpu
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
@@ -239,7 +252,5 @@ google.golang.org/appengine/internal/modules
 google.golang.org/appengine/internal/base
 google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
-# gopkg.in/alecthomas/kingpin.v2 v2.2.6
-gopkg.in/alecthomas/kingpin.v2
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2

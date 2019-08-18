@@ -24,6 +24,7 @@ const (
 	RedisPrefix           = "gochat_"
 	RedisRoomPrefix       = "gochat_room_"
 	RedisRoomOnlinePrefix = "gochat_room_online_count_"
+	MsgVersion            = 1
 	OpSend                = 1 //
 	OpSingleSend          = 2 // single user
 	OpRoomSend            = 3 // send to room
