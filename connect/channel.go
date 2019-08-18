@@ -27,3 +27,11 @@ func NewChannel(size int) (c *Channel) {
 	c.Prev = nil
 	return
 }
+
+func (ch *Channel) Push(msg *proto.Msg) (err error) {
+	select {
+	case ch.broadcast <- msg:
+	default:
+	}
+	return
+}

@@ -8,6 +8,7 @@ package connect
 import (
 	"gochat/proto"
 	"sync"
+	"sync/atomic"
 )
 
 type Bucket struct {
@@ -84,6 +85,14 @@ func (b *Bucket) DeleteChannel(ch *Channel) {
 	b.cLock.RUnlock()
 }
 
-func (b *Bucket) PushRoom(c chan *proto.PushRoomMsgRequest) {
+func (b *Bucket) Channel(uid string) (ch *Channel) {
+	b.cLock.RLock()
+	ch = b.chs[uid]
+	b.cLock.RUnlock()
+	return
+}
 
+func (b *Bucket) BroadcastRoom(pushRoomMsgReq *proto.PushRoomMsgRequest) {
+	num := atomic.AddUint64(&b.routinesNum, 1) % b.bucketOptions.RoutineAmount
+	b.routines[num] <- pushRoomMsgReq
 }

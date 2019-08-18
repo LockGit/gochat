@@ -18,6 +18,8 @@ var realPath string
 var Conf *Config
 
 const (
+	SuccessReplyCode      = 0
+	SuccessReplyMsg       = "success"
 	QueueName             = "gochat_sub"
 	NoAuth                = "NoAuth"
 	RedisBaseValidTime    = 86400
