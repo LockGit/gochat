@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gochat/config"
 	"gochat/proto"
-	"im/libs/hash/cityhash"
+	"gochat/tools"
 	"time"
 )
 
@@ -43,7 +43,7 @@ func NewServer(b []*Bucket, o Operator, options ServerOptions) *Server {
 
 //reduce lock competition, use city hash insert to different bucket
 func (s *Server) Bucket(uid string) *Bucket {
-	idx := cityhash.CityHash32([]byte(uid), uint32(len(uid))) % s.bucketIdx
+	idx := tools.CityHash32([]byte(uid), uint32(len(uid))) % s.bucketIdx
 	return s.Buckets[idx]
 }
 
