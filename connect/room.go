@@ -7,6 +7,7 @@ package connect
 
 import (
 	"github.com/pkg/errors"
+	"gochat/proto"
 	"sync"
 )
 
@@ -31,6 +32,8 @@ func NewRoom(roomId int) *Room {
 
 func (r *Room) Put(ch *Channel) (err error) {
 	//doubly linked list
+	r.rLock.Lock()
+	defer r.rLock.Unlock()
 	if !r.drop {
 		if r.next != nil {
 			r.next.Prev = ch
@@ -42,6 +45,15 @@ func (r *Room) Put(ch *Channel) (err error) {
 	} else {
 		err = errors.New("room drop")
 	}
+	return
+}
+
+func (r *Room) Push(msg *proto.Msg) {
+	r.rLock.RLock()
+	for ch := r.next; ch != nil; ch = ch.Next {
+		ch.Push(msg)
+	}
+	r.rLock.RUnlock()
 	return
 }
 

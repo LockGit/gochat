@@ -42,6 +42,26 @@ func NewBucket(bucketOptions BucketOptions) (b *Bucket) {
 	return
 }
 
+func (b *Bucket) PushRoom(ch chan *proto.PushRoomMsgRequest) {
+	for {
+		var (
+			arg  *proto.PushRoomMsgRequest
+			room *Room
+		)
+		arg = <-ch
+		if room = b.Room(arg.RoomId); room != nil {
+			room.Push(&arg.Msg)
+		}
+	}
+}
+
+func (b *Bucket) Room(rid int) (room *Room) {
+	b.cLock.RLock()
+	room, _ = b.rooms[rid]
+	b.cLock.RUnlock()
+	return
+}
+
 func (b *Bucket) Put(uid string, roomId int, ch *Channel) (err error) {
 	var (
 		room *Room
