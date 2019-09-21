@@ -25,7 +25,7 @@ func GetRedisInstance(redisOpt RedisOption) *redis.Client {
 	address := redisOpt.Address
 	db := redisOpt.Db
 	password := redisOpt.Password
-	addr := fmt.Sprintf("%s:%d", address, db)
+	addr := fmt.Sprintf("%s", address)
 	if redisCli, ok := RedisClientMap[addr]; ok {
 		return redisCli
 	}

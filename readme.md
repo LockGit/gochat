@@ -3,6 +3,12 @@
 # architecture design 
 
 
+# go run
+```
+go run -tags=etcd main.go
+
+```
+
 
 ```markdown
 connect层
