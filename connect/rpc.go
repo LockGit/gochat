@@ -70,7 +70,7 @@ func (c *Connect) InitConnectRpcServer() (err error) {
 		if network, addr, err = tools.ParseNetwork(bind); err != nil {
 			logrus.Panicf("InitConnectRpcServer ParseNetwork error : %s", err)
 		}
-		logrus.Infof("InitPushRpc addr %s", addr)
+		logrus.Infof("connect start run at-->%s:%s", network, addr)
 		go c.createConnectRpcServer(network, addr)
 	}
 	return
@@ -135,12 +135,11 @@ func (c *Connect) createConnectRpcServer(network string, addr string) {
 	s := server.NewServer()
 	addRegistryPlugin(s, network, addr)
 	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathConnect, new(RpcConnectPush), fmt.Sprintf("%d", config.Conf.Common.CommonEtcd.ServerId))
-	logrus.Infof("createConnectRpcServer addr %s", addr)
 	s.Serve(network, addr)
 }
 
 func addRegistryPlugin(s *server.Server, network string, addr string) {
-	r := &serverplugin.EtcdRegisterPlugin{
+	r := &serverplugin.EtcdV3RegisterPlugin{
 		ServiceAddress: network + "@" + addr,
 		EtcdServers:    []string{config.Conf.Common.CommonEtcd.Host},
 		BasePath:       config.Conf.Common.CommonEtcd.BasePath,

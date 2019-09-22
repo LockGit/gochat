@@ -53,7 +53,7 @@ func (c *Connect) Run() {
 		BroadcastSize:   512,
 	})
 
-	//init connect layer rpc server ,job layer will call this
+	//init connect layer rpc server ,task layer will call this
 	if err := c.InitConnectRpcServer(); err != nil {
 		logrus.Panicf("InitConnectRpcServer Fatal error: %s \n", err)
 	}

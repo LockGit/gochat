@@ -5,8 +5,9 @@
 
 # go run
 ```
-go run -tags=etcd main.go
-
+go run -tags=etcd main.go -module logic
+go run -tags=etcd main.go -module connect
+go run -tags=etcd main.go -module task
 ```
 
 

@@ -34,7 +34,7 @@ func (task *Task) InitConnectRpcClient() (err error) {
 		}
 		d := client.NewPeer2PeerDiscovery(connectConf.Key, "")
 		RpcConnectClientList[int(serverId)] = client.NewXClient(etcdConfig.ServerPathConnect, client.Failtry, client.RandomSelect, d, client.DefaultOption)
-		logrus.Infof("InitConnectRpcClient addr %s, v %v", connectConf.Key, RpcConnectClientList[int(serverId)])
+		logrus.Infof("InitConnectRpcClient addr %s, v %+v", connectConf.Key, RpcConnectClientList[int(serverId)])
 	}
 	return
 }

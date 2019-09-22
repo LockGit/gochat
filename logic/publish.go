@@ -44,7 +44,7 @@ func (logic *Logic) InitRpcServer() (err error) {
 		if network, addr, err = tools.ParseNetwork(bind); err != nil {
 			logrus.Panicf("InitLogicRpc ParseNetwork error : %s", err.Error())
 		}
-		logrus.Infof("start run at-->%s:%s", network, addr)
+		logrus.Infof("logic start run at-->%s:%s", network, addr)
 		go logic.createRpcServer(network, addr)
 	}
 	return
