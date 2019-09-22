@@ -31,7 +31,7 @@ func init() {
 	defaultOptions.useSSSE3 = cpuid.CPU.SSSE3()
 	defaultOptions.useSSE2 = cpuid.CPU.SSE2()
 	defaultOptions.useAVX2 = cpuid.CPU.AVX2()
-	defaultOptions.useAVX512 = cpuid.CPU.AVX512F() && cpuid.CPU.AVX512BW()
+	defaultOptions.useAVX512 = cpuid.CPU.AVX512F() && cpuid.CPU.AVX512BW() && amd64
 }
 
 // WithMaxGoroutines is the maximum number of goroutines number for encoding & decoding.

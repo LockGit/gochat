@@ -852,6 +852,9 @@ func galMultiply(a, b byte) byte {
 	return mulTable[a][b]
 }
 
+// amd64 indicates whether we are on an amd64 platform.
+var amd64 bool
+
 // Original function:
 /*
 // galMultiply multiplies to elements of the field.

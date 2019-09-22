@@ -180,7 +180,7 @@ func (dec *fecDecoder) freeRange(first, n int, q []fecPacket) []fecPacket {
 		xmitBuf.Put([]byte(q[i]))
 	}
 
-	if first == 0 && n < len(q)/2 {
+	if first == 0 && n < cap(q)/2 {
 		return q[n:]
 	}
 	copy(q[first:], q[first+n:])
@@ -222,7 +222,7 @@ func newFECEncoder(dataShards, parityShards, offset int) *fecEncoder {
 	enc.dataShards = dataShards
 	enc.parityShards = parityShards
 	enc.shardSize = dataShards + parityShards
-	enc.paws = (0xffffffff/uint32(enc.shardSize) - 1) * uint32(enc.shardSize)
+	enc.paws = 0xffffffff / uint32(enc.shardSize) * uint32(enc.shardSize)
 	enc.headerOffset = offset
 	enc.payloadOffset = enc.headerOffset + fecHeaderSize
 

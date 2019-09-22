@@ -30,7 +30,7 @@ type RpcLogic struct {
 
 func (c *Connect) InitLogicRpcClient() (err error) {
 	once.Do(func() {
-		d := client.NewEtcdDiscovery(
+		d := client.NewEtcdV3Discovery(
 			config.Conf.Common.CommonEtcd.BasePath,
 			config.Conf.Common.CommonEtcd.ServerPathLogic,
 			[]string{config.Conf.Common.CommonEtcd.Host},

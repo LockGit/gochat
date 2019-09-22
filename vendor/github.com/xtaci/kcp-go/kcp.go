@@ -1,9 +1,9 @@
-// Package kcp - A Fast and Reliable ARQ Protocol
 package kcp
 
 import (
 	"encoding/binary"
 	"sync/atomic"
+	"time"
 )
 
 const (
@@ -29,6 +29,12 @@ const (
 	IKCP_PROBE_INIT  = 7000   // 7 secs to probe window size
 	IKCP_PROBE_LIMIT = 120000 // up to 120 secs to probe window
 )
+
+// monotonic reference time point
+var refTime time.Time = time.Now()
+
+// currentMs returns current elasped monotonic milliseconds since program startup
+func currentMs() uint32 { return uint32(time.Now().Sub(refTime) / time.Millisecond) }
 
 // output_callback is a prototype which ought capture conn and call conn.Write
 type output_callback func(buf []byte, size int)
@@ -155,8 +161,11 @@ type ackItem struct {
 	ts uint32
 }
 
-// NewKCP create a new kcp control object, 'conv' must equal in two endpoint
-// from the same connection.
+// NewKCP create a new kcp state machine
+//
+// 'conv' must be equal in the connection peers, or else data will be silently rejected.
+//
+// 'output' function will be called whenever these is data to be sent on wire.
 func NewKCP(conv uint32, output output_callback) *KCP {
 	kcp := new(KCP)
 	kcp.conv = conv
@@ -190,9 +199,10 @@ func (kcp *KCP) delSegment(seg *segment) {
 	}
 }
 
-// ReserveBytes keeps n bytes untouched from the beginning of the buffer
-// the output_callback function should be aware of this
-// return false if n >= mss
+// ReserveBytes keeps n bytes untouched from the beginning of the buffer,
+// the output_callback function should be aware of this.
+//
+// Return false if n >= mss
 func (kcp *KCP) ReserveBytes(n int) bool {
 	if n >= int(kcp.mtu-IKCP_OVERHEAD) || n < 0 {
 		return false
@@ -227,19 +237,21 @@ func (kcp *KCP) PeekSize() (length int) {
 	return
 }
 
-// Recv is user/upper level recv: returns size, returns below zero for EAGAIN
+// Receive data from kcp state machine
+//
+// Return number of bytes read.
+//
+// Return -1 when there is no readable data.
+//
+// Return -2 if len(buffer) is smaller than kcp.PeekSize().
 func (kcp *KCP) Recv(buffer []byte) (n int) {
-	if len(kcp.rcv_queue) == 0 {
+	peeksize := kcp.PeekSize()
+	if peeksize < 0 {
 		return -1
 	}
 
-	peeksize := kcp.PeekSize()
-	if peeksize < 0 {
-		return -2
-	}
-
 	if peeksize > len(buffer) {
-		return -3
+		return -2
 	}
 
 	var fast_recover bool
@@ -268,7 +280,7 @@ func (kcp *KCP) Recv(buffer []byte) (n int) {
 	count = 0
 	for k := range kcp.rcv_buf {
 		seg := &kcp.rcv_buf[k]
-		if seg.sn == kcp.rcv_nxt && len(kcp.rcv_queue) < int(kcp.rcv_wnd) {
+		if seg.sn == kcp.rcv_nxt && len(kcp.rcv_queue)+count < int(kcp.rcv_wnd) {
 			kcp.rcv_nxt++
 			count++
 		} else {
@@ -491,7 +503,7 @@ func (kcp *KCP) parse_data(newseg segment) bool {
 	count := 0
 	for k := range kcp.rcv_buf {
 		seg := &kcp.rcv_buf[k]
-		if seg.sn == kcp.rcv_nxt && len(kcp.rcv_queue) < int(kcp.rcv_wnd) {
+		if seg.sn == kcp.rcv_nxt && len(kcp.rcv_queue)+count < int(kcp.rcv_wnd) {
 			kcp.rcv_nxt++
 			count++
 		} else {
@@ -506,8 +518,12 @@ func (kcp *KCP) parse_data(newseg segment) bool {
 	return repeat
 }
 
-// Input when you received a low level packet (eg. UDP packet), call it
-// regular indicates a regular packet has received(not from FEC)
+// Input a packet into kcp state machine.
+//
+// 'regular' indicates it's a real data packet from remote, and it means it's not generated from ReedSolomon
+// codecs.
+//
+// 'ackNoDelay' will trigger immediate ACK, but surely it will not be efficient in bandwidth
 func (kcp *KCP) Input(data []byte, regular, ackNoDelay bool) int {
 	snd_una := kcp.snd_una
 	if len(data) < IKCP_OVERHEAD {
@@ -799,7 +815,7 @@ func (kcp *KCP) flush(ackOnly bool) uint32 {
 		}
 
 		if needsend {
-			current = currentMs() // time update for a blocking call
+			current = currentMs()
 			segment.xmit++
 			segment.ts = current
 			segment.wnd = seg.wnd
@@ -875,6 +891,8 @@ func (kcp *KCP) flush(ackOnly bool) uint32 {
 	return uint32(minrto)
 }
 
+// (deprecated)
+//
 // Update updates state (call it repeatedly, every 10ms-100ms), or you can ask
 // ikcp_check when to call it again (without ikcp_input/_send calling).
 // 'current' - current timestamp in millisec.
@@ -903,6 +921,8 @@ func (kcp *KCP) Update() {
 	}
 }
 
+// (deprecated)
+//
 // Check determines when should you invoke ikcp_update:
 // returns when you should invoke ikcp_update in millisec, if there
 // is no ikcp_input/_send calling. you can call ikcp_update in that
@@ -1025,7 +1045,7 @@ func (kcp *KCP) WaitSnd() int {
 // just shift the rear elements to front, otherwise just reslice q to q[n:]
 // then the cost of runtime.growslice can always be less than n/2
 func (kcp *KCP) remove_front(q []segment, n int) []segment {
-	if n > len(q)/2 {
+	if n > cap(q)/2 {
 		newn := copy(q, q[n:])
 		return q[:newn]
 	}

@@ -9,6 +9,15 @@ To import into your Go project, run the following command in your terminal:
 Then, in your import declaration section of your Go file, paste the following:
 `import "github.com/influxdata/influxdb1-client/v2"`
 
+If you get the error `build github.com/user/influx: cannot find module for path github.com/influxdata/influxdb1-client/v2` when trying to build:
+change your import to:
+```go
+import(
+	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
+	client "github.com/influxdata/influxdb1-client/v2"
+)
+```
+
 ## Example
 The following example creates a new client to the InfluxDB host on localhost:8086 and runs a query for the measurement `cpu_load` from the `mydb` database. 
 ``` go

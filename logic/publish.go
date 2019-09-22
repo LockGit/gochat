@@ -54,12 +54,18 @@ func (logic *Logic) createRpcServer(network string, addr string) {
 	s := server.NewServer()
 	logic.addRegistryPlugin(s, network, addr)
 	// serverId must be unique
-	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathLogic, new(RpcLogic), fmt.Sprintf("%d", config.Conf.Common.CommonEtcd.ServerId))
+	err := s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathLogic, new(RpcLogic), fmt.Sprintf("%d", config.Conf.Common.CommonEtcd.ServerId))
+	if err != nil {
+		logrus.Errorf("register error:%s", err.Error())
+	}
+	s.RegisterOnShutdown(func(s *server.Server) {
+		s.UnregisterAll()
+	})
 	s.Serve(network, addr)
 }
 
 func (logic *Logic) addRegistryPlugin(s *server.Server, network string, addr string) {
-	r := &serverplugin.EtcdRegisterPlugin{
+	r := &serverplugin.EtcdV3RegisterPlugin{
 		ServiceAddress: network + "@" + addr,
 		EtcdServers:    []string{config.Conf.Common.CommonEtcd.Host},
 		BasePath:       config.Conf.Common.CommonEtcd.BasePath,

@@ -21,7 +21,7 @@ var RpcConnectClientList map[int]client.XClient
 
 func (task *Task) InitConnectRpcClient() (err error) {
 	etcdConfig := config.Conf.Common.CommonEtcd
-	d := client.NewEtcdDiscovery(etcdConfig.BasePath, etcdConfig.ServerPathConnect, []string{etcdConfig.Host}, nil)
+	d := client.NewEtcdV3Discovery(etcdConfig.BasePath, etcdConfig.ServerPathConnect, []string{etcdConfig.Host}, nil)
 	if len(d.GetServices()) <= 0 {
 		logrus.Panicf("no etcd server find!")
 	}
