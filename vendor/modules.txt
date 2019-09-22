@@ -110,6 +110,11 @@ github.com/huandu/xstrings
 github.com/influxdata/influxdb1-client
 github.com/influxdata/influxdb1-client/models
 github.com/influxdata/influxdb1-client/pkg/escape
+# github.com/jinzhu/gorm v1.9.10
+github.com/jinzhu/gorm
+github.com/jinzhu/gorm/dialects/sqlite
+# github.com/jinzhu/inflection v1.0.0
+github.com/jinzhu/inflection
 # github.com/json-iterator/go v1.1.7
 github.com/json-iterator/go
 # github.com/juju/ratelimit v1.0.1
@@ -144,6 +149,8 @@ github.com/marten-seemann/qtls
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.3
 github.com/mattn/go-isatty
+# github.com/mattn/go-sqlite3 v1.10.0
+github.com/mattn/go-sqlite3
 # github.com/miekg/dns v1.0.14
 github.com/miekg/dns
 # github.com/mitchellh/go-homedir v1.0.0

@@ -1,9 +1,12 @@
-# gochat 是一个使用纯go实现的im系统 
+# gochat是一个使用纯go实现的im系统 
 
 # architecture design 
 
+
 # 依赖
 ```
+数据库：sqlite3 (可以根据实际业务场景替换成mysql或者其他数据库,在本项目中仅存储了用户id信息）
+数据库ORM：gorm 
 服务发现：etcd
 rpc通讯：rpcx
 ```
@@ -29,9 +32,29 @@ go build -o gochat.bin -tags=etcd main.go
 ./gochat.bin -module site
 ```
 
+# 使用docker一键启动 
+```
+如果你觉得以上步骤过于繁琐，你可以使用以下docker镜像构建所有依赖环境并快速启动一个聊天室
+1，docker pull 
+2，sh run.sh 
+3，访问
+```
+
+
 # 后续
-```markdown
-gochat实现了简单基本聊天室功能，由于作者精力有限，你可以在此基础上使用自己的业务逻辑定制一些需求，并优化一些gochat中的代码
+```
+gochat实现了简单聊天室功能，由于精力有限，你可以在此基础上使用自己的业务逻辑定制一些需求，并优化一些gochat中的代码
+发送缓存与接收缓存问题，关于tcp粘包的处理，报文头部指定消息size,读取指定size为一包，不足size继续读取直到满足完整一包
+```
+
+
+
+```sqlite
+create table user(
+  `id` INTEGER PRIMARY KEY autoincrement , -- '用户id'
+  `user_name` varchar(20) not null UNIQUE default '', -- '用户名'
+  `create_time` timestamp NOT NULL DEFAULT current_timestamp -- '创建时间'
+);
 ```
 
 ```markdown
