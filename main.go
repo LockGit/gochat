@@ -24,10 +24,10 @@ func main() {
 	flag.Parse()
 	fmt.Println(fmt.Sprintf("start run %s module", module))
 	switch module {
-	case "connect":
-		connect.New().Run()
 	case "logic":
 		logic.New().Run()
+	case "connect":
+		connect.New().Run()
 	case "task":
 		task.New().Run()
 	case "api":
