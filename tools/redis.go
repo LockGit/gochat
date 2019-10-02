@@ -8,11 +8,9 @@ package tools
 import (
 	"fmt"
 	"github.com/go-redis/redis"
-	"sync"
 	"time"
 )
 
-var once sync.Once
 var RedisClientMap = map[string]*redis.Client{}
 
 type RedisOption struct {

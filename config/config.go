@@ -19,6 +19,7 @@ var Conf *Config
 
 const (
 	SuccessReplyCode      = 0
+	FailReplyCode         = 1
 	SuccessReplyMsg       = "success"
 	QueueName             = "gochat_sub"
 	NoAuth                = "NoAuth"

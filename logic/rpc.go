@@ -8,14 +8,87 @@ package logic
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gochat/config"
+	"gochat/logic/dao"
 	"gochat/proto"
+	"gochat/tools"
 	"strconv"
 	"time"
 )
 
 type RpcLogic struct {
+}
+
+func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, reply *proto.RegisterReply) (err error) {
+	reply.Code = config.FailReplyCode
+	u := new(dao.User)
+	u.UserName = args.Name
+	userId, err := u.Add()
+	if err != nil {
+		logrus.Infof("register err:%s", err.Error())
+		return
+	}
+	//set token
+	authToken := tools.GetRandomToken("sess", 32)
+	err = RedisClient.Set(authToken, userId, 86400*time.Second).Err()
+	if err != nil {
+		logrus.Infof("register set redis token fail!")
+		return err
+	}
+	reply.Code = config.SuccessReplyCode
+	reply.AuthToken = authToken
+	return
+}
+
+func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply *proto.LoginResponse) (err error) {
+	reply.Code = config.FailReplyCode
+	u := new(dao.User)
+	userName := args.Name
+	data := u.CheckHaveUserName(userName)
+	if data.Id == 0 {
+		return errors.New("no this user!")
+	}
+	//set token
+	authToken := tools.CreateSessionId()
+	err = RedisClient.Set(authToken, data.Id, 86400*time.Second).Err()
+	if err != nil {
+		logrus.Infof("register set redis token fail!")
+		return err
+	}
+	reply.Code = config.SuccessReplyCode
+	reply.AuthToken = authToken
+	return
+}
+
+func (rpc *RpcLogic) CheckAuth(ctx context.Context, args *proto.CheckAuthRequest, reply *proto.CheckAuthResponse) (err error) {
+	reply.Code = config.FailReplyCode
+	authToken := args.AuthToken
+	sessionName := tools.GetSessionName(authToken)
+	var userId string
+	userId, err = RedisClient.Get(sessionName).Result()
+	if err != nil {
+		logrus.Infof("check auth fail!,token is:%s", authToken)
+		return err
+	}
+	reply.Code = config.SuccessReplyCode
+	intUserId, _ := strconv.Atoi(userId)
+	reply.UserId = intUserId
+	return
+}
+
+func (rpc *RpcLogic) Logout(ctx context.Context, args *proto.LogoutRequest, reply *proto.LogoutResponse) (err error) {
+	reply.Code = config.FailReplyCode
+	authToken := args.AuthToken
+	sessionName := tools.GetSessionName(authToken)
+	err = RedisClient.Del(sessionName).Err()
+	if err != nil {
+		logrus.Infof("logout error:%s", err.Error())
+		return err
+	}
+	reply.Code = config.SuccessReplyCode
+	return
 }
 
 func (rpc *RpcLogic) Connect(ctx context.Context, args *proto.ConnectRequest, reply *proto.ConnectReply) (err error) {

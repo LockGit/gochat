@@ -12,7 +12,7 @@ func New() *Chat {
 	return &Chat{}
 }
 
-//api server
+//api server,Also, you can use gin,echo ... framework wrap
 func (c *Chat) Run() {
 	//login
 	//register
