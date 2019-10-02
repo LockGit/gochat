@@ -8,6 +8,7 @@ package logic
 import (
 	"context"
 	"fmt"
+	"github.com/go-redis/redis"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gochat/config"
@@ -21,6 +22,17 @@ import (
 type RpcLogic struct {
 }
 
+var RedisSessClient *redis.Client
+
+func init() {
+	RedisSessClient = NewRedisSessClient()
+}
+
+// wrap
+func NewRedisSessClient() *redis.Client {
+	return RedisClient
+}
+
 func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, reply *proto.RegisterReply) (err error) {
 	reply.Code = config.FailReplyCode
 	u := new(dao.User)
@@ -32,7 +44,7 @@ func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, 
 	}
 	//set token
 	authToken := tools.GetRandomToken("sess", 32)
-	err = RedisClient.Set(authToken, userId, 86400*time.Second).Err()
+	err = RedisSessClient.Set(authToken, userId, 86400*time.Second).Err()
 	if err != nil {
 		logrus.Infof("register set redis token fail!")
 		return err
@@ -52,7 +64,7 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 	}
 	//set token
 	authToken := tools.CreateSessionId()
-	err = RedisClient.Set(authToken, data.Id, 86400*time.Second).Err()
+	err = RedisSessClient.Set(authToken, data.Id, 86400*time.Second).Err()
 	if err != nil {
 		logrus.Infof("register set redis token fail!")
 		return err
@@ -67,7 +79,7 @@ func (rpc *RpcLogic) CheckAuth(ctx context.Context, args *proto.CheckAuthRequest
 	authToken := args.AuthToken
 	sessionName := tools.GetSessionName(authToken)
 	var userId string
-	userId, err = RedisClient.Get(sessionName).Result()
+	userId, err = RedisSessClient.Get(sessionName).Result()
 	if err != nil {
 		logrus.Infof("check auth fail!,token is:%s", authToken)
 		return err
@@ -82,7 +94,7 @@ func (rpc *RpcLogic) Logout(ctx context.Context, args *proto.LogoutRequest, repl
 	reply.Code = config.FailReplyCode
 	authToken := args.AuthToken
 	sessionName := tools.GetSessionName(authToken)
-	err = RedisClient.Del(sessionName).Err()
+	err = RedisSessClient.Del(sessionName).Err()
 	if err != nil {
 		logrus.Infof("logout error:%s", err.Error())
 		return err
