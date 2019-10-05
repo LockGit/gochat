@@ -64,5 +64,8 @@ type Send struct {
 	Msg          string `json:"msg"`
 	FormUserId   string `json:"formUserId"`
 	FormUserName string `json:"formUserName"`
+	ToUserId     string `json:"toUserId"`
+	ToUserName   string `json:"toUserName"`
+	RoomId       int    `json:"roomId"`
 	Op           int    `json:"op"`
 }

@@ -7,6 +7,7 @@ package logic
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/pkg/errors"
@@ -43,8 +44,15 @@ func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, 
 		return
 	}
 	//set token
-	authToken := tools.GetRandomToken("sess", 32)
-	err = RedisSessClient.Set(authToken, userId, 86400*time.Second).Err()
+	logic := new(Logic)
+	authToken := logic.getUserKey(tools.GetRandomToken("sess", 32))
+	userData := make(map[string]interface{})
+	userData["UserId"] = userId
+	userData["UserName"] = args.Name
+	RedisSessClient.Do("MULTI")
+	RedisSessClient.HMSet(authToken, userData)
+	RedisSessClient.Expire(authToken, 86400*time.Second)
+	err = RedisSessClient.Do("EXEC").Err()
 	if err != nil {
 		logrus.Infof("register set redis token fail!")
 		return err
@@ -63,8 +71,17 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 		return errors.New("no this user!")
 	}
 	//set token
-	authToken := tools.CreateSessionId()
-	err = RedisSessClient.Set(authToken, data.Id, 86400*time.Second).Err()
+	//err = redis.HMSet(auth, userData)
+	logic := new(Logic)
+	authToken := logic.getUserKey(tools.CreateSessionId())
+	userData := make(map[string]interface{})
+	userData["UserId"] = data.Id
+	userData["UserName"] = data.UserName
+	RedisSessClient.Do("MULTI")
+	RedisSessClient.HMSet(authToken, userData)
+	RedisSessClient.Expire(authToken, 86400*time.Second)
+	err = RedisSessClient.Do("EXEC").Err()
+	//err = RedisSessClient.Set(authToken, data.Id, 86400*time.Second).Err()
 	if err != nil {
 		logrus.Infof("register set redis token fail!")
 		return err
@@ -103,23 +120,126 @@ func (rpc *RpcLogic) Logout(ctx context.Context, args *proto.LogoutRequest, repl
 	return
 }
 
+/**
+single send msg
+*/
+func (rpc *RpcLogic) Push(ctx context.Context, args *proto.Send, reply *proto.SuccessReply) (err error) {
+	reply.Code = config.FailReplyCode
+	sendData := args
+	var bodyBytes []byte
+	bodyBytes, err = json.Marshal(sendData)
+	if err != nil {
+		logrus.Errorf("logic,push msg fail,err:%s", err.Error())
+		return
+	}
+	logic := new(Logic)
+	userSidKey := logic.getUserKey(fmt.Sprintf("%s", sendData.ToUserId))
+	serverId := RedisSessClient.Get(userSidKey).Val()
+	var serverIdInt int
+	serverIdInt, err = strconv.Atoi(serverId)
+	if err != nil {
+		logrus.Errorf("logic,push parse int fail:%s", err.Error())
+		return
+	}
+	err = logic.RedisPublishChannel(serverIdInt, sendData.ToUserId, bodyBytes)
+	if err != nil {
+		logrus.Errorf("logic,redis publish err: %s", err.Error())
+		return
+	}
+	reply.Code = config.SuccessReplyCode
+	return
+}
+
+/**
+push msg to room
+*/
+func (rpc *RpcLogic) PushRoom(ctx context.Context, args *proto.Send, reply *proto.SuccessReply) (err error) {
+	reply.Code = config.FailReplyCode
+	sendData := args
+	roomId := sendData.RoomId
+	logic := new(Logic)
+	roomUserInfo := make(map[string]string)
+	roomUserKey := logic.getRoomUserKey(strconv.Itoa(roomId))
+	roomUserInfo, err = RedisClient.HGetAll(roomUserKey).Result()
+	if err != nil {
+		logrus.Errorf("logic,PushRoom redis hGetAll err:%s", err.Error())
+		return
+	}
+	var bodyBytes []byte
+	sendData.RoomId = roomId
+	sendData.Msg = args.Msg
+	sendData.FormUserId = args.FormUserId
+	sendData.FormUserName = args.FormUserName
+	sendData.Op = config.OpRoomInfoSend
+	bodyBytes, err = json.Marshal(sendData)
+	if err != nil {
+		logrus.Errorf("logic,PushRoom Marshal err:%s", err.Error())
+		return
+	}
+	err = logic.RedisPublishRoomInfo(roomId, len(roomUserInfo), roomUserInfo, bodyBytes)
+	if err != nil {
+		logrus.Errorf("logic,PushRoom err:%s", err.Error())
+		return
+	}
+	reply.Code = config.SuccessReplyCode
+	return
+}
+
+/**
+get room online person count
+*/
+func (rpc *RpcLogic) Count(ctx context.Context, args *proto.Send, reply *proto.SuccessReply) (err error) {
+	reply.Code = config.FailReplyCode
+	roomId := args.RoomId
+	logic := new(Logic)
+	var count int
+	count, err = RedisSessClient.Get(logic.getRoomOnlineCountKey(fmt.Sprintf("%d", roomId))).Int()
+	err = logic.RedisPushRoomCount(roomId, count)
+	if err != nil {
+		logrus.Errorf("logic,Count err:%s", err.Error())
+		return
+	}
+	reply.Code = config.SuccessReplyCode
+	return
+}
+
+/**
+get room info
+*/
+func (rpc *RpcLogic) GetRoomInfo(ctx context.Context, args *proto.Send, reply *proto.SuccessReply) (err error) {
+	reply.Code = config.FailReplyCode
+	logic := new(Logic)
+	roomId := args.RoomId
+	roomUserInfo := make(map[string]string)
+	roomUserKey := logic.getRoomUserKey(strconv.Itoa(roomId))
+	roomUserInfo, err = RedisClient.HGetAll(roomUserKey).Result()
+	err = logic.RedisPushRoomInfo(roomId, len(roomUserInfo), roomUserInfo)
+	if err != nil {
+		logrus.Errorf("logic,GetRoomInfo err:%s", err.Error())
+		return
+	}
+	reply.Code = config.SuccessReplyCode
+	return
+}
+
 func (rpc *RpcLogic) Connect(ctx context.Context, args *proto.ConnectRequest, reply *proto.ConnectReply) (err error) {
 	if args == nil {
 		logrus.Errorf("Connect() error(%v)", err)
 		return
 	}
 	logic := new(Logic)
-	key := logic.getKey(args.Auth)
+	key := logic.getUserKey(args.Auth)
 	userInfo, err := RedisClient.HGetAll(key).Result()
 	if err != nil {
-		logrus.Infof("RedisCli HGetAll key :%s , err:%s", key, err)
+		logrus.Infof("RedisCli HGetAll key :%s , err:%s", key, err.Error())
+		return err
 	}
 	reply.Uid = userInfo["UserId"]
 	roomUserKey := logic.getRoomUserKey(strconv.Itoa(args.RoomId))
 	if reply.Uid == "" {
 		reply.Uid = config.NoAuth
 	} else {
-		userKey := logic.getKey(reply.Uid)
+		userKey := logic.getUserKey(reply.Uid)
 		logrus.Infof("logic redis set userKey:%s, serverId : %s", userKey, args.ServerId)
 		validTime := config.RedisBaseValidTime * time.Second
 		err = RedisClient.Set(userKey, args.ServerId, validTime).Err()
@@ -153,7 +273,7 @@ func (rpc *RpcLogic) DisConnect(ctx context.Context, args *proto.DisConnectReque
 	if err != nil {
 		logrus.Warnf("RedisCli HGetAll roomUserInfo key:%s, err: %s", roomUserKey, err)
 	}
-	if err = logic.RedisPublishRoomInfo(args.RoomId, len(roomUserInfo), roomUserInfo); err != nil {
+	if err = logic.RedisPublishRoomInfo(args.RoomId, len(roomUserInfo), roomUserInfo, nil); err != nil {
 		logrus.Warnf("publish RedisPublishRoomCount err: %s", err.Error())
 		return
 	}

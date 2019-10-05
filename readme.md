@@ -3,12 +3,15 @@
 # architecture design 
 
 
-# 依赖
+# 组件
 ```
-数据库：sqlite3 (可以根据实际业务场景替换成mysql或者其他数据库,在本项目中仅存储了用户id信息）
+语言：golang
+数据库：sqlite3 (可以根据实际业务场景替换成mysql或者其他数据库,在本项目中为方便演示，使用sqlite替代大型关系型数据库，仅存储了用户id信息）
 数据库ORM：gorm 
 服务发现：etcd
 rpc通讯：rpcx
+队列:redis (方便演示使用redis，可以根据实际情况替换为kafka或者rabbitmq)
+缓存:redis 
 ```
 
 # 按照以下顺序启动各层
@@ -44,9 +47,15 @@ go build -o gochat.bin -tags=etcd main.go
 # 后续
 ```
 gochat实现了简单聊天室功能，由于精力有限，你可以在此基础上使用自己的业务逻辑定制一些需求，并优化一些gochat中的代码
-发送缓存与接收缓存问题，关于tcp粘包的处理，报文头部指定消息size,读取指定size为一包，不足size继续读取直到满足完整一包
+关于tcp粘包的处理，报文头部指定消息size,读取指定size为一包，不足size继续读取直到满足完整一包
 ```
 
+```
+cd db && sqlite3 gochat.sqlite3
+.tables
+消息id使用snowflakeId算法，此部分可以单独拆分成微服务，使其成为基础服务的一部分
+该算法实现，qps理论最高409.6w，互联网上没有哪一家公司可以达到这么高的并发，除非遭受DDOS攻击 
+```
 
 
 ```sqlite
