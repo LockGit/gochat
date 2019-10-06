@@ -44,7 +44,7 @@ func (c *Connect) InitLogicRpcClient() (err error) {
 	return
 }
 
-func (rpc *RpcLogic) connect(connReq *proto.ConnectRequest) (uid string, err error) {
+func (rpc *RpcLogic) Connect(connReq *proto.ConnectRequest) (uid string, err error) {
 	reply := &proto.ConnectReply{}
 	err = logicRpcClient.Call(context.Background(), "Connect", connReq, reply)
 	if err != nil {
@@ -55,7 +55,7 @@ func (rpc *RpcLogic) connect(connReq *proto.ConnectRequest) (uid string, err err
 	return
 }
 
-func (rpc *RpcLogic) disConnect(disConnReq *proto.DisConnectRequest) (err error) {
+func (rpc *RpcLogic) DisConnect(disConnReq *proto.DisConnectRequest) (err error) {
 	reply := &proto.DisConnectReply{}
 	if err = logicRpcClient.Call(context.Background(), "DisConnect", disConnReq, reply); err != nil {
 		logrus.Fatalf("failed to call: %v", err)
@@ -70,7 +70,7 @@ func (c *Connect) InitConnectRpcServer() (err error) {
 		if network, addr, err = tools.ParseNetwork(bind); err != nil {
 			logrus.Panicf("InitConnectRpcServer ParseNetwork error : %s", err)
 		}
-		logrus.Infof("connect start run at-->%s:%s", network, addr)
+		logrus.Infof("Connect start run at-->%s:%s", network, addr)
 		go c.createConnectRpcServer(network, addr)
 	}
 	return

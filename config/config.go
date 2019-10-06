@@ -39,6 +39,7 @@ type Config struct {
 	Connect ConnectConfig
 	Logic   LogicConfig
 	Task    TaskConfig
+	Api     ApiConfig
 }
 
 func init() {
@@ -78,11 +79,17 @@ func Init() {
 		if err != nil {
 			panic(err)
 		}
+		viper.SetConfigName("/api")
+		err = viper.MergeInConfig()
+		if err != nil {
+			panic(err)
+		}
 		Conf = new(Config)
 		viper.Unmarshal(&Conf.Common)
 		viper.Unmarshal(&Conf.Connect)
 		viper.Unmarshal(&Conf.Task)
 		viper.Unmarshal(&Conf.Logic)
+		viper.Unmarshal(&Conf.Api)
 	})
 }
 
@@ -92,6 +99,21 @@ func GetMode() string {
 		env = "dev"
 	}
 	return env
+}
+
+func GetGinRunMode() string {
+	env := GetMode()
+	//gin 有 debug,test,release 三种模式
+	if env == "dev" {
+		return "debug"
+	}
+	if env == "test" {
+		return "debug"
+	}
+	if env == "prod" {
+		return "release"
+	}
+	return "release"
 }
 
 type CommonEtcd struct {
@@ -178,4 +200,12 @@ type TaskBase struct {
 
 type TaskConfig struct {
 	TaskBase TaskBase `mapstructure:"task-base"`
+}
+
+type ApiBase struct {
+	ListenPort int `mapstructure:"listenPort"`
+}
+
+type ApiConfig struct {
+	ApiBase ApiBase `mapstructure:"api-base"`
 }

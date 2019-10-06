@@ -54,6 +54,13 @@ github.com/facebookgo/clock
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
+# github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3
+github.com/gin-contrib/sse
+# github.com/gin-gonic/gin v1.4.0
+github.com/gin-gonic/gin
+github.com/gin-gonic/gin/binding
+github.com/gin-gonic/gin/internal/json
+github.com/gin-gonic/gin/render
 # github.com/go-redis/redis v6.15.2+incompatible
 github.com/go-redis/redis
 github.com/go-redis/redis/internal
@@ -147,7 +154,7 @@ github.com/magiconair/properties
 github.com/marten-seemann/qtls
 # github.com/mattn/go-colorable v0.0.9
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.3
+# github.com/mattn/go-isatty v0.0.7
 github.com/mattn/go-isatty
 # github.com/mattn/go-sqlite3 v1.10.0
 github.com/mattn/go-sqlite3
@@ -215,6 +222,8 @@ github.com/templexxx/cpufeat
 github.com/templexxx/xor
 # github.com/tjfoc/gmsm v1.0.1
 github.com/tjfoc/gmsm/sm4
+# github.com/ugorji/go v1.1.4
+github.com/ugorji/go/codec
 # github.com/valyala/fastrand v1.0.0
 github.com/valyala/fastrand
 # github.com/vmihailenco/msgpack v4.0.4+incompatible
@@ -318,6 +327,8 @@ google.golang.org/grpc/credentials/internal
 google.golang.org/grpc/balancer/base
 google.golang.org/grpc/binarylog/grpc_binarylog_v1
 google.golang.org/grpc/internal/syscall
+# gopkg.in/go-playground/validator.v8 v8.18.2
+gopkg.in/go-playground/validator.v8
 # gopkg.in/redis.v5 v5.2.9
 gopkg.in/redis.v5
 gopkg.in/redis.v5/internal

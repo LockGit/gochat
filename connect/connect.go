@@ -22,7 +22,7 @@ func New() *Connect {
 }
 
 func (c *Connect) Run() {
-	// get connect layer config
+	// get Connect layer config
 	connectConfig := config.Conf.Connect
 
 	//set the maximum number of CPUs that can be executing
@@ -32,7 +32,7 @@ func (c *Connect) Run() {
 	if err := c.InitLogicRpcClient(); err != nil {
 		logrus.Panicf("InitLogicRpcClient err:%s", err.Error())
 	}
-	//init connect layer rpc server, logic client will call this
+	//init Connect layer rpc server, logic client will call this
 	Buckets := make([]*Bucket, connectConfig.ConnectBucket.CpuNum)
 	for i := 0; i < connectConfig.ConnectBucket.CpuNum; i++ {
 		Buckets[i] = NewBucket(BucketOptions{
@@ -53,13 +53,13 @@ func (c *Connect) Run() {
 		BroadcastSize:   512,
 	})
 
-	//init connect layer rpc server ,task layer will call this
+	//init Connect layer rpc server ,task layer will call this
 	if err := c.InitConnectRpcServer(); err != nil {
 		logrus.Panicf("InitConnectRpcServer Fatal error: %s \n", err)
 	}
 
-	//start connect layer server handler persistent connection
+	//start Connect layer server handler persistent connection
 	if err := c.InitWebsocket(); err != nil {
-		logrus.Panicf("connect layer InitWebsocket() error:  %s \n", err.Error())
+		logrus.Panicf("Connect layer InitWebsocket() error:  %s \n", err.Error())
 	}
 }

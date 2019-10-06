@@ -10,7 +10,7 @@ import (
 	"gochat/proto"
 )
 
-//in fact, Channel it's a user connect session
+//in fact, Channel it's a user Connect session
 type Channel struct {
 	Room      *Room
 	Next      *Channel

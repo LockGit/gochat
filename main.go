@@ -39,7 +39,6 @@ func main() {
 		return
 	}
 	fmt.Println(fmt.Sprintf("run %s module done!", module))
-
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGTSTP)
 	<-quit
