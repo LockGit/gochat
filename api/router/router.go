@@ -17,7 +17,7 @@ func Register() *gin.Engine {
 	initUserRouter(r)
 	initPushRouter(r)
 	r.NoRoute(func(c *gin.Context) {
-		tools.FailWithMsg(c, "请检测请求方法以及url是否正确!")
+		tools.FailWithMsg(c, "please check request url !")
 	})
 	return r
 }
