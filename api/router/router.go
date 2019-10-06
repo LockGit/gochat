@@ -20,10 +20,6 @@ func Register() *gin.Engine {
 		tools.FailWithMsg(c, "请检测请求方法以及url是否正确!")
 	})
 	return r
-	//Push
-	//PushRoom
-	//Count
-	//GetRoomInfo
 }
 
 func initUserRouter(r *gin.Engine) {
