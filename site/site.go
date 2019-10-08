@@ -5,6 +5,11 @@
  */
 package site
 
+import (
+	"github.com/sirupsen/logrus"
+	"net/http"
+)
+
 type Site struct {
 }
 
@@ -13,5 +18,5 @@ func New() *Site {
 }
 
 func (s *Site) Run() {
-
+	logrus.Fatal(http.ListenAndServe(":8080", http.FileServer(http.Dir("./"))))
 }

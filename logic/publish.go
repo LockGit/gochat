@@ -89,12 +89,12 @@ func (logic *Logic) RedisPublishChannel(serverId int, toUserId string, msg []byt
 	redisMsgStr, err := json.Marshal(redisMsg)
 	if err != nil {
 		logrus.Errorf("logic,RedisPublishChannel Marshal err:%s", err.Error())
-		return
+		return err
 	}
 	redisChannel := config.QueueName
 	if err := RedisClient.Publish(redisChannel, redisMsgStr).Err(); err != nil {
 		logrus.Errorf("logic,RedisPublishChannel err:%s", err.Error())
-		return
+		return err
 	}
 	return
 }
