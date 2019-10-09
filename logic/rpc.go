@@ -38,6 +38,7 @@ func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, 
 	reply.Code = config.FailReplyCode
 	u := new(dao.User)
 	u.UserName = args.Name
+	u.Password = args.Password
 	userId, err := u.Add()
 	if err != nil {
 		logrus.Infof("register err:%s", err.Error())
@@ -66,9 +67,10 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 	reply.Code = config.FailReplyCode
 	u := new(dao.User)
 	userName := args.Name
+	passWord := args.Password
 	data := u.CheckHaveUserName(userName)
-	if data.Id == 0 {
-		return errors.New("no this user!")
+	if (data.Id == 0) || (passWord != data.Password) {
+		return errors.New("no this user or password error!")
 	}
 	//set token
 	//err = redis.HMSet(auth, userData)

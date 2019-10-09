@@ -6,7 +6,8 @@
 package proto
 
 type LoginRequest struct {
-	Name string
+	Name     string
+	Password string
 }
 
 type LoginResponse struct {
@@ -15,7 +16,8 @@ type LoginResponse struct {
 }
 
 type RegisterRequest struct {
-	Name string
+	Name     string
+	Password string
 }
 
 type RegisterReply struct {

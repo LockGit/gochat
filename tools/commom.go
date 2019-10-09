@@ -7,7 +7,9 @@ package tools
 
 import (
 	"crypto/rand"
+	"crypto/sha1"
 	"encoding/base64"
+	"fmt"
 	"github.com/bwmarrin/snowflake"
 	"io"
 )
@@ -34,4 +36,11 @@ func CreateSessionId() string {
 
 func GetSessionName(authToken string) string {
 	return SessionPrefix + authToken
+}
+
+func Sha1(s string) (str string) {
+	h := sha1.New()
+	h.Write([]byte(s))
+	bs := h.Sum(nil)
+	return fmt.Sprintf("%x", bs)
 }
