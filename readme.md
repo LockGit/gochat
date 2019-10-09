@@ -62,6 +62,7 @@ cd db && sqlite3 gochat.sqlite3
 create table user(
   `id` INTEGER PRIMARY KEY autoincrement , -- '用户id'
   `user_name` varchar(20) not null UNIQUE default '', -- '用户名'
+  `password` char(40) not null default '', -- '密码'
   `create_time` timestamp NOT NULL DEFAULT current_timestamp -- '创建时间'
 );
 ```
