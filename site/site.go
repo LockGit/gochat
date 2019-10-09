@@ -22,5 +22,6 @@ func New() *Site {
 func (s *Site) Run() {
 	siteConfig := config.Conf.Site
 	port := siteConfig.SiteBase.ListenPort
-	logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), http.FileServer(http.Dir("./"))))
+	addr := fmt.Sprintf(":%d", port)
+	logrus.Fatal(http.ListenAndServe(addr, http.FileServer(http.Dir("./site/"))))
 }

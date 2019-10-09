@@ -85,6 +85,11 @@ func Init() {
 		if err != nil {
 			panic(err)
 		}
+		viper.SetConfigName("/site")
+		err = viper.MergeInConfig()
+		if err != nil {
+			panic(err)
+		}
 		Conf = new(Config)
 		viper.Unmarshal(&Conf.Common)
 		viper.Unmarshal(&Conf.Connect)
