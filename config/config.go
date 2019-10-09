@@ -40,6 +40,7 @@ type Config struct {
 	Logic   LogicConfig
 	Task    TaskConfig
 	Api     ApiConfig
+	Site    SiteConfig
 }
 
 func init() {
@@ -90,6 +91,7 @@ func Init() {
 		viper.Unmarshal(&Conf.Task)
 		viper.Unmarshal(&Conf.Logic)
 		viper.Unmarshal(&Conf.Api)
+		viper.Unmarshal(&Conf.Site)
 	})
 }
 
@@ -208,4 +210,12 @@ type ApiBase struct {
 
 type ApiConfig struct {
 	ApiBase ApiBase `mapstructure:"api-base"`
+}
+
+type SiteBase struct {
+	ListenPort int `mapstructure:"listenPort"`
+}
+
+type SiteConfig struct {
+	SiteBase SiteBase `mapstructure:"site-base"`
 }
