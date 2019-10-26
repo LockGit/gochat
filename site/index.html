@@ -6,8 +6,133 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Online Chat Room</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/chartroom.css">
+    <style>
+        body {
+            background-color: black;
+            background-image: radial-gradient(white, rgba(255, 255, 255, .2) 2px, transparent 40px),
+            radial-gradient(white, rgba(255, 255, 255, .15) 1px, transparent 30px),
+            radial-gradient(white, rgba(255, 255, 255, .1) 2px, transparent 40px),
+            radial-gradient(rgba(255, 255, 255, .4), rgba(255, 255, 255, .1) 2px, transparent 30px);
+            background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px;
+            background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
+        }
+
+        .image {
+            width: 50px;
+            height: 50px;
+        }
+
+        .m-room .g-left {
+            float: left;
+            width: 745px;
+            height: 100%;
+            box-sizing: border-box;
+            border-right: 1px solid #434e58;
+        }
+
+        .m-room .g-right {
+            float: right;
+            position: relative;
+            width: 257px;
+            height: 100%;
+        }
+
+        .image {
+            width: 50px;
+            height: 50px;
+        }
+    </style>
 </head>
 <body>
-    <p>Hello friend, gochat it's a im server . Writer By Golang !</p>
+<div class="m-head">
+    <div class="g-doc">
+        <div class="logo item">Live Chat Room</div>
+
+
+        <div class="info item">
+            <img src="/static/chat_head.jpg" alt="photo" id="avatar" class="image">
+            <!--a href="./roomManage.html" id="nickName">匿名</a-->
+            <span id="nickName"></span>
+            <a href="/login.html" id="chatroom-login" style="display: none;">Login</a>
+            <a id="chatroom-logout" onclick="logout()">Logout</a>
+        </div>
+
+    </div>
+</div>
+<div style="text-align: center;color: white;margin: 5px auto;font-size: 24px;">
+    Hello friend, gochat it's a im server . Writer By Golang !
+</div>
+<div class="g-doc">
+    <div class="m-room" id="room">
+        <div class="g-left">
+            <div class="info">
+                <div class="avatar">
+                    <img class="image" id="roomAvatar" src="/static/chat_head.jpg">
+                </div>
+                <div class="detail">
+                    <p class="title" id="roomTitle">gochat Live Room</p>
+                    <p class="desc">Anchor：<span id="roomCreator">gochat</span>&nbsp;&nbsp;Live User Count：<span
+                                id="roomOnlineMemberNum">-</span></p>
+                </div>
+            </div>
+            <div class="media" style="text-align: center;">
+                Play Some Video
+            </div>
+        </div>
+        <div class="g-right">
+            <div class="m-status hide" id="linkStatus">connect...</div>
+            <div class="announcement_title">
+                Live bulletin
+            </div>
+            <div class="announcement" id="roomAnnouncement">
+                <a href="https://github.com/LockGit/gochat" target="_blank">gochat github</a>
+                <br>
+                You are welcome to optimize it
+            </div>
+            <ul class="tab">
+                <li class="crt j-tab" data-value="chat" id="tab_chat" onclick="changeTab('chat')">Live interaction</li>
+                <li class="j-tab" data-value="member" id="tab_member" onclick="changeTab('member')">Members online</li>
+
+            </ul>
+            <div class="chat j-pannel j-chat" id="msg">
+
+            </div>
+
+            <div class="member j-pannel hide" id="member_list">
+                <div class="list j-member">
+                    <div class="j-guestList" id="member_info">
+                    </div>
+                </div>
+
+
+            </div>
+
+
+            <div id="chatroom-verified">
+                <div class="edit">
+                    <textarea class="editText" id="editText" placeholder=""></textarea>
+                </div>
+                <div class="sendBtn">
+                    <a class="u-btn btn" id="sentText" onclick="send()">Send</a>
+                    <a class="btn custom" id="customBtn"></a>
+                    <a class="btn emoji" id="emoji"></a>
+                </div>
+            </div>
+            <div id="chatroom-anonymous">
+                <em class="loginWarn">Login before sending the message</em>
+                <div class="loginBtn">
+                    <a href="/register.html" class="u-btn btn">Login or Register</a>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
+<script src="/js/jquery.min.js"></script>
+<script src="/js/chat.js"></script>

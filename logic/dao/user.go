@@ -44,3 +44,9 @@ func (u *User) CheckHaveUserName(userName string) (data User) {
 	dbIns.Table(u.TableName()).Where("user_name=?", userName).First(&data)
 	return
 }
+
+func (u *User) GetUserNameByUserId(userId int) (userName string) {
+	var data User
+	dbIns.Table(u.TableName()).Where("user_id=?", userId).First(&data)
+	return data.UserName
+}

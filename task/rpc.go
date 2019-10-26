@@ -39,10 +39,10 @@ func (task *Task) InitConnectRpcClient() (err error) {
 	return
 }
 
-func (task *Task) pushSingleToConnect(serverId int, userId string, msg []byte) {
+func (task *Task) pushSingleToConnect(serverId int, userId int, msg []byte) {
 	logrus.Infof("pushSingleToConnect Body %s", string(msg))
 	pushMsgReq := &proto.PushMsgRequest{
-		Uid: userId,
+		UserId: userId,
 		Msg: proto.Msg{
 			Ver:       config.MsgVersion,
 			Operation: config.OpSingleSend,

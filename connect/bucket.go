@@ -12,8 +12,8 @@ import (
 )
 
 type Bucket struct {
-	cLock         sync.RWMutex        // protect the channels for chs
-	chs           map[string]*Channel // map sub key to a channel
+	cLock         sync.RWMutex     // protect the channels for chs
+	chs           map[int]*Channel // map sub key to a channel
 	bucketOptions BucketOptions
 	rooms         map[int]*Room // bucket room channels
 	routines      []chan *proto.PushRoomMsgRequest
@@ -30,7 +30,7 @@ type BucketOptions struct {
 
 func NewBucket(bucketOptions BucketOptions) (b *Bucket) {
 	b = new(Bucket)
-	b.chs = make(map[string]*Channel, bucketOptions.ChannelSize)
+	b.chs = make(map[int]*Channel, bucketOptions.ChannelSize)
 	b.bucketOptions = bucketOptions
 	b.routines = make([]chan *proto.PushRoomMsgRequest, bucketOptions.RoutineAmount)
 	b.rooms = make(map[int]*Room, bucketOptions.RoomSize)
@@ -62,7 +62,7 @@ func (b *Bucket) Room(rid int) (room *Room) {
 	return
 }
 
-func (b *Bucket) Put(uid string, roomId int, ch *Channel) (err error) {
+func (b *Bucket) Put(userId int, roomId int, ch *Channel) (err error) {
 	var (
 		room *Room
 		ok   bool
@@ -75,8 +75,8 @@ func (b *Bucket) Put(uid string, roomId int, ch *Channel) (err error) {
 		}
 		ch.Room = room
 	}
-	ch.uid = uid
-	b.chs[uid] = ch
+	ch.userId = userId
+	b.chs[userId] = ch
 	b.cLock.Unlock()
 
 	if room != nil {
@@ -91,10 +91,10 @@ func (b *Bucket) DeleteChannel(ch *Channel) {
 		room *Room
 	)
 	b.cLock.RLock()
-	if ch, ok = b.chs[ch.uid]; ok {
-		room = b.chs[ch.uid].Room
+	if ch, ok = b.chs[ch.userId]; ok {
+		room = b.chs[ch.userId].Room
 		//delete from bucket
-		delete(b.chs, ch.uid)
+		delete(b.chs, ch.userId)
 	}
 	if room != nil && room.DeleteChannel(ch) {
 		// if room empty delete,will mark room.drop is true
@@ -105,9 +105,9 @@ func (b *Bucket) DeleteChannel(ch *Channel) {
 	b.cLock.RUnlock()
 }
 
-func (b *Bucket) Channel(uid string) (ch *Channel) {
+func (b *Bucket) Channel(userId int) (ch *Channel) {
 	b.cLock.RLock()
-	ch = b.chs[uid]
+	ch = b.chs[userId]
 	b.cLock.RUnlock()
 	return
 }

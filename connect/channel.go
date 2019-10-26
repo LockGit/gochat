@@ -16,7 +16,7 @@ type Channel struct {
 	Next      *Channel
 	Prev      *Channel
 	broadcast chan *proto.Msg
-	uid       string
+	userId    int
 	conn      *websocket.Conn
 }
 

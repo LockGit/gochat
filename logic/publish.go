@@ -79,7 +79,7 @@ func (logic *Logic) addRegistryPlugin(s *server.Server, network string, addr str
 	s.Plugins.Add(r)
 }
 
-func (logic *Logic) RedisPublishChannel(serverId int, toUserId string, msg []byte) (err error) {
+func (logic *Logic) RedisPublishChannel(serverId int, toUserId int, msg []byte) (err error) {
 	redisMsg := proto.RedisMsg{
 		Op:       config.OpSingleSend,
 		ServerId: serverId,

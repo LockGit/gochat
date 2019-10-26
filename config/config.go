@@ -110,7 +110,7 @@ func GetMode() string {
 
 func GetGinRunMode() string {
 	env := GetMode()
-	//gin 有 debug,test,release 三种模式
+	//gin have debug,test,release mode
 	if env == "dev" {
 		return "debug"
 	}

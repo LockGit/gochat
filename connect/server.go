@@ -7,6 +7,7 @@ package connect
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"gochat/config"
@@ -42,8 +43,9 @@ func NewServer(b []*Bucket, o Operator, options ServerOptions) *Server {
 }
 
 //reduce lock competition, use city hash insert to different bucket
-func (s *Server) Bucket(uid string) *Bucket {
-	idx := tools.CityHash32([]byte(uid), uint32(len(uid))) % s.bucketIdx
+func (s *Server) Bucket(userId int) *Bucket {
+	userIdStr := fmt.Sprintf("%d", userId)
+	idx := tools.CityHash32([]byte(userIdStr), uint32(len(userIdStr))) % s.bucketIdx
 	return s.Buckets[idx]
 }
 
@@ -90,10 +92,10 @@ func (s *Server) readPump(ch *Channel) {
 	defer func() {
 		disConnectRequest := new(proto.DisConnectRequest)
 		disConnectRequest.RoomId = ch.Room.Id
-		if ch.uid != "" {
-			disConnectRequest.Uid = ch.uid
+		if ch.userId != 0 {
+			disConnectRequest.UserId = ch.userId
 		}
-		s.Bucket(ch.uid).DeleteChannel(ch)
+		s.Bucket(ch.userId).DeleteChannel(ch)
 		if err := s.operator.DisConnect(disConnectRequest); err != nil {
 			logrus.Warnf("DisConnect err :%s", err.Error())
 		}
@@ -124,19 +126,19 @@ func (s *Server) readPump(ch *Channel) {
 			logrus.Errorf("message struct %b", connReq)
 		}
 		connReq.ServerId = config.Conf.Connect.ConnectBase.ServerId
-		uid, err := s.operator.Connect(connReq)
+		userId, err := s.operator.Connect(connReq)
 		if err != nil {
 			logrus.Errorf("s.operator.Connect error %s", err.Error())
 			return
 		}
-		if uid == "" {
-			logrus.Error("Invalid Auth ,uid empty")
+		if userId == 0 {
+			logrus.Error("Invalid Auth ,userId empty")
 			return
 		}
-		logrus.Infof("websocket rpc call return uid:%s,RoomId:%d", uid, connReq.RoomId)
-		b := s.Bucket(uid)
+		logrus.Infof("websocket rpc call return userId:%d,RoomId:%d", userId, connReq.RoomId)
+		b := s.Bucket(userId)
 		//insert into a bucket
-		err = b.Put(uid, connReq.RoomId, ch)
+		err = b.Put(userId, connReq.RoomId, ch)
 		if err != nil {
 			logrus.Errorf("conn close err: %s", err.Error())
 			ch.conn.Close()

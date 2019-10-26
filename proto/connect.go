@@ -13,8 +13,8 @@ type Msg struct {
 }
 
 type PushMsgRequest struct {
-	Uid string
-	Msg Msg
+	UserId int
+	Msg    Msg
 }
 
 type PushRoomMsgRequest struct {

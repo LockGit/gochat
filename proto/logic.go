@@ -15,6 +15,16 @@ type LoginResponse struct {
 	AuthToken string
 }
 
+type GetUserInfoRequest struct {
+	UserId int
+}
+
+type GetUserInfoResponse struct {
+	Code     int
+	UserId   int
+	UserName string
+}
+
 type RegisterRequest struct {
 	Name     string
 	Password string
@@ -38,8 +48,9 @@ type CheckAuthRequest struct {
 }
 
 type CheckAuthResponse struct {
-	Code   int
-	UserId int
+	Code     int
+	UserId   int
+	UserName string
 }
 
 type ConnectRequest struct {
@@ -49,12 +60,12 @@ type ConnectRequest struct {
 }
 
 type ConnectReply struct {
-	Uid string
+	UserId int
 }
 
 type DisConnectRequest struct {
 	RoomId int
-	Uid    string
+	UserId int
 }
 
 type DisConnectReply struct {
@@ -64,9 +75,9 @@ type DisConnectReply struct {
 type Send struct {
 	Code         int    `json:"code"`
 	Msg          string `json:"msg"`
-	FormUserId   string `json:"formUserId"`
-	FormUserName string `json:"formUserName"`
-	ToUserId     string `json:"toUserId"`
+	FromUserId   int    `json:"fromUserId"`
+	FromUserName string `json:"fromUserName"`
+	ToUserId     int    `json:"toUserId"`
 	ToUserName   string `json:"toUserName"`
 	RoomId       int    `json:"roomId"`
 	Op           int    `json:"op"`

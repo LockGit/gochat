@@ -9,7 +9,7 @@ type RedisMsg struct {
 	Op           int               `json:"op"`
 	ServerId     int               `json:"serverId,omitempty"`
 	RoomId       int               `json:"roomId,omitempty"`
-	UserId       string            `json:"userId,omitempty"`
+	UserId       int               `json:"userId,omitempty"`
 	Msg          []byte            `json:"msg"`
 	Count        int               `json:"count"`
 	RoomUserInfo map[string]string `json:"RoomUserInfo"`

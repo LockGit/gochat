@@ -25,7 +25,7 @@ import (
 var logicRpcClient client.XClient
 var once sync.Once
 
-type RpcLogic struct {
+type RpcConnect struct {
 }
 
 func (c *Connect) InitLogicRpcClient() (err error) {
@@ -44,18 +44,18 @@ func (c *Connect) InitLogicRpcClient() (err error) {
 	return
 }
 
-func (rpc *RpcLogic) Connect(connReq *proto.ConnectRequest) (uid string, err error) {
+func (rpc *RpcConnect) Connect(connReq *proto.ConnectRequest) (uid int, err error) {
 	reply := &proto.ConnectReply{}
 	err = logicRpcClient.Call(context.Background(), "Connect", connReq, reply)
 	if err != nil {
 		logrus.Fatalf("failed to call: %v", err)
 	}
-	uid = reply.Uid
-	logrus.Infof("comet logic uid :%s", reply.Uid)
+	uid = reply.UserId
+	logrus.Infof("comet logic userId :%s", reply.UserId)
 	return
 }
 
-func (rpc *RpcLogic) DisConnect(disConnReq *proto.DisConnectRequest) (err error) {
+func (rpc *RpcConnect) DisConnect(disConnReq *proto.DisConnectRequest) (err error) {
 	reply := &proto.DisConnectReply{}
 	if err = logicRpcClient.Call(context.Background(), "DisConnect", disConnReq, reply); err != nil {
 		logrus.Fatalf("failed to call: %v", err)
@@ -89,8 +89,8 @@ func (rpc *RpcConnectPush) PushSingleMsg(ctx context.Context, pushMsgReq *proto.
 		logrus.Errorf("rpc PushSingleMsg() args:(%v)", pushMsgReq)
 		return
 	}
-	bucket = DefaultServer.Bucket(pushMsgReq.Uid)
-	if channel = bucket.Channel(pushMsgReq.Uid); channel != nil {
+	bucket = DefaultServer.Bucket(pushMsgReq.UserId)
+	if channel = bucket.Channel(pushMsgReq.UserId); channel != nil {
 		err = channel.Push(&pushMsgReq.Msg)
 		logrus.Infof("DefaultServer Channel err nil ,args: %v", pushMsgReq)
 		return

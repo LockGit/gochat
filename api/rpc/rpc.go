@@ -20,6 +20,8 @@ var once sync.Once
 type RpcLogic struct {
 }
 
+var RpcLogicObj *RpcLogic
+
 func init() {
 	once.Do(func() {
 		d := client.NewEtcdV3Discovery(
@@ -29,9 +31,10 @@ func init() {
 			nil,
 		)
 		LogicRpcClient = client.NewXClient(config.Conf.Common.CommonEtcd.ServerPathLogic, client.Failtry, client.RandomSelect, d, client.DefaultOption)
+		RpcLogicObj = new(RpcLogic)
 	})
 	if LogicRpcClient == nil {
-		logrus.Errorf("get rpc client nil")
+		logrus.Errorf("get logic rpc client nil")
 	}
 }
 
@@ -51,11 +54,20 @@ func (rpc *RpcLogic) Register(req *proto.RegisterRequest) (code int, authToken s
 	return
 }
 
-func (rpc *RpcLogic) CheckAuth(req *proto.CheckAuthRequest) (code int, userId int) {
+func (rpc *RpcLogic) GetUserNameByUserId(req *proto.GetUserInfoRequest) (code int, userName string) {
+	reply := proto.GetUserInfoResponse{}
+	LogicRpcClient.Call(context.Background(), "GetUserInfoByUserId", req, reply)
+	code = reply.Code
+	userName = reply.UserName
+	return
+}
+
+func (rpc *RpcLogic) CheckAuth(req *proto.CheckAuthRequest) (code int, userId int, userName string) {
 	reply := proto.CheckAuthResponse{}
 	LogicRpcClient.Call(context.Background(), "CheckAuth", req, reply)
 	code = reply.Code
 	userId = reply.UserId
+	userName = reply.UserName
 	return
 }
 
