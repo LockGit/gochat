@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gochat/api/router"
+	"gochat/api/rpc"
 	"gochat/config"
 	"net/http"
 	"os"
@@ -29,6 +30,9 @@ func New() *Chat {
 
 //api server,Also, you can use gin,echo ... framework wrap
 func (c *Chat) Run() {
+	//init rpc client
+	rpc.InitLogicRpcClient()
+
 	r := router.Register()
 	runMode := config.GetGinRunMode()
 	logrus.Info("server start , now run mode is ", runMode)

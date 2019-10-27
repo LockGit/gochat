@@ -263,7 +263,7 @@ func (rpc *RpcLogic) Connect(ctx context.Context, args *proto.ConnectRequest, re
 		// add room user count ++
 		RedisClient.Incr(logic.getRoomOnlineCountKey(fmt.Sprintf("%d", args.RoomId)))
 	}
-	logrus.Infof("logic rpc uid:%s", reply.UserId)
+	logrus.Infof("logic rpc uid:%d", reply.UserId)
 	return
 }
 

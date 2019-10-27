@@ -22,7 +22,7 @@ type RpcLogic struct {
 
 var RpcLogicObj *RpcLogic
 
-func init() {
+func InitLogicRpcClient() {
 	once.Do(func() {
 		d := client.NewEtcdV3Discovery(
 			config.Conf.Common.CommonEtcd.BasePath,

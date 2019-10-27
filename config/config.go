@@ -22,7 +22,6 @@ const (
 	FailReplyCode         = 1
 	SuccessReplyMsg       = "success"
 	QueueName             = "gochat_sub"
-	NoAuth                = "NoAuth"
 	RedisBaseValidTime    = 86400
 	RedisPrefix           = "gochat_"
 	RedisRoomPrefix       = "gochat_room_"
