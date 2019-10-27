@@ -1,5 +1,3 @@
-let socketUrl = "ws://127.0.0.1:7000/ws";
-let apiUrl = "http://127.0.0.1:7070";
 let websocket = new WebSocket(socketUrl);
 $(document).ready(function () {
     let auth = getLocalStorage("authToken");
@@ -26,7 +24,7 @@ $(document).ready(function () {
             }
         },
         error: function () {
-            alert("异常！");
+            swal("异常！");
         }
     });
 
@@ -70,11 +68,11 @@ function getRoomInfo() {
         data: JSON.stringify(jsonData),
         success: function (result) {
             if (result.code != 0) {
-                alert("请求出错，请稍后重试！");
+                swal("请求出错，请稍后重试！");
             }
         },
         error: function () {
-            alert("异常！");
+            swal("异常！");
         }
     });
 }
@@ -93,24 +91,22 @@ function send() {
             if (result.code == 0) {
 
             } else {
-                alert("请先简单注册登录");
+                swal("请先简单注册登录");
                 window.location.href = "/register.html";
             }
         },
         error: function () {
-            alert("异常！");
+            swal("异常！");
         }
     });
 }
 
-function getLocalStorage(name) {
-    return localStorage.getItem(name);
-}
+
 
 function logout() {
     let jsonData = {authToken: getLocalStorage("authToken")};
     $.ajax({
-        type: "GET",
+        type: "POST",
         dataType: "json",
         url: apiUrl + "/user/logout",
         data: JSON.stringify(jsonData),
@@ -118,11 +114,11 @@ function logout() {
             if (result.code == 0) {
                 window.location.href = "/login.html";
             } else {
-                alert("请求出错，请稍后重试！");
+                swal("请求出错，请稍后重试！");
             }
         },
         error: function () {
-            alert("异常！");
+            swal("异常！");
         }
     });
 }

@@ -9,12 +9,11 @@
     <link rel="stylesheet" href="/css/bootstrap.min.css">
     <style>
         body {
-            background-color:black;
-            background-image:
-                    radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
-                    radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
-                    radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px),
-                    radial-gradient(rgba(255,255,255,.4), rgba(255,255,255,.1) 2px, transparent 30px);
+            background-color: black;
+            background-image: radial-gradient(white, rgba(255, 255, 255, .2) 2px, transparent 40px),
+            radial-gradient(white, rgba(255, 255, 255, .15) 1px, transparent 30px),
+            radial-gradient(white, rgba(255, 255, 255, .1) 2px, transparent 40px),
+            radial-gradient(rgba(255, 255, 255, .4), rgba(255, 255, 255, .1) 2px, transparent 30px);
             background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px;
             background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
         }
@@ -30,16 +29,20 @@
                     <h2>User Login</h2>
                 </div>
                 <div class="col-lg-12">
-                    <input type="text" class="form-control" name="username" placeholder="please input username" required autofocus/>
+                    <input type="text" class="form-control" id="username" name="username"
+                           placeholder="please input username" required
+                           autofocus/>
                 </div>
                 <div class="col-lg-12"></div>
                 <div class="col-lg-12">
-                    <input type="password" class="form-control" name="password" placeholder="please input password" required autofocus/>
+                    <input type="password" class="form-control" id="password" name="password"
+                           placeholder="please input password"
+                           required autofocus/>
                 </div>
                 <div class="col-lg-12"></div>
                 <div class="col-lg-12"></div>
                 <div class="col-lg-12">
-                    <input type="submit" class="btn btn-success col-lg-12" value="Login">
+                    <input type="submit" class="btn btn-success col-lg-12" value="Login" id="login">
                 </div>
                 <div class="col-lg-12 text-center" style="color: white;margin-top:10px;">
                     No account ! <a href="/register.html">Register</a>
@@ -52,3 +55,31 @@
 </body>
 </html>
 <script src="/js/jquery.min.js"></script>
+<script src="/js/sweetalert.min.js"></script>
+<script src="/js/common.js"></script>
+<script>
+    $(function () {
+        $("#login").on("click", function () {
+            let userName = $("#username").val();
+            let passWord = $("#password").val();
+            let jsonData = {userName: userName, passWord: passWord};
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: apiUrl + "/user/login",
+                data: JSON.stringify(jsonData),
+                success: function (result) {
+                    if (result.code == 0) {
+                        setLocalStorage("authToken", result.data)
+                        window.location.href = "/index.html";
+                    } else {
+                        swal("请求出错，请稍后重试！");
+                    }
+                },
+                error: function () {
+                    swal("异常！");
+                }
+            });
+        });
+    })
+</script>
