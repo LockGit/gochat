@@ -24,7 +24,7 @@ $(document).ready(function () {
             }
         },
         error: function () {
-            swal("异常！");
+            swal("sorry, exception！");
         }
     });
 
@@ -68,11 +68,11 @@ function getRoomInfo() {
         data: JSON.stringify(jsonData),
         success: function (result) {
             if (result.code != 0) {
-                swal("请求出错，请稍后重试！");
+                swal("request error，please try again later！");
             }
         },
         error: function () {
-            swal("异常！");
+            swal("sorry, exception！");
         }
     });
 }
@@ -89,18 +89,17 @@ function send() {
         data: JSON.stringify(jsonData),
         success: function (result) {
             if (result.code == 0) {
-
+                // send ok
             } else {
-                swal("请先简单注册登录");
+                swal("please login or register account!");
                 window.location.href = "/register.html";
             }
         },
         error: function () {
-            swal("异常！");
+            swal("sorry, exception！");
         }
     });
 }
-
 
 
 function logout() {
@@ -114,11 +113,11 @@ function logout() {
             if (result.code == 0) {
                 window.location.href = "/login.html";
             } else {
-                swal("请求出错，请稍后重试！");
+                swal("request error，please try again later！");
             }
         },
         error: function () {
-            swal("异常！");
+            swal("sorry, exception！");
         }
     });
 }
