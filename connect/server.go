@@ -90,9 +90,13 @@ func (s *Server) writePump(ch *Channel) {
 
 func (s *Server) readPump(ch *Channel) {
 	defer func() {
-		if ch.Room.Id == 0 || ch.userId == 0 {
+		logrus.Infof("start exec disConnect ...")
+		if ch.Room == nil || ch.userId == 0 {
+			logrus.Infof("roomId and userId eq 0")
+			ch.conn.Close()
 			return
 		}
+		logrus.Infof("exec disConnect ...")
 		disConnectRequest := new(proto.DisConnectRequest)
 		disConnectRequest.RoomId = ch.Room.Id
 		disConnectRequest.UserId = ch.userId

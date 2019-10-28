@@ -109,8 +109,11 @@ func (rpc *RpcLogic) CheckAuth(ctx context.Context, args *proto.CheckAuthRequest
 	var userDataMap = map[string]string{}
 	userDataMap, err = RedisSessClient.HGetAll(sessionName).Result()
 	if err != nil {
-		logrus.Infof("check auth fail!,token is:%s", authToken)
+		logrus.Infof("check auth fail!,authToken is:%s", authToken)
 		return err
+	}
+	if len(userDataMap) == 0 {
+		return errors.New(fmt.Sprintf("no this user session,authToken is:%s", authToken))
 	}
 	intUserId, _ := strconv.Atoi(userDataMap["userId"])
 	reply.UserId = intUserId
@@ -178,6 +181,9 @@ func (rpc *RpcLogic) PushRoom(ctx context.Context, args *proto.Send, reply *prot
 		logrus.Errorf("logic,PushRoom redis hGetAll err:%s", err.Error())
 		return
 	}
+	if len(roomUserInfo) == 0 {
+		return errors.New("no this user")
+	}
 	var bodyBytes []byte
 	sendData.RoomId = roomId
 	sendData.Msg = args.Msg
@@ -226,6 +232,9 @@ func (rpc *RpcLogic) GetRoomInfo(ctx context.Context, args *proto.Send, reply *p
 	roomUserInfo := make(map[string]string)
 	roomUserKey := logic.getRoomUserKey(strconv.Itoa(roomId))
 	roomUserInfo, err = RedisClient.HGetAll(roomUserKey).Result()
+	if len(roomUserInfo) == 0 {
+		return errors.New("getRoomInfo no this user")
+	}
 	err = logic.RedisPushRoomInfo(roomId, len(roomUserInfo), roomUserInfo)
 	if err != nil {
 		logrus.Errorf("logic,GetRoomInfo err:%s", err.Error())
@@ -246,6 +255,9 @@ func (rpc *RpcLogic) Connect(ctx context.Context, args *proto.ConnectRequest, re
 	if err != nil {
 		logrus.Infof("RedisCli HGetAll key :%s , err:%s", key, err.Error())
 		return err
+	}
+	if len(userInfo) == 0 {
+		return errors.New("connect no session")
 	}
 	reply.UserId, _ = strconv.Atoi(userInfo["UserId"])
 	roomUserKey := logic.getRoomUserKey(strconv.Itoa(args.RoomId))
@@ -285,6 +297,9 @@ func (rpc *RpcLogic) DisConnect(ctx context.Context, args *proto.DisConnectReque
 	roomUserInfo, err := RedisClient.HGetAll(roomUserKey).Result()
 	if err != nil {
 		logrus.Warnf("RedisCli HGetAll roomUserInfo key:%s, err: %s", roomUserKey, err)
+	}
+	if len(roomUserInfo) == 0 {
+		return errors.New("DisConnect no this user")
 	}
 	if err = logic.RedisPublishRoomInfo(args.RoomId, len(roomUserInfo), roomUserInfo, nil); err != nil {
 		logrus.Warnf("publish RedisPublishRoomCount err: %s", err.Error())
