@@ -70,14 +70,14 @@
                 data: JSON.stringify(jsonData),
                 success: function (result) {
                     if (result.code == 0) {
-                        setLocalStorage("authToken", result.data)
+                        setLocalStorage("authToken", result.data);
                         window.location.href = "/index.html";
                     } else {
-                        swal("请求出错，请稍后重试！");
+                        swal("login error!");
                     }
                 },
                 error: function () {
-                    swal("异常！");
+                    swal("exception！");
                 }
             });
         });
