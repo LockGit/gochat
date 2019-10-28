@@ -127,6 +127,10 @@ func (s *Server) readPump(ch *Channel) {
 		if err := json.Unmarshal([]byte(message), &connReq); err != nil {
 			logrus.Errorf("message struct %b", connReq)
 		}
+		if connReq.AuthToken == "" {
+			logrus.Errorf("s.operator.Connect no authToken,error %s", err.Error())
+			return
+		}
 		connReq.ServerId = config.Conf.Connect.ConnectBase.ServerId
 		userId, err := s.operator.Connect(connReq)
 		if err != nil {
