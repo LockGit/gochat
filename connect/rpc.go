@@ -51,7 +51,7 @@ func (rpc *RpcConnect) Connect(connReq *proto.ConnectRequest) (uid int, err erro
 		logrus.Fatalf("failed to call: %v", err)
 	}
 	uid = reply.UserId
-	logrus.Infof("comet logic userId :%s", reply.UserId)
+	logrus.Infof("connect logic userId :%d", reply.UserId)
 	return
 }
 

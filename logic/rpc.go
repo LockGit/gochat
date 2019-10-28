@@ -241,7 +241,7 @@ func (rpc *RpcLogic) Connect(ctx context.Context, args *proto.ConnectRequest, re
 		return
 	}
 	logic := new(Logic)
-	key := logic.getUserKey(args.Auth)
+	key := logic.getUserKey(args.AuthToken)
 	userInfo, err := RedisClient.HGetAll(key).Result()
 	if err != nil {
 		logrus.Infof("RedisCli HGetAll key :%s , err:%s", key, err.Error())

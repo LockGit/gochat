@@ -90,11 +90,13 @@ func (s *Server) writePump(ch *Channel) {
 
 func (s *Server) readPump(ch *Channel) {
 	defer func() {
+		if ch.Room.Id == 0 || ch.userId == 0 {
+			ch.conn.Close()
+			return
+		}
 		disConnectRequest := new(proto.DisConnectRequest)
 		disConnectRequest.RoomId = ch.Room.Id
-		if ch.userId != 0 {
-			disConnectRequest.UserId = ch.userId
-		}
+		disConnectRequest.UserId = ch.userId
 		s.Bucket(ch.userId).DeleteChannel(ch)
 		if err := s.operator.DisConnect(disConnectRequest); err != nil {
 			logrus.Warnf("DisConnect err :%s", err.Error())
@@ -132,7 +134,7 @@ func (s *Server) readPump(ch *Channel) {
 			return
 		}
 		if userId == 0 {
-			logrus.Error("Invalid Auth ,userId empty")
+			logrus.Error("Invalid AuthToken ,userId empty")
 			return
 		}
 		logrus.Infof("websocket rpc call return userId:%d,RoomId:%d", userId, connReq.RoomId)
