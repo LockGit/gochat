@@ -22,6 +22,7 @@ import (
 )
 
 var RedisClient *redis.Client
+var RedisSessClient *redis.Client
 
 func (logic *Logic) InitPublishRedisClient() (err error) {
 	redisOpt := tools.RedisOption{
@@ -33,6 +34,8 @@ func (logic *Logic) InitPublishRedisClient() (err error) {
 	if pong, err := RedisClient.Ping().Result(); err != nil {
 		logrus.Infof("RedisCli Ping Result pong: %s,  err: %s", pong, err)
 	}
+	//this can change use another redis save session data
+	RedisSessClient = RedisClient
 	return err
 }
 

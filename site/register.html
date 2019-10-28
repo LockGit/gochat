@@ -22,7 +22,7 @@
 <body>
 
 <div style="width: 450px;margin: 200px auto;">
-    <form action="/login/doLogin" method="post">
+    <form action="#" method="post">
         <div class="mycenter">
             <div class="mysign">
                 <div class="col-lg-12 text-center text-info">
@@ -42,7 +42,7 @@
                 <div class="col-lg-12"></div>
                 <div class="col-lg-12"></div>
                 <div class="col-lg-12">
-                    <input type="submit" class="btn btn-success col-lg-12" value="Register" id="register">
+                    <input type="button" class="btn btn-success col-lg-12" value="Register" id="register">
                 </div>
                 <div class="col-lg-12 text-center" style="color: white;margin-top:10px;">
                     Already have account ! <a href="/login.html">Login</a>
@@ -70,14 +70,14 @@
                 data: JSON.stringify(jsonData),
                 success: function (result) {
                     if (result.code == 0) {
-                        setLocalStorage("authToken", result.data)
+                        setLocalStorage("authToken", result.data);
                         window.location.href = "/index.html";
                     } else {
-                        swal("请求出错，请稍后重试！");
+                        swal("register error！");
                     }
                 },
                 error: function () {
-                    swal("异常！");
+                    swal("register exception！");
                 }
             });
         });

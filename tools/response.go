@@ -25,7 +25,7 @@ var MsgCodeMap = map[int]string{
 }
 
 func SuccessWithMsg(c *gin.Context, msg interface{}, data interface{}) {
-	ResponseWithCode(c, CodeSuccess, msg, nil)
+	ResponseWithCode(c, CodeSuccess, msg, data)
 }
 
 func FailWithMsg(c *gin.Context, msg interface{}) {

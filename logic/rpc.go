@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-redis/redis"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gochat/config"
@@ -21,17 +20,6 @@ import (
 )
 
 type RpcLogic struct {
-}
-
-var RedisSessClient *redis.Client
-
-func init() {
-	RedisSessClient = NewRedisSessClient()
-}
-
-// wrap
-func NewRedisSessClient() *redis.Client {
-	return RedisClient
 }
 
 func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, reply *proto.RegisterReply) (err error) {
@@ -47,8 +35,8 @@ func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, 
 	//set token
 	authToken := tools.CreateSessionId()
 	userData := make(map[string]interface{})
-	userData["UserId"] = userId
-	userData["UserName"] = args.Name
+	userData["userId"] = userId
+	userData["userName"] = args.Name
 	RedisSessClient.Do("MULTI")
 	RedisSessClient.HMSet(authToken, userData)
 	RedisSessClient.Expire(authToken, 86400*time.Second)
@@ -75,8 +63,8 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 	//err = redis.HMSet(auth, userData)
 	authToken := tools.CreateSessionId()
 	userData := make(map[string]interface{})
-	userData["UserId"] = data.Id
-	userData["UserName"] = data.UserName
+	userData["userId"] = data.Id
+	userData["userName"] = data.UserName
 	RedisSessClient.Do("MULTI")
 	RedisSessClient.HMSet(authToken, userData)
 	RedisSessClient.Expire(authToken, 86400*time.Second)
@@ -113,7 +101,8 @@ func (rpc *RpcLogic) CheckAuth(ctx context.Context, args *proto.CheckAuthRequest
 		return err
 	}
 	if len(userDataMap) == 0 {
-		return errors.New(fmt.Sprintf("no this user session,authToken is:%s", authToken))
+		logrus.Infof("no this user session,authToken is:%s", authToken)
+		return
 	}
 	intUserId, _ := strconv.Atoi(userDataMap["userId"])
 	reply.UserId = intUserId
@@ -246,20 +235,22 @@ func (rpc *RpcLogic) GetRoomInfo(ctx context.Context, args *proto.Send, reply *p
 
 func (rpc *RpcLogic) Connect(ctx context.Context, args *proto.ConnectRequest, reply *proto.ConnectReply) (err error) {
 	if args == nil {
-		logrus.Errorf("Connect() error(%v)", err)
+		logrus.Errorf("logic,connect args empty")
 		return
 	}
 	logic := new(Logic)
 	key := logic.getUserKey(args.AuthToken)
+	logrus.Infof("logic,authToken is:%s", args.AuthToken)
 	userInfo, err := RedisClient.HGetAll(key).Result()
 	if err != nil {
 		logrus.Infof("RedisCli HGetAll key :%s , err:%s", key, err.Error())
 		return err
 	}
 	if len(userInfo) == 0 {
-		return errors.New("connect no session")
+		reply.UserId = 0
+		return
 	}
-	reply.UserId, _ = strconv.Atoi(userInfo["UserId"])
+	reply.UserId, _ = strconv.Atoi(userInfo["userId"])
 	roomUserKey := logic.getRoomUserKey(strconv.Itoa(args.RoomId))
 	if reply.UserId == 0 {
 		reply.UserId = 0
@@ -271,11 +262,11 @@ func (rpc *RpcLogic) Connect(ctx context.Context, args *proto.ConnectRequest, re
 		if err != nil {
 			logrus.Warnf("logic set err:%s", err)
 		}
-		RedisClient.HSet(roomUserKey, fmt.Sprintf("%d", reply.UserId), userInfo["UserName"])
+		RedisClient.HSet(roomUserKey, fmt.Sprintf("%d", reply.UserId), userInfo["userName"])
 		// add room user count ++
 		RedisClient.Incr(logic.getRoomOnlineCountKey(fmt.Sprintf("%d", args.RoomId)))
 	}
-	logrus.Infof("logic rpc uid:%d", reply.UserId)
+	logrus.Infof("logic rpc userId:%d", reply.UserId)
 	return
 }
 

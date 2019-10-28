@@ -27,7 +27,7 @@ func GetSnowflakeId() string {
 func GetRandomToken(prefix string, length int) string {
 	r := make([]byte, length)
 	io.ReadFull(rand.Reader, r)
-	return prefix + "_" + base64.URLEncoding.EncodeToString(r)
+	return prefix + base64.URLEncoding.EncodeToString(r)
 }
 
 func CreateSessionId() string {
