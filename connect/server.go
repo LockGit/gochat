@@ -91,7 +91,6 @@ func (s *Server) writePump(ch *Channel) {
 func (s *Server) readPump(ch *Channel) {
 	defer func() {
 		if ch.Room.Id == 0 || ch.userId == 0 {
-			ch.conn.Close()
 			return
 		}
 		disConnectRequest := new(proto.DisConnectRequest)
@@ -125,10 +124,10 @@ func (s *Server) readPump(ch *Channel) {
 		var connReq *proto.ConnectRequest
 		logrus.Infof("get a message :%s", message)
 		if err := json.Unmarshal([]byte(message), &connReq); err != nil {
-			logrus.Errorf("message struct %b", connReq)
+			logrus.Errorf("message struct %+v", connReq)
 		}
 		if connReq.AuthToken == "" {
-			logrus.Errorf("s.operator.Connect no authToken,error %s", err.Error())
+			logrus.Errorf("s.operator.Connect no authToken")
 			return
 		}
 		connReq.ServerId = config.Conf.Connect.ConnectBase.ServerId
