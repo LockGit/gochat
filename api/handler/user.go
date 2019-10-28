@@ -29,7 +29,7 @@ func Login(c *gin.Context) {
 		Password: tools.Sha1(formLogin.Password),
 	}
 	code, authToken := rpc.RpcLogicObj.Login(req)
-	if code == tools.CodeFail {
+	if code == tools.CodeFail || authToken == "" {
 		tools.FailWithMsg(c, "login fail")
 		return
 	}

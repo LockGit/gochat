@@ -18,10 +18,10 @@ const (
 )
 
 var MsgCodeMap = map[int]string{
-	CodeUnknownError: "未知错误",
-	CodeSuccess:      "操作成功",
-	CodeFail:         "操作失败",
-	CodeSessionError: "Session错误",
+	CodeUnknownError: "unKnow error",
+	CodeSuccess:      "success",
+	CodeFail:         "fail",
+	CodeSessionError: "Session error",
 }
 
 func SuccessWithMsg(c *gin.Context, msg interface{}, data interface{}) {
