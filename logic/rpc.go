@@ -259,7 +259,7 @@ func (rpc *RpcLogic) Connect(ctx context.Context, args *proto.ConnectRequest, re
 		reply.UserId = 0
 	} else {
 		userKey := logic.getUserKey(fmt.Sprintf("%d", reply.UserId))
-		logrus.Infof("logic redis set userKey:%s, serverId : %s", userKey, args.ServerId)
+		logrus.Infof("logic redis set userKey:%s, serverId : %d", userKey, args.ServerId)
 		validTime := config.RedisBaseValidTime * time.Second
 		err = RedisClient.Set(userKey, args.ServerId, validTime).Err()
 		if err != nil {

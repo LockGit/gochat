@@ -45,8 +45,7 @@ $(document).ready(function () {
         } else if (data.op == 4) {
             // get room user count
             $("#roomOnlineMemberNum").text(data.count);
-        } else if (data.op == 5) {
-            // get room user list
+
             $('#member_info').html("");
             let member = document.getElementById("member_info");
             let innerInfoArr = [];
@@ -54,7 +53,10 @@ $(document).ready(function () {
                 let item = '<div class="item" data-id="' + k + '"><div class="avatar"><img src="/static/chat_head.jpg"> </div> <div class="nick">' + data.roomUserInfo[k] + '</div> </div>';
                 innerInfoArr.push(item)
             }
-            member.innerHTML = innerInfoArr.join("");
+            $('#member_info').html(innerInfoArr.join(""));
+        } else if (data.op == 5) {
+            // get room user list
+
         }
     };
 });
