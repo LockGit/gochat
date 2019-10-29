@@ -47,7 +47,6 @@ $(document).ready(function () {
             $("#roomOnlineMemberNum").text(data.count);
 
             $('#member_info').html("");
-            let member = document.getElementById("member_info");
             let innerInfoArr = [];
             for (let k in data.roomUserInfo) {
                 let item = '<div class="item" data-id="' + k + '"><div class="avatar"><img src="/static/chat_head.jpg"> </div> <div class="nick">' + data.roomUserInfo[k] + '</div> </div>';
