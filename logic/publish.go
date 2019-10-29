@@ -109,7 +109,7 @@ func (logic *Logic) RedisPublishRoomInfo(roomId int, count int, RoomUserInfo map
 		Count:        count,
 		Msg:          msg,
 		RoomUserInfo: RoomUserInfo,
-		CreateTime:   time.Now(),
+		CreateTime:   tools.GetNowDateTime(),
 	}
 	redisMsgByte, err := json.Marshal(redisMsg)
 	if err != nil {

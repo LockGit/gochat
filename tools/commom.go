@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/snowflake"
 	"io"
+	"time"
 )
 
 const SessionPrefix = "sess_"
@@ -43,4 +44,8 @@ func Sha1(s string) (str string) {
 	h.Write([]byte(s))
 	bs := h.Sum(nil)
 	return fmt.Sprintf("%x", bs)
+}
+
+func GetNowDateTime() string {
+	return time.Unix(time.Now().Unix(), 0).Format("2006-01-02 15:04:05")
 }

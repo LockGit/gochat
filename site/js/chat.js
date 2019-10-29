@@ -40,7 +40,7 @@ $(document).ready(function () {
         let data = JSON.parse(evt.data);
         if (data.op == 3) {
             // send msg to room
-            let innerInfo = '<div class="item" ><p class="nick guest j-nick " data-role="guest" data-account="">' + data.fromUserName + '</p><p class="text">' + data.msg + '</p></div>';
+            let innerInfo = '<div class="item" ><p class="nick guest j-nick " data-role="guest" data-account="">' + data.fromUserName + '(' + data.createTime + ')</p><p class="text">' + data.msg + '</p></div>';
             msg.innerHTML += innerInfo + '<br>';
         } else if (data.op == 4) {
             // get room user count

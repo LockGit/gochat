@@ -5,8 +5,6 @@
  */
 package proto
 
-import "time"
-
 type RedisMsg struct {
 	Op           int               `json:"op"`
 	ServerId     int               `json:"serverId,omitempty"`
@@ -15,7 +13,7 @@ type RedisMsg struct {
 	Msg          []byte            `json:"msg"`
 	Count        int               `json:"count"`
 	RoomUserInfo map[string]string `json:"roomUserInfo"`
-	CreateTime   time.Time         `json:"createTime"`
+	CreateTime   string            `json:"createTime"`
 }
 
 type RedisRoomInfo struct {
