@@ -39,13 +39,14 @@ $(document).ready(function () {
     websocket.onmessage = function (evt) {
         let data = JSON.parse(evt.data);
         if (data.op == 3) {
-            // send to room
+            // send msg to room
             let innerInfo = '<div class="item" ><p class="nick guest j-nick " data-role="guest" data-account="">' + data.fromUserName + '</p><p class="text">' + data.msg + '</p></div>';
             msg.innerHTML += innerInfo + '<br>';
         } else if (data.op == 4) {
             // get room user count
             $("#roomOnlineMemberNum").text(data.count);
-
+        } else if (data.op == 5) {
+            // get room user list
             $('#member_info').html("");
             let innerInfoArr = [];
             for (let k in data.roomUserInfo) {
@@ -53,9 +54,6 @@ $(document).ready(function () {
                 innerInfoArr.push(item)
             }
             $('#member_info').html(innerInfoArr.join(""));
-        } else if (data.op == 5) {
-            // get room user list
-
         }
     };
 });
@@ -66,6 +64,25 @@ function getRoomInfo() {
         type: "POST",
         dataType: "json",
         url: apiUrl + "/push/getRoomInfo",
+        data: JSON.stringify(jsonData),
+        success: function (result) {
+            if (result.code != 0) {
+                swal("request error，please try again later！");
+            }
+        },
+        error: function () {
+            swal("sorry, exception！");
+        }
+    });
+}
+
+
+function getRoomUserCount() {
+    let jsonData = {roomId: 1, authToken: getLocalStorage("authToken")};
+    $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: apiUrl + "/push/count",
         data: JSON.stringify(jsonData),
         success: function (result) {
             if (result.code != 0) {
@@ -134,5 +151,7 @@ function changeTab(type) {
         document.getElementById("tab_member").className = "crt j-tab";
         document.getElementById("member_list").className = "member j-pannel";
         document.getElementById("msg").className = "chat j-pannel j-chat hide";
+        getRoomInfo();
+        getRoomUserCount();
     }
 }

@@ -42,7 +42,7 @@ func NewServer(b []*Bucket, o Operator, options ServerOptions) *Server {
 	return s
 }
 
-//reduce lock competition, use city hash insert to different bucket
+//reduce lock competition, use google city hash insert to different bucket
 func (s *Server) Bucket(userId int) *Bucket {
 	userIdStr := fmt.Sprintf("%d", userId)
 	idx := tools.CityHash32([]byte(userIdStr), uint32(len(userIdStr))) % s.bucketIdx

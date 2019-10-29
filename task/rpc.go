@@ -92,7 +92,7 @@ func (task *Task) broadcastRoomCountToConnect(roomId, count int) {
 		RoomId: roomId,
 		Msg: proto.Msg{
 			Ver:       config.MsgVersion,
-			Operation: config.OpRoomSend,
+			Operation: config.OpRoomCountSend,
 			SeqId:     tools.GetSnowflakeId(),
 			Body:      body,
 		},
@@ -108,7 +108,7 @@ func (task *Task) broadcastRoomCountToConnect(roomId, count int) {
 func (task *Task) broadcastRoomInfoToConnect(roomId int, roomUserInfo map[string]string) {
 	msg := &proto.RedisRoomInfo{
 		Count:        len(roomUserInfo),
-		Op:           config.OpRoomCountSend,
+		Op:           config.OpRoomInfoSend,
 		RoomUserInfo: roomUserInfo,
 		RoomId:       roomId,
 	}
@@ -122,7 +122,7 @@ func (task *Task) broadcastRoomInfoToConnect(roomId int, roomUserInfo map[string
 		RoomId: roomId,
 		Msg: proto.Msg{
 			Ver:       config.MsgVersion,
-			Operation: config.OpRoomSend,
+			Operation: config.OpRoomInfoSend,
 			SeqId:     tools.GetSnowflakeId(),
 			Body:      body,
 		},
