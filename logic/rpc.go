@@ -172,9 +172,9 @@ func (rpc *RpcLogic) PushRoom(ctx context.Context, args *proto.Send, reply *prot
 		logrus.Errorf("logic,PushRoom redis hGetAll err:%s", err.Error())
 		return
 	}
-	if len(roomUserInfo) == 0 {
-		return errors.New("no this user")
-	}
+	//if len(roomUserInfo) == 0 {
+	//	return errors.New("no this user")
+	//}
 	var bodyBytes []byte
 	sendData.RoomId = roomId
 	sendData.Msg = args.Msg
