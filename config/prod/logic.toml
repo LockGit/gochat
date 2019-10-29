@@ -1,0 +1,7 @@
+[logic-base]
+cpuNum = 4
+rpcAddress = "tcp@127.0.0.1:6900,tcp@127.0.0.1:6901"
+certPath = ""
+keyPath = ""
+serverId = "1"
+
