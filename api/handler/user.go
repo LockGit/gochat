@@ -87,7 +87,6 @@ func CheckAuth(c *gin.Context) {
 
 type FormLogout struct {
 	AuthToken string `form:"authToken" json:"authToken" binding:"required"`
-	RoomId    int    `form:"roomId" json:"roomId" binding:"required"`
 }
 
 func Logout(c *gin.Context) {
