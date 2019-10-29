@@ -1,7 +1,6 @@
-[中文版本(Chinese version)](readme.zh-cn.md)
+[English version(英文版本)](readme.md)
 
 # gochat是一个使用纯go实现的im系统 
-
 
 # architecture design 
 
