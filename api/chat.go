@@ -51,7 +51,7 @@ func (c *Chat) Run() {
 			logrus.Errorf("start listen : %s\n", err)
 		}
 	}()
-
+	// if have two quit signal , this signal will priority capture ,also can graceful shutdown
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGTSTP)
 	<-quit
