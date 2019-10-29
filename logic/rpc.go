@@ -180,7 +180,7 @@ func (rpc *RpcLogic) PushRoom(ctx context.Context, args *proto.Send, reply *prot
 	sendData.Msg = args.Msg
 	sendData.FromUserId = args.FromUserId
 	sendData.FromUserName = args.FromUserName
-	sendData.Op = config.OpRoomInfoSend
+	sendData.Op = config.OpRoomSend
 	bodyBytes, err = json.Marshal(sendData)
 	if err != nil {
 		logrus.Errorf("logic,PushRoom Marshal err:%s", err.Error())

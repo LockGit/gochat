@@ -104,7 +104,7 @@ func (logic *Logic) RedisPublishChannel(serverId int, toUserId int, msg []byte) 
 
 func (logic *Logic) RedisPublishRoomInfo(roomId int, count int, RoomUserInfo map[string]string, msg []byte) (err error) {
 	var redisMsg = &proto.RedisMsg{
-		Op:           config.OpRoomInfoSend,
+		Op:           config.OpRoomSend,
 		RoomId:       roomId,
 		Count:        count,
 		Msg:          msg,
