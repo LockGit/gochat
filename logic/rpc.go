@@ -33,20 +33,21 @@ func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, 
 		return
 	}
 	//set token
-	authToken := tools.CreateSessionId()
+	randToken := tools.GetRandomToken(32)
+	sessionId := tools.CreateSessionId(randToken)
 	userData := make(map[string]interface{})
 	userData["userId"] = userId
 	userData["userName"] = args.Name
 	RedisSessClient.Do("MULTI")
-	RedisSessClient.HMSet(authToken, userData)
-	RedisSessClient.Expire(authToken, 86400*time.Second)
+	RedisSessClient.HMSet(sessionId, userData)
+	RedisSessClient.Expire(sessionId, 86400*time.Second)
 	err = RedisSessClient.Do("EXEC").Err()
 	if err != nil {
 		logrus.Infof("register set redis token fail!")
 		return err
 	}
 	reply.Code = config.SuccessReplyCode
-	reply.AuthToken = authToken
+	reply.AuthToken = randToken
 	return
 }
 
@@ -61,13 +62,14 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 	}
 	//set token
 	//err = redis.HMSet(auth, userData)
-	authToken := tools.CreateSessionId()
+	randToken := tools.GetRandomToken(32)
+	sessionId := tools.CreateSessionId(randToken)
 	userData := make(map[string]interface{})
 	userData["userId"] = data.Id
 	userData["userName"] = data.UserName
 	RedisSessClient.Do("MULTI")
-	RedisSessClient.HMSet(authToken, userData)
-	RedisSessClient.Expire(authToken, 86400*time.Second)
+	RedisSessClient.HMSet(sessionId, userData)
+	RedisSessClient.Expire(sessionId, 86400*time.Second)
 	err = RedisSessClient.Do("EXEC").Err()
 	//err = RedisSessClient.Set(authToken, data.Id, 86400*time.Second).Err()
 	if err != nil {
@@ -75,7 +77,7 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 		return err
 	}
 	reply.Code = config.SuccessReplyCode
-	reply.AuthToken = authToken
+	reply.AuthToken = randToken
 	return
 }
 

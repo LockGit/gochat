@@ -24,18 +24,18 @@ func GetSnowflakeId() string {
 	return id
 }
 
-func GetRandomToken(prefix string, length int) string {
+func GetRandomToken(length int) string {
 	r := make([]byte, length)
 	io.ReadFull(rand.Reader, r)
-	return prefix + base64.URLEncoding.EncodeToString(r)
+	return base64.URLEncoding.EncodeToString(r)
 }
 
-func CreateSessionId() string {
-	return GetRandomToken(SessionPrefix, 32)
+func CreateSessionId(sessionId string) string {
+	return SessionPrefix + sessionId
 }
 
-func GetSessionName(authToken string) string {
-	return SessionPrefix + authToken
+func GetSessionName(sessionId string) string {
+	return SessionPrefix + sessionId
 }
 
 func Sha1(s string) (str string) {
