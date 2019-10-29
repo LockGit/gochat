@@ -39,7 +39,7 @@ func InitLogicRpcClient() {
 }
 
 func (rpc *RpcLogic) Login(req *proto.LoginRequest) (code int, authToken string) {
-	reply := proto.LoginResponse{}
+	reply := &proto.LoginResponse{}
 	LogicRpcClient.Call(context.Background(), "Login", req, reply)
 	code = reply.Code
 	authToken = reply.AuthToken
@@ -47,7 +47,7 @@ func (rpc *RpcLogic) Login(req *proto.LoginRequest) (code int, authToken string)
 }
 
 func (rpc *RpcLogic) Register(req *proto.RegisterRequest) (code int, authToken string) {
-	reply := proto.RegisterReply{}
+	reply := &proto.RegisterReply{}
 	LogicRpcClient.Call(context.Background(), "Register", req, reply)
 	code = reply.Code
 	authToken = reply.AuthToken
@@ -55,7 +55,7 @@ func (rpc *RpcLogic) Register(req *proto.RegisterRequest) (code int, authToken s
 }
 
 func (rpc *RpcLogic) GetUserNameByUserId(req *proto.GetUserInfoRequest) (code int, userName string) {
-	reply := proto.GetUserInfoResponse{}
+	reply := &proto.GetUserInfoResponse{}
 	LogicRpcClient.Call(context.Background(), "GetUserInfoByUserId", req, reply)
 	code = reply.Code
 	userName = reply.UserName
@@ -63,7 +63,7 @@ func (rpc *RpcLogic) GetUserNameByUserId(req *proto.GetUserInfoRequest) (code in
 }
 
 func (rpc *RpcLogic) CheckAuth(req *proto.CheckAuthRequest) (code int, userId int, userName string) {
-	reply := proto.CheckAuthResponse{}
+	reply := &proto.CheckAuthResponse{}
 	LogicRpcClient.Call(context.Background(), "CheckAuth", req, reply)
 	code = reply.Code
 	userId = reply.UserId
@@ -72,14 +72,14 @@ func (rpc *RpcLogic) CheckAuth(req *proto.CheckAuthRequest) (code int, userId in
 }
 
 func (rpc *RpcLogic) Logout(req *proto.LogoutRequest) (code int) {
-	reply := proto.LogoutResponse{}
+	reply := &proto.LogoutResponse{}
 	LogicRpcClient.Call(context.Background(), "Logout", req, reply)
 	code = reply.Code
 	return
 }
 
 func (rpc *RpcLogic) Push(req *proto.Send) (code int, msg string) {
-	reply := proto.SuccessReply{}
+	reply := &proto.SuccessReply{}
 	LogicRpcClient.Call(context.Background(), "Push", req, reply)
 	code = reply.Code
 	msg = reply.Msg
@@ -87,7 +87,7 @@ func (rpc *RpcLogic) Push(req *proto.Send) (code int, msg string) {
 }
 
 func (rpc *RpcLogic) PushRoom(req *proto.Send) (code int, msg string) {
-	reply := proto.SuccessReply{}
+	reply := &proto.SuccessReply{}
 	LogicRpcClient.Call(context.Background(), "PushRoom", req, reply)
 	code = reply.Code
 	msg = reply.Msg
@@ -95,7 +95,7 @@ func (rpc *RpcLogic) PushRoom(req *proto.Send) (code int, msg string) {
 }
 
 func (rpc *RpcLogic) Count(req *proto.Send) (code int, msg string) {
-	reply := proto.SuccessReply{}
+	reply := &proto.SuccessReply{}
 	LogicRpcClient.Call(context.Background(), "Count", req, reply)
 	code = reply.Code
 	msg = reply.Msg
@@ -103,7 +103,7 @@ func (rpc *RpcLogic) Count(req *proto.Send) (code int, msg string) {
 }
 
 func (rpc *RpcLogic) GetRoomInfo(req *proto.Send) (code int, msg string) {
-	reply := proto.SuccessReply{}
+	reply := &proto.SuccessReply{}
 	LogicRpcClient.Call(context.Background(), "GetRoomInfo", req, reply)
 	code = reply.Code
 	msg = reply.Msg
