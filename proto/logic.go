@@ -81,4 +81,5 @@ type Send struct {
 	ToUserName   string `json:"toUserName"`
 	RoomId       int    `json:"roomId"`
 	Op           int    `json:"op"`
+	CreateTime   string `json:"createTime"`
 }

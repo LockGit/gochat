@@ -13,7 +13,6 @@ type RedisMsg struct {
 	Msg          []byte            `json:"msg"`
 	Count        int               `json:"count"`
 	RoomUserInfo map[string]string `json:"roomUserInfo"`
-	CreateTime   string            `json:"createTime"`
 }
 
 type RedisRoomInfo struct {
