@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Online Chat Room</title>
     <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/chartroom.css">
+    <link rel="stylesheet" href="/css/chatroom.css">
     <style>
         body {
             background-color: black;
@@ -49,8 +49,6 @@
 <div class="m-head">
     <div class="g-doc">
         <div class="logo item">Live Chat Room</div>
-
-
         <div class="info item">
             <img src="/static/chat_head.jpg" alt="photo" id="avatar" class="image">
             <!--a href="./roomManage.html" id="nickName">匿名</a-->
@@ -61,8 +59,8 @@
 
     </div>
 </div>
-<div style="text-align: center;color: white;margin: 5px auto;font-size: 24px;">
-    Hello friend, gochat it's a im server . Writer By Golang !
+<div style="text-align: center;background:#e5f4ff;color: #000;width:1002px;margin: 2px auto;border:1px solid #ccc;font-size: 24px;border-radius: 5px;opacity: 0.8;">
+    Hello friend, gochat it's a im server . Write By Golang !
 </div>
 <div class="g-doc">
     <div class="m-room" id="room">
@@ -73,12 +71,21 @@
                 </div>
                 <div class="detail">
                     <p class="title" id="roomTitle">gochat Live Room</p>
-                    <p class="desc">Author：<span id="roomCreator">gochat</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Online User Count：<span
-                                id="roomOnlineMemberNum" style="color: green;font-weight: bold;">-</span></p>
+                    <p class="desc">Project：
+                        <span id="roomCreator">gochat</span>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Online User Count：
+                        <span id="roomOnlineMemberNum" style="color: green;font-weight: bold;">-</span>
+                        <span style="margin-left:20px;">
+                            <a href="https://github.com/LockGit/gochat" target="_blank">https://github.com/LockGit/gochat</a>
+                        </span>
+                    </p>
                 </div>
             </div>
             <div class="media" style="text-align: center;">
-                Play Some Video
+                <p>Play Some Video</p>
+                <div>
+                    <img src="/static/play.gif" alt="hello" style="width:auto;height:auto;max-width:100%;max-height:100%;opacity: 0.8;">
+                </div>
             </div>
         </div>
         <div class="g-right">
@@ -116,7 +123,7 @@
                     <textarea class="editText" id="editText" placeholder=""></textarea>
                 </div>
                 <div class="sendBtn">
-                    <a class="u-btn btn" id="sentText" onclick="send()">Send</a>
+                    <a class="u-btn btn" id="sentText" onclick="send()" style="border-radius: 5px;">Send</a>
                     <a class="btn custom" id="customBtn"></a>
                     <a class="btn emoji" id="emoji"></a>
                 </div>
@@ -132,7 +139,9 @@
         </div>
     </div>
 </div>
-
+<div class="m-head" style="margin: 2px auto;">
+    <p style="text-align: center;height: 50px;line-height: 50px;">gochat it's a lightweight im server write by go , Author by Lock.</p>
+</div>
 </body>
 </html>
 <script src="/js/jquery.min.js"></script>

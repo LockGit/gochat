@@ -185,10 +185,12 @@ a, a:hover{
     /*margin-top: 90px;*/
     width: 100%;
     height: 538px;
-    background-color: #e5f4ff;
+    /*background-color: #e5f4ff;*/
+    background-color: #fff;
     box-sizing: border-box;
     border-radius: 5px;
     zoom: 1;
+    opacity: 0.9;
 }
 .m-room .g-left{
     float: left;
@@ -724,6 +726,7 @@ body a:hover{
     height: 54px;
     /*background-color: #fff;*/
     background-color: #a6e1ec;
+    opacity: 0.8;
     /*border-top: 2px solid #238efa;*/
 }
 .m-head .g-doc{

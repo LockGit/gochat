@@ -86,7 +86,7 @@ function getRoomUserCount() {
         data: JSON.stringify(jsonData),
         success: function (result) {
             if (result.code != 0) {
-                swal("request error，please try again later!");
+                swal("request error，please login!");
             }
         },
         error: function () {
@@ -97,7 +97,12 @@ function getRoomUserCount() {
 
 
 function send() {
+    $("#tab_chat").click();
     let msg = document.getElementById('editText').value;
+    if (msg == "") {
+        swal("send msg is empty!");
+        return
+    }
     document.getElementById('editText').value = '';
     let jsonData = {op: 3, msg: msg, roomId: 1, authToken: getLocalStorage("authToken")};
     $.ajax({
@@ -131,7 +136,7 @@ function logout() {
             if (result.code == 0) {
                 window.location.href = "/login.html";
             } else {
-                swal("request error，please try again later！");
+                swal("request error，please login！");
             }
         },
         error: function () {
