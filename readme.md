@@ -90,4 +90,7 @@ ui层
 ```
 
 
-
+### docker 
+```bash
+docker build -f docker/Dockerfile . -t lockgit/gochat
+```
