@@ -236,8 +236,10 @@ a, a:hover{
     font-size: 12px;
     line-height: 12px;
     margin-top: 12px;
+    margin-bottom: 10px;
     color: #3a4a59;
 }
+
 .m-room .media{
     width: 100%;
     height: 453px;
