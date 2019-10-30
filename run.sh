@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Author : Lock
+# Email: lockexit@gmail.com
 
 CONFIG_ENV=$1
 
