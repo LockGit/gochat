@@ -29,10 +29,12 @@ else
         --name gochat-${CONFIG_ENV} \
         -h gochat-${CONFIG_ENV} \
         -e TZ=Asia/Shanghai \
-        -e RUN_MODE=prod \
+        -e RUN_MODE=dev \
+        -e ETCD_DATA_DIR=/root/default.etcd \
         -v `pwd`:/go/src/gochat \
         -v `pwd`/docker/${CONFIG_ENV}/supervisord.d:/etc/supervisord.d \
         -v `pwd`/docker/${CONFIG_ENV}/supervisord.conf:/etc/supervisord.conf \
+        -v `pwd`/docker/${CONFIG_ENV}/redis.conf:/root/redis.conf \
         -d \
         -p 8080:8080 \
         -p 7070:7070 \
@@ -45,9 +47,11 @@ else
         -h gochat-${CONFIG_ENV} \
         -e TZ=Asia/Shanghai \
         -e RUN_MODE=prod \
+        -e ETCD_DATA_DIR=/root/default.etcd \
         -v `pwd`:/go/src/gochat \
         -v `pwd`/docker/${CONFIG_ENV}/supervisord.d:/etc/supervisord.d \
         -v `pwd`/docker/${CONFIG_ENV}/supervisord.conf:/etc/supervisord.conf \
+        -v `pwd`/docker/${CONFIG_ENV}/redis.conf:/root/redis.conf \
         -d \
         -p 8080:8080 \
         -p 7070:7070 \
