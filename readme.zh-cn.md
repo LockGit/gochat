@@ -153,7 +153,7 @@ go build -o gochat.bin -tags=etcd main.go
 
 
 如果你想自己构建一个镜像,那么只需要build docker文件下的Dockerfile
-docker build -f docker/Dockerfile . -t lockgit/gochat,
+docker build -f docker/Dockerfile . -t lockgit/gochat
 然后执行sh run.sh dev即可 
 ```
 
