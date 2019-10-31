@@ -191,7 +191,7 @@ And make sure there are no firewall restrictions on the relevant ports on the vp
 ```
 
 ### Here is an online chat demo site:
-<a href="http://155.138.194.113:8080" target="_black">http://155.138.194.113:8080</a>
+<a href="http://155.138.194.113:8080" target="_blank">http://155.138.194.113:8080</a>
 ```
 Log in with the above user name and password, or register one by yourself.
 ```
