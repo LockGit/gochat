@@ -8,14 +8,14 @@ gochat为纯go实现的即时通讯系统,支持私信消息与房间广播消�
 ```
 
 ### 架构设计
- ![](https://github.com/LockGit/gochat/blob/master/architecture/gochat.gng)
+ ![](https://github.com/LockGit/gochat/blob/master/architecture/gochat.png)
 
 ### 服务发现
-![](https://github.com/LockGit/gochat/blob/master/architecture/gochat_discovery.gng)
+![](https://github.com/LockGit/gochat/blob/master/architecture/gochat_discovery.png)
 
 
 ### 消息投递 
-![](https://github.com/LockGit/gochat/blob/master/architecture/signle_send.gng)
+![](https://github.com/LockGit/gochat/blob/master/architecture/signle_send.png)
 ```
 消息发送必须在登录状态下,如上图,用户A向用户B发送了一条消息。那么经历了如下历程：
 1,用户A调用api层接口登录系统,登录成功后与connect层认证保持长链接,并rpc call logic层记录用户A在connect层登录的serverId,默认加入房间号1
