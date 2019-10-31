@@ -156,6 +156,9 @@ go build -o gochat.bin -tags=etcd main.go
 如果你想自己构建一个镜像,那么只需要build docker文件下的Dockerfile
 docker build -f docker/Dockerfile . -t lockgit/gochat
 然后执行sh run.sh dev即可 
+
+如果你要部署在个人vps上,记得修改site/js/common.js中socketUrl与apiUrl的地址为你的vps的ip地址,
+并确保vps上没有针对相关端口的防火墙限制。
 ```
 
 

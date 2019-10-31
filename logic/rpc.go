@@ -60,6 +60,7 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 	if (data.Id == 0) || (passWord != data.Password) {
 		return errors.New("no this user or password error!")
 	}
+	loginUserIdSessionIdMap := fmt.Sprintf("sess_map_%d", data.Id)
 	//set token
 	//err = redis.HMSet(auth, userData)
 	randToken := tools.GetRandomToken(32)
@@ -67,9 +68,20 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 	userData := make(map[string]interface{})
 	userData["userId"] = data.Id
 	userData["userName"] = data.UserName
+	//check is login
+	token, _ := RedisSessClient.Get(loginUserIdSessionIdMap).Result()
+	if token != "" {
+		//logout already login user session
+		oldSession := tools.CreateSessionId(token)
+		err := RedisSessClient.Del(oldSession).Err()
+		if err != nil {
+			return errors.New("logout user fail!token is:" + token)
+		}
+	}
 	RedisSessClient.Do("MULTI")
 	RedisSessClient.HMSet(sessionId, userData)
 	RedisSessClient.Expire(sessionId, 86400*time.Second)
+	RedisSessClient.Set(loginUserIdSessionIdMap, randToken, 86400*time.Second)
 	err = RedisSessClient.Do("EXEC").Err()
 	//err = RedisSessClient.Set(authToken, data.Id, 86400*time.Second).Err()
 	if err != nil {

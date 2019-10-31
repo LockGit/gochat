@@ -184,6 +184,10 @@ If you want to build an image yourself,
 you only need to build the Dockerfile under the docker file.
 Docker build -f docker/Dockerfile . -t lockgit/gochat
 then execute sh run.sh dev
+
+If you want to deploy on personal vps, 
+remember to change the address of socketUrl and apiUrl in site/js/common.js to your ip address of vps.
+And make sure there are no firewall restrictions on the relevant ports on the vps.
 ```
 
 

@@ -28,7 +28,6 @@ $(document).ready(function () {
         }
     });
 
-    let msg = document.getElementById("msg");
     let data = {"authToken": getLocalStorage("authToken"), "roomId": 1};
     //websocket onopen
     websocket.onopen = function (evt) {
@@ -39,9 +38,14 @@ $(document).ready(function () {
     websocket.onmessage = function (evt) {
         let data = JSON.parse(evt.data);
         if (data.op == 3) {
-            // send msg to room
-            let innerInfo = '<div class="item" ><p class="nick guest j-nick " data-role="guest" data-account="">' + data.fromUserName + ' (' + data.createTime + ')</p><p class="text">' + data.msg + '</p></div>';
-            msg.innerHTML += innerInfo + '<br>';
+            let userNameAndMsg = data.fromUserName + '(' + data.createTime + ')';
+            let innerInfo = '<div class="item" >' +
+                '<p class="nick guest j-nick " data-role="guest"></p>' +
+                '<p class="text"></p>' +
+                '</div>';
+            $("#msg").append(innerInfo);
+            $("#msg > div[class='item']:last > p[class='nick guest j-nick ']").text(userNameAndMsg);
+            $("#msg > div[class='item']:last > p[class='text']:last").text(data.msg);
         } else if (data.op == 4) {
             // get room user count
             $("#roomOnlineMemberNum").text(data.count);
@@ -95,9 +99,15 @@ function getRoomUserCount() {
     });
 }
 
+$("#editText").keypress(function (e) {
+    if (e.which == 13) {
+        send();
+    }
+});
 
 function send() {
     $("#tab_chat").click();
+    $("#msg").animate({scrollTop: $("#msg").offset().top + 100000}, 1000);
     let msg = document.getElementById('editText').value;
     if (msg == "") {
         swal("send msg is empty!");
