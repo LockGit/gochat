@@ -162,7 +162,7 @@ docker build -f docker/Dockerfile . -t lockgit/gochat
 ```
 
 ### 这里提供一个在线聊天demo站点：
-[http://155.138.194.113:8080](http://155.138.194.113:8080){:target="_blank"}
+<a href="http://155.138.194.113:8080" target="_black">http://155.138.194.113:8080</a>
 ```
 用以上用户名密码登录即可,也可以自己注册一个
 ```
