@@ -23,7 +23,7 @@ else
 
     echo "nice, now set docker image is:${DOCKER_IMAGE}"
 
-    # 后台运行
+    # docker run
     if [ "${CONFIG_ENV}" == "dev" ]
     then
         sudo docker run \
