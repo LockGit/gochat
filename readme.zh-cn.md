@@ -32,7 +32,8 @@ connect层:
             channel: (用户会话)
 ```
 
-
+### 聊天室预览
+![](https://github.com/LockGit/gochat/blob/master/architecture/gochat.gif)
 
 ### 目录结构
 ```
