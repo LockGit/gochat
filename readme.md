@@ -142,6 +142,7 @@ create table user(
 ### Installation
 ```
 Before starting each layer, 
+Please make sure that the 7000, 7070, 8080 ports are not occupied.
 make sure that the etcd and redis services and the above database tables have been started, 
 and then start the layers in the following order. 
 
