@@ -25,7 +25,7 @@ which is very convenient to install.
 
 
 ### Message delivery
-![](https://github.com/LockGit/gochat/blob/master/architecture/signle_send.png)
+![](https://github.com/LockGit/gochat/blob/master/architecture/single_send.png)
 ```
 The message must be sent in the login state. As shown above, User A sends a message to User B. 
 Then experienced the following process:

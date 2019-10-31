@@ -17,7 +17,7 @@ gochat为纯go实现的即时通讯系统,支持私信消息与房间广播消�
 
 
 ### 消息投递 
-![](https://github.com/LockGit/gochat/blob/master/architecture/signle_send.png)
+![](https://github.com/LockGit/gochat/blob/master/architecture/single_send.png)
 ```
 消息发送必须在登录状态下,如上图,用户A向用户B发送了一条消息。那么经历了如下历程：
 1,用户A调用api层接口登录系统,登录成功后与connect层认证保持长链接,
