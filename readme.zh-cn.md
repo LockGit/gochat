@@ -3,8 +3,10 @@
 ### gochat是一个使用纯go实现的轻量级im系统 
 ```
 gochat为纯go实现的即时通讯系统,支持私信消息与房间广播消息,各层之间通过rpc通讯,支持水平扩展。
-使用redis作为消息存储与投递的载体,相对kafaka操作起来更加方便快捷,所以十分轻量,各层之间基于etcd服务发现,在扩容部署时将会方便很多。
-由于go的交叉编译特性,编译后可以快速在各个平台上运行,gochat架构及目录结构清晰,并且本项目还贴心的提供了docker一键构建所有环境依赖,安装起来十分便捷。
+使用redis作为消息存储与投递的载体,相对kafaka操作起来更加方便快捷,所以十分轻量。
+各层之间基于etcd服务发现,在扩容部署时将会方便很多。
+由于go的交叉编译特性,编译后可以快速在各个平台上运行,gochat架构及目录结构清晰,
+并且本项目还贴心的提供了docker一键构建所有环境依赖,安装起来十分便捷。
 ```
 
 ### 架构设计
@@ -18,11 +20,21 @@ gochat为纯go实现的即时通讯系统,支持私信消息与房间广播消�
 ![](https://github.com/LockGit/gochat/blob/master/architecture/signle_send.png)
 ```
 消息发送必须在登录状态下,如上图,用户A向用户B发送了一条消息。那么经历了如下历程：
-1,用户A调用api层接口登录系统,登录成功后与connect层认证保持长链接,并rpc call logic层记录用户A在connect层登录的serverId,默认加入房间号1
-2,用户B调用api层接口登录系统,登录成功后与connect层认证保持长链接,并rpc call logic层记录用户B在connect层登录的serverId,默认加入房间号1
-3,用户A调用api层接口发送消息,api层rpc call logic层发送消息方法,logic层将该消息push到队列中等待task层消费
-4,task层订阅logic层发送到队列中的消息后,根据消息内容(userId,roomId,serverId)可以定位用户B目前在connect层那一个serverId上保持长链接,进一步rpc call connect层方法
-5,connect层被task层rpc call之后,会将该消息投递到相关房间内，再进一步投递给在该房间内的用户B,完成一次完整的消息会话通讯
+1,用户A调用api层接口登录系统,登录成功后与connect层认证保持长链接,
+并rpc call logic层记录用户A在connect层登录的serverId,默认加入房间号1
+
+2,用户B调用api层接口登录系统,登录成功后与connect层认证保持长链接,
+并rpc call logic层记录用户B在connect层登录的serverId,默认加入房间号1
+
+3,用户A调用api层接口发送消息,api层rpc call logic层发送消息方法,
+logic层将该消息push到队列中等待task层消费
+
+4,task层订阅logic层发送到队列中的消息后,
+根据消息内容(userId,roomId,serverId)可以定位用户B目前在connect层那一个serverId上保持长链接,
+进一步rpc call connect层方法
+
+5,connect层被task层rpc call之后,会将该消息投递到相关房间内，
+再进一步投递给在该房间内的用户B,完成一次完整的消息会话通讯
 
 学习其他im系统，为了减少锁的竞争,会在connect层会划分bucket:
 大致会像如下结构：
@@ -64,18 +76,33 @@ connect层:
 ### 相关组件
 ```
 语言：golang
-数据库：sqlite3 (可以根据实际业务场景替换成mysql或者其他数据库,在本项目中为方便演示,使用sqlite替代大型关系型数据库,仅存储了简单用户信息）
+
+数据库：sqlite3 
+可以根据实际业务场景替换成mysql或者其他数据库,
+在本项目中为方便演示,使用sqlite替代大型关系型数据库,仅存储了简单用户信息
+
 数据库ORM：gorm 
+
 服务发现：etcd
+
 rpc通讯：rpcx
-队列:redis (方便演示使用redis,可以根据实际情况替换为kafka或者rabbitmq)
-缓存:redis (存储用户session,以及相关计数器,聊天室房间信息等)
-消息id:snowflakeId算法,此部分可以单独拆分成微服务,使其成为基础服务的一部分。该id发号器qps理论最高409.6w/s,互联网上没有哪一家公司可以达到这么高的并发,除非遭受DDOS攻击
+
+队列:redis 
+方便演示使用redis,可以根据实际情况替换为kafka或者rabbitmq
+
+缓存:redis 
+存储用户session,以及相关计数器,聊天室房间信息等
+
+消息id:
+snowflakeId算法,此部分可以单独拆分成微服务,使其成为基础服务的一部分。
+该id发号器qps理论最高409.6w/s,互联网上没有哪一家公司可以达到这么高的并发,除非遭受DDOS攻击
 ```
 
 ### 数据库及表结构
 ```
-在本demo中,为了足够轻量方便演示,数据库使用了sqlite3,基于gorm,所以这个是可以替换的。如果需要替换其他关系型数据库,仅仅只需要修改相关db驱动即可。
+在本demo中,为了足够轻量方便演示,数据库使用了sqlite3,基于gorm,所以这个是可以替换的。
+如果需要替换其他关系型数据库,仅仅只需要修改相关db驱动即可。
+
 相关表结构：
 cd db && sqlite3 gochat.sqlite3
 .tables
@@ -91,7 +118,9 @@ create table user(
 
 ### 安装
 ```
-在启动各层之前,请确保已经启动了etcd与redis服务以及以上数据库表,然后按照以下顺序启动各层,如果要扩容connect层,请确保connect层配置中各个serverId不一样!
+在启动各层之前,请确保已经启动了etcd与redis服务以及以上数据库表,
+然后按照以下顺序启动各层,如果要扩容connect层,
+请确保connect层配置中各个serverId不一样!
 
 0,编译
 go build -o gochat.bin -tags=etcd main.go
@@ -116,21 +145,26 @@ go build -o gochat.bin -tags=etcd main.go
 ```
 如果你觉得以上步骤过于繁琐,你可以使用以下docker镜像构建所有依赖环境并快速启动一个聊天室
 
-你可以使用我推到docker hub上的镜像 (默认镜像中已经创建了几个测试用户：分别是lock,demo,test 密码均为:111111)
+你可以使用我推到docker hub上的镜像:
+默认镜像中已经创建了几个测试用户：分别是lock,demo,test 密码均为:111111
 1,docker pull lockgit/gochat:latest
 2,sh run.sh dev
 3,访问 http://127.0.0.1:8080 开启聊天室
 
 
 如果你想自己构建一个镜像,那么只需要build docker文件下的Dockerfile
-docker build -f docker/Dockerfile . -t lockgit/gochat,然后执行sh run.sh dev即可 
+docker build -f docker/Dockerfile . -t lockgit/gochat,
+然后执行sh run.sh dev即可 
 ```
 
 
 ### 后续
 ```
-gochat实现了简单聊天室功能,由于精力有限,你可以在此基础上使用自己的业务逻辑定制一些需求,并优掉一些gochat中的代码。
-看懂跟实现一遍是不一样的,照着例子做完之后应该会理解的更深刻一些,另关于tcp粘包的处理,通用做法在报文头部指定消息size,读取指定size为一包,不足size继续读取直到满足完整一包,本demo中暂未处理。
+gochat实现了简单聊天室功能,由于精力有限,
+你可以在此基础上使用自己的业务逻辑定制一些需求,并优掉一些gochat中的代码。
+看懂跟实现一遍是不一样的,照着例子做完之后应该会理解的更深刻一些,
+另关于tcp粘包的处理,通用做法在报文头部指定消息size,
+读取指定size为一包,不足size继续读取直到满足完整一包,本demo中暂未处理。
 后面会根据情况优化和改进gochat中的代码与设计。
 ```
 

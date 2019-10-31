@@ -2,9 +2,15 @@
 
 ### Gochat is a lightweight im server implemented using pure go
 ```
-gochat is an instant messaging system implemented by pure go. It supports private message and room broadcast messages. rpc communication is provided between layers to support horizontal expansion.
-Using redis as a carrier for message storage and delivery, it is more convenient and faster to operate than kafaka, so it is very lightweight. Based on the etcd service discovery between layers, it will be much more convenient when expanding and deploying.
-Due to the cross-compilation feature of go, it can be run on various platforms quickly after compilation. The gochat architecture and directory structure are clear, and the project also provides docker one-click to build all environment dependencies, which is very convenient to install.
+gochat is an instant messaging system implemented by pure go. 
+It supports private message and room broadcast messages. 
+rpc communication is provided between layers to support horizontal expansion.
+Using redis as a carrier for message storage and delivery, it is more convenient and faster to operate than kafaka.
+so it is very lightweight. 
+Based on the etcd service discovery between layers, it will be much more convenient when expanding and deploying.
+Due to the cross-compilation feature of go, it can be run on various platforms quickly after compilation. 
+The gochat architecture and directory structure are clear.
+And the project also provides docker one-click to build all environment dependencies, which is very convenient to install.
 ```
 
 ### Architecture design
@@ -17,12 +23,30 @@ Due to the cross-compilation feature of go, it can be run on various platforms q
 ### Message delivery
 ![](https://github.com/LockGit/gochat/blob/master/architecture/signle_send.png)
 ```
-The message must be sent in the login state. As shown above, User A sends a message to User B. Then experienced the following process:
-1. User A invokes the api layer interface to log in to the system. After the login succeeds, the user keeps a long link with the connect layer authentication, and the rpc call logic layer records the serverId that user A logs in at the connect layer. The default joins the room number 1.
-2. User B calls the api layer interface to log in to the system. After the login succeeds, the user keeps a long link with the connect layer authentication, and the rpc call logic layer records the serverId of the user B login at the connect layer. The default joins the room number 1.
-3. User A calls the api layer interface to send a message, and the api layer rpc call logic layer sends a message method. The logic layer pushes the message to the queue and waits for the task layer to consume.
-4, after the task layer subscribes to the message sent by the logic layer to the queue, according to the message content (userId, roomId, serverId), the user B can be positioned to maintain a long link on the serverId of the connect layer, and the rpc call connect layer method is further
-After the connect layer is rpc call by the task layer, the message will be delivered to the relevant room, and then further delivered to the user B in the room to complete a complete message session communication.
+The message must be sent in the login state. As shown above, User A sends a message to User B. 
+Then experienced the following process:
+1. User A invokes the api layer interface to log in to the system. After the login succeeds, 
+the user keeps a long link with the connect layer authentication, 
+and the rpc call logic layer records the serverId that user A logs in at the connect layer. 
+The default joins the room number 1.
+
+2. User B calls the api layer interface to log in to the system. 
+After the login succeeds, the user keeps a long link with the connect layer authentication, 
+and the rpc call logic layer records the serverId of the user B login at the connect layer. 
+The default joins the room number 1.
+
+3. User A calls the api layer interface to send a message, 
+and the api layer rpc call logic layer sends a message method. 
+The logic layer pushes the message to the queue and waits for the task layer to consume.
+
+4, After the task layer subscribes to the message sent by the logic layer to the queue, 
+according to the message content (userId, roomId, serverId), 
+the user B can be positioned to maintain a long link on the serverId of the connect layer, 
+and the rpc call connect layer method is further
+
+5, After the connect layer is rpc call by the task layer, 
+the message will be delivered to the relevant room, 
+and then further delivered to the user B in the room to complete a complete message session communication.
 
 Learning other im systems, in order to reduce the lock competition, will be divided in the connect layer bucket:
 It will roughly look like the following structure:
@@ -65,18 +89,39 @@ Connect layer:
 ### Related components
 ```
 Language: golang
-Database: sqlite3 (can be replaced by mysql or other database according to the actual business scenario. In this project, for the convenience of demonstration, use sqlite instead of large relational database, only store simple user information)
+
+Database: sqlite3
+can be replaced by mysql or other database according to the actual business scenario. In this project, 
+for the convenience of demonstration, use sqlite instead of large relational database, 
+only store simple user information
+
 Database ORM: gorm
+
 Service discovery: etcd
+
 Rpc communication: rpcx
-Queue: redis (convenient to use redis, can be replaced with kafka or rabbitmq according to the actual situation)
-Cache: redis (store user session, and related counters, chat room information, etc.)
-Message id: The snowflakeId algorithm, which can be split into microservices separately, making it part of the underlying service. The id numbering device qps theory is up to 409.6w/s. No company on the Internet can achieve such high concurrency unless it suffers from DDOS attacks.
+
+Queue: redis 
+convenient to use redis, can be replaced with kafka or rabbitmq according to the actual situation
+
+Cache: redis 
+store user session, and related counters, chat room information, etc.
+
+Message id: 
+The snowflakeId algorithm, 
+which can be split into microservices separately, 
+making it part of the underlying service. 
+The id numbering device qps theory is up to 409.6w/s. 
+No company on the Internet can achieve such high concurrency unless it suffers from DDOS attacks.
 ```
 
 ### Database and table structure
 ```
-In this demo, in order to be lightweight and convenient to demonstrate, the database uses sqlite3, based on gorm, so this can be replaced. If you need to replace other relational databases, just modify the relevant db driver.
+In this demo, in order to be lightweight and convenient to demonstrate, 
+the database uses sqlite3, based on gorm, 
+so this can be replaced. 
+If you need to replace other relational databases, just modify the relevant db driver.
+
 Related table structure:
 cd db && sqlite3 gochat.sqlite3
 .tables
@@ -92,7 +137,12 @@ create table user(
 
 ### Installation
 ```
-Before starting each layer, make sure that the etcd and redis services and the above database tables have been started, and then start the layers in the following order. If you want to expand the connect layer, make sure that the serverId in the connect layer configuration is different!
+Before starting each layer, 
+make sure that the etcd and redis services and the above database tables have been started, 
+and then start the layers in the following order. 
+
+If you want to expand the connect layer, 
+make sure that the serverId in the connect layer configuration is different!
 
 0,Compile
 go build -o gochat.bin -tags=etcd main.go
@@ -115,22 +165,29 @@ go build -o gochat.bin -tags=etcd main.go
 
 ### Start with a docker
 ```
-If you feel that the above steps are too cumbersome, you can use the following docker image to build all the dependencies and quickly start a chat room.
+If you feel that the above steps are too cumbersome, 
+you can use the following docker image to build all the dependencies and quickly start a chat room.
 
-You can use the image I pushed to the docker hub (there have been several test users created in the default image: lock, demo, test password: 111111)
+You can use the image I pushed to the docker hub 
+(there have been several test users created in the default image: lock, demo, test password: 111111)
 1,docker pull lockgit/gochat:latest
 2,sh run.sh dev
 3,visit http://127.0.0.1:8080 to open the chat room
 
 
-If you want to build an image yourself, you only need to build the Dockerfile under the docker file.
-Docker build -f docker/Dockerfile . -t lockgit/gochat, then execute sh run.sh dev
+If you want to build an image yourself, 
+you only need to build the Dockerfile under the docker file.
+Docker build -f docker/Dockerfile . -t lockgit/gochat, 
+then execute sh run.sh dev
 ```
 
 
 ### Follow-up
 ```
-gochat implements a simple chat room function. Due to limited energy, you can use your own business logic to customize some requirements and optimize some code in gochat.
-It is not the same as implementing it once. It should be understood more deeply after the example is done. For the handling of tcp sticky packets, the common practice is to specify the message size in the message header and read the specified size as a package. Insufficient size continues to read until the complete package is satisfied. This demo has not been processed yet.
+gochat implements a simple chat room function. Due to limited energy, 
+you can use your own business logic to customize some requirements and optimize some code in gochat.
+It is not the same as implementing it once. It should be understood more deeply after the example is done. 
+For the handling of tcp sticky packets, the common practice is to specify the message size in the message header and read the specified size as a package,
+Insufficient size continues to read until the complete package is satisfied. This demo has not been processed yet.
 The code and design in gochat will be optimized and improved as needed.
 ```
