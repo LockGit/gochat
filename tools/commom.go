@@ -35,6 +35,10 @@ func CreateSessionId(sessionId string) string {
 	return SessionPrefix + sessionId
 }
 
+func GetSessionIdByUserId(userId int) string {
+	return fmt.Sprintf("sess_map_%d", userId)
+}
+
 func GetSessionName(sessionId string) string {
 	return SessionPrefix + sessionId
 }

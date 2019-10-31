@@ -30,7 +30,22 @@ func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, 
 	userId, err := u.Add()
 	if err != nil {
 		logrus.Infof("register err:%s", err.Error())
-		return
+		return err
+	}
+	if userId == 0 {
+		return errors.New("register userId empty!")
+	}
+	loginSessionId := tools.GetSessionIdByUserId(userId)
+	if userId > 0 {
+		token, _ := RedisSessClient.Get(loginSessionId).Result()
+		if token != "" {
+			//logout already login user session
+			oldSession := tools.CreateSessionId(token)
+			err := RedisSessClient.Del(oldSession).Err()
+			if err != nil {
+				return errors.New("logout user fail!token is:" + token)
+			}
+		}
 	}
 	//set token
 	randToken := tools.GetRandomToken(32)
@@ -41,6 +56,7 @@ func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, 
 	RedisSessClient.Do("MULTI")
 	RedisSessClient.HMSet(sessionId, userData)
 	RedisSessClient.Expire(sessionId, 86400*time.Second)
+	RedisSessClient.Set(loginSessionId, randToken, 86400*time.Second)
 	err = RedisSessClient.Do("EXEC").Err()
 	if err != nil {
 		logrus.Infof("register set redis token fail!")
@@ -60,7 +76,7 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 	if (data.Id == 0) || (passWord != data.Password) {
 		return errors.New("no this user or password error!")
 	}
-	loginUserIdSessionIdMap := fmt.Sprintf("sess_map_%d", data.Id)
+	loginSessionId := tools.GetSessionIdByUserId(data.Id)
 	//set token
 	//err = redis.HMSet(auth, userData)
 	randToken := tools.GetRandomToken(32)
@@ -69,7 +85,7 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 	userData["userId"] = data.Id
 	userData["userName"] = data.UserName
 	//check is login
-	token, _ := RedisSessClient.Get(loginUserIdSessionIdMap).Result()
+	token, _ := RedisSessClient.Get(loginSessionId).Result()
 	if token != "" {
 		//logout already login user session
 		oldSession := tools.CreateSessionId(token)
@@ -81,7 +97,7 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 	RedisSessClient.Do("MULTI")
 	RedisSessClient.HMSet(sessionId, userData)
 	RedisSessClient.Expire(sessionId, 86400*time.Second)
-	RedisSessClient.Set(loginUserIdSessionIdMap, randToken, 86400*time.Second)
+	RedisSessClient.Set(loginSessionId, randToken, 86400*time.Second)
 	err = RedisSessClient.Do("EXEC").Err()
 	//err = RedisSessClient.Set(authToken, data.Id, 86400*time.Second).Err()
 	if err != nil {
@@ -130,6 +146,33 @@ func (rpc *RpcLogic) Logout(ctx context.Context, args *proto.LogoutRequest, repl
 	reply.Code = config.FailReplyCode
 	authToken := args.AuthToken
 	sessionName := tools.GetSessionName(authToken)
+
+	var userDataMap = map[string]string{}
+	userDataMap, err = RedisSessClient.HGetAll(sessionName).Result()
+	if err != nil {
+		logrus.Infof("check auth fail!,authToken is:%s", authToken)
+		return err
+	}
+	if len(userDataMap) == 0 {
+		logrus.Infof("no this user session,authToken is:%s", authToken)
+		return
+	}
+	intUserId, _ := strconv.Atoi(userDataMap["userId"])
+	sessIdMap := tools.GetSessionIdByUserId(intUserId)
+	//del sess_map like sess_map_1
+	err = RedisSessClient.Del(sessIdMap).Err()
+	if err != nil {
+		logrus.Infof("logout del sess map error:%s", err.Error())
+		return err
+	}
+	//del serverId
+	logic := new(Logic)
+	serverIdKey := logic.getUserKey(fmt.Sprintf("%d", intUserId))
+	err = RedisSessClient.Del(serverIdKey).Err()
+	if err != nil {
+		logrus.Infof("logout del server id error:%s", err.Error())
+		return err
+	}
 	err = RedisSessClient.Del(sessionName).Err()
 	if err != nil {
 		logrus.Infof("logout error:%s", err.Error())
