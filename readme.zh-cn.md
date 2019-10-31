@@ -53,7 +53,7 @@ connect层:
 .
 ├── api                  # api接口层,提供rest api服务,主要rpc call logic层服务,可水平扩展 
 ├── architecture         # 架构图资源图片文件夹
-├── bin                  # golang编译后的二进制文件,不参提交至git仓库
+├── bin                  # golang编译后的二进制文件,不参与提交至git仓库
 ├── config               # 配置文件
 ├── connect              # 链接层,该层用于handler住大量用户长连接,实时消息推送,除此之外,主要rpc call logic层服务,可水平扩展
 ├── db                   # 数据库链接初始化,内部gochat.sqlite3为方便演示时使用的sqlite数据库,实际场景可替换为其他关系型数据库

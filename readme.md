@@ -6,7 +6,7 @@ gochat is an instant messaging system implemented by pure go.
 It supports private message and room broadcast messages. 
 rpc communication is provided between layers to support horizontal expansion.
 Using redis as a carrier for message storage and delivery, 
-it is more convenient and faster to operate than kafaka.
+it is more convenient and faster to operate than kafka.
 so it is very lightweight. 
 Based on the etcd service discovery between layers, 
 it will be much more convenient when expanding and deploying.
