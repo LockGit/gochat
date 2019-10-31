@@ -188,6 +188,9 @@ then execute sh run.sh dev
 If you want to deploy on personal vps, 
 remember to change the address of socketUrl and apiUrl in site/js/common.js to your ip address of vps.
 And make sure there are no firewall restrictions on the relevant ports on the vps.
+
+Here is an online chat demo site: http://155.138.194.113:8080 [click](http://155.138.194.113:8080?_blank)
+Log in with the above user name and password, or register one by yourself.
 ```
 
 

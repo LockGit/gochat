@@ -159,6 +159,9 @@ docker build -f docker/Dockerfile . -t lockgit/gochat
 
 如果你要部署在个人vps上,记得修改site/js/common.js中socketUrl与apiUrl的地址为你的vps的ip地址,
 并确保vps上没有针对相关端口的防火墙限制。
+
+这里提供一个在线聊天demo站点：http://155.138.194.113:8080 [点击访问](http://155.138.194.113:8080?_blank)
+用以上用户名密码登录即可,也可以自己注册一个
 ```
 
 
