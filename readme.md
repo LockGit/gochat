@@ -36,7 +36,8 @@ logic层将该消息push到队列中等待task层消费
 5,connect层被task层rpc call之后,会将该消息投递到相关房间内，
 再进一步投递给在该房间内的用户B,完成一次完整的消息会话通讯
 
-6,如果是私信消息,那么task层会根据userId定位connect层对应的serverId,直接rpc call 该serverId的connect层，完成私信消息投递。
+6,如果是私信消息,那么task层会根据userId定位connect层对应的serverId,
+直接rpc call 该serverId的connect层，完成私信消息投递。
 
 学习其他im系统，为了减少锁的竞争,会在connect层会划分bucket:
 大致会像如下结构：
