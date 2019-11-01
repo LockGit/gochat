@@ -154,6 +154,7 @@ go build -o gochat.bin -tags=etcd main.go
 用户名,密码
 demo  111111
 test  111111
+admin 111111
 1,docker pull lockgit/gochat:latest
 2,sh run.sh dev
 3,访问 http://127.0.0.1:8080 开启聊天室
