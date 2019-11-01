@@ -84,8 +84,8 @@ Connect layer:
 ├── logic           # Logic layer, this layer mainly receives the rpc request of the connect layer and the api layer. If it is a message, it will be pushed to the queue, and finally consumed by the task layer, which can be horizontally expanded.
 ├── main.go         # gochat program only entry file
 ├── proto           # golang rpc proto file
-├── readme.md       # English documentation
-├── readme.zh-cn.md # Chinese documentation
+├── readme.md       # Chinese documentation
+├── readme.en.md    # English documentation
 ├── reload.sh       # Compile gochat and execute supervisorctl restart to restart related processes
 ├── run.sh          # Quickly build a docker container and start the demo
 ├── site            # site layer, this layer is a pure static page, will http request api layer, can be extended horizontally

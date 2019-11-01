@@ -66,8 +66,8 @@ connect层:
 ├── logic                # 逻辑层,该层主要接收connect层与api层的rpc请求。如果是消息,会push到队列,最终被task层消费,可水平扩展
 ├── main.go              # gochat程序唯一入口文件
 ├── proto                # golang rpc proto 文件
-├── readme.md            # 英文说明文档
-├── readme.zh-cn.md      # 中文说明文档
+├── readme.md            # 中文说明文档
+├── readme.en.md         # 英文说明文档
 ├── reload.sh            # 编译gochat并执行supervisorctl restart重启相关进程
 ├── run.sh               # 快速构建一个docker容器,启动demo
 ├── site                 # 站点层,该层为纯静态页面,会http请求api层,可水平扩展
