@@ -198,6 +198,9 @@ And make sure there are no firewall restrictions on the relevant ports on the vp
 <a href="http://155.138.194.113:8080" target="_blank">http://155.138.194.113:8080</a>
 ```
 Log in with the above user name and password, or register one by yourself.
+You can log in to different browsers with different accounts. 
+If it is Chrome, you can use several browsers in incognito mode to log in with different accounts.
+Then, experience the chat between different accounts and the effect of message delivery.
 ```
 
 ### Follow-up
