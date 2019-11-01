@@ -46,6 +46,7 @@ $(document).ready(function () {
             $("#msg").append(innerInfo);
             $("#msg > div[class='item']:last > p[class='nick guest j-nick ']").text(userNameAndMsg);
             $("#msg > div[class='item']:last > p[class='text']:last").text(data.msg);
+            $("#msg").animate({scrollTop: $("#msg").offset().top + 100000}, 1000);
         } else if (data.op == 4) {
             // get room user count
             $("#roomOnlineMemberNum").text(data.count);

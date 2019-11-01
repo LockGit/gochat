@@ -52,6 +52,10 @@ and the rpc call connect layer method is further
 the message will be delivered to the relevant room, 
 and then further delivered to the user B in the room to complete a complete message session communication.
 
+6, if it is a private message, 
+then the task layer will locate the serverId corresponding to the connect layer according to the userId, 
+directly rpc call the connect layer of the serverId, and complete the private message delivery.
+
 Learning other im systems, in order to reduce the lock competition, will be divided in the connect layer bucket:
 It will roughly look like the following structure:
 Connect layer:
