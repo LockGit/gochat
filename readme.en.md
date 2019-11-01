@@ -178,7 +178,10 @@ If you feel that the above steps are too cumbersome,
 you can use the following docker image to build all the dependencies and quickly start a chat room.
 
 You can use the image I pushed to the docker hub 
-(there have been several test users created in the default image: lock, demo, test password: 111111)
+there have been several test users created in the default image.
+username  password
+demo        111111
+test        111111
 1,docker pull lockgit/gochat:latest
 2,sh run.sh dev
 3,visit http://127.0.0.1:8080 to open the chat room

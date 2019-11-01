@@ -150,7 +150,10 @@ go build -o gochat.bin -tags=etcd main.go
 如果你觉得以上步骤过于繁琐,你可以使用以下docker镜像构建所有依赖环境并快速启动一个聊天室
 
 你可以使用我推到docker hub上的镜像:
-默认镜像中已经创建了几个测试用户：分别是lock,demo,test 密码均为:111111
+默认镜像中已经创建了几个测试用户：
+用户名,密码
+demo  111111
+test  111111
 1,docker pull lockgit/gochat:latest
 2,sh run.sh dev
 3,访问 http://127.0.0.1:8080 开启聊天室
