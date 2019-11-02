@@ -90,7 +90,7 @@ Connect layer:
 ├── run.sh          # Quickly build a docker container and start the demo
 ├── site            # site layer, this layer is a pure static page, will http request api layer, can be extended horizontally
 ├── task            # task layer, the data in the consumption queue of this layer, and the rpc call connect layer performs message transmission, which can be extended horizontally
-├── tools           #tools function
+├── tools           # tools function
 └── vendor          # vendor package
 ```
 
