@@ -1,7 +1,0 @@
-language: go
-env:
-  global:
-    GO111MODULE: "on"
-script:
-  - go get -v -t -tags "etcd" ./...
-
