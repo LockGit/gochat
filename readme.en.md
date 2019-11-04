@@ -212,8 +212,6 @@ Then, experience the chat between different accounts and the effect of message d
 ```
 gochat implements a simple chat room function. Due to limited energy, 
 you can use your own business logic to customize some requirements and optimize some code in gochat.
-It is not the same as implementing it once. It should be understood more deeply after the example is done. 
-For the handling of tcp sticky packets, the common practice is to specify the message size in the message header and read the specified size as a package,
-Insufficient size continues to read until the complete package is satisfied. This demo has not been processed yet.
-The code and design in gochat will be optimized and improved as needed.
+Please contact the relevant issue for any questions in use, 
+and follow up and optimize the relevant code according to the actual situation.
 ```
