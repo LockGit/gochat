@@ -1,3 +1,5 @@
+# gochat
+
 [English version(英文版本)](readme.en.md)
 
 ### gochat是一个使用纯go实现的轻量级im系统 
