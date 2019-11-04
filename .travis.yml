@@ -5,6 +5,6 @@ env:
 script: true
 
 build:
-  - go build -tags="etcd" ./...
+  - go build -tags "etcd" ./...
 
 
