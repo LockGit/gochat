@@ -1,5 +1,14 @@
-language: go
-script: true
+language:
+  go
+
+go:
+  - "1.12"
+  - master
+
 env:
   global:
-    GO111MODULE: true
+    GO111MODULE: "on"
+
+script: true
+
+
