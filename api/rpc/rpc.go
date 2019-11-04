@@ -38,17 +38,23 @@ func InitLogicRpcClient() {
 	}
 }
 
-func (rpc *RpcLogic) Login(req *proto.LoginRequest) (code int, authToken string) {
+func (rpc *RpcLogic) Login(req *proto.LoginRequest) (code int, authToken string, msg string) {
 	reply := &proto.LoginResponse{}
-	LogicRpcClient.Call(context.Background(), "Login", req, reply)
+	err := LogicRpcClient.Call(context.Background(), "Login", req, reply)
+	if err != nil {
+		msg = err.Error()
+	}
 	code = reply.Code
 	authToken = reply.AuthToken
 	return
 }
 
-func (rpc *RpcLogic) Register(req *proto.RegisterRequest) (code int, authToken string) {
+func (rpc *RpcLogic) Register(req *proto.RegisterRequest) (code int, authToken string, msg string) {
 	reply := &proto.RegisterReply{}
-	LogicRpcClient.Call(context.Background(), "Register", req, reply)
+	err := LogicRpcClient.Call(context.Background(), "Register", req, reply)
+	if err != nil {
+		msg = err.Error()
+	}
 	code = reply.Code
 	authToken = reply.AuthToken
 	return

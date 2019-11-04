@@ -73,7 +73,7 @@
                         setLocalStorage("authToken", result.data);
                         window.location.href = "/index.html";
                     } else {
-                        swal("register error！");
+                        swal("error:" + result.message);
                     }
                 },
                 error: function () {

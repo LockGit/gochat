@@ -35,17 +35,8 @@ func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, 
 	if userId == 0 {
 		return errors.New("register userId empty!")
 	}
-	loginSessionId := tools.GetSessionIdByUserId(userId)
 	if userId > 0 {
-		token, _ := RedisSessClient.Get(loginSessionId).Result()
-		if token != "" {
-			//logout already login user session
-			oldSession := tools.CreateSessionId(token)
-			err := RedisSessClient.Del(oldSession).Err()
-			if err != nil {
-				return errors.New("logout user fail!token is:" + token)
-			}
-		}
+		return errors.New("user already have,please login!")
 	}
 	//set token
 	randToken := tools.GetRandomToken(32)
@@ -56,7 +47,6 @@ func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, 
 	RedisSessClient.Do("MULTI")
 	RedisSessClient.HMSet(sessionId, userData)
 	RedisSessClient.Expire(sessionId, 86400*time.Second)
-	RedisSessClient.Set(loginSessionId, randToken, 86400*time.Second)
 	err = RedisSessClient.Do("EXEC").Err()
 	if err != nil {
 		logrus.Infof("register set redis token fail!")

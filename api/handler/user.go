@@ -28,9 +28,9 @@ func Login(c *gin.Context) {
 		Name:     formLogin.UserName,
 		Password: tools.Sha1(formLogin.Password),
 	}
-	code, authToken := rpc.RpcLogicObj.Login(req)
+	code, authToken, msg := rpc.RpcLogicObj.Login(req)
 	if code == tools.CodeFail || authToken == "" {
-		tools.FailWithMsg(c, "login fail")
+		tools.FailWithMsg(c, msg)
 		return
 	}
 	tools.SuccessWithMsg(c, "login success", authToken)
@@ -51,9 +51,9 @@ func Register(c *gin.Context) {
 		Name:     formRegister.UserName,
 		Password: tools.Sha1(formRegister.Password),
 	}
-	code, authToken := rpc.RpcLogicObj.Register(req)
-	if code == tools.CodeFail {
-		tools.FailWithMsg(c, "register fail")
+	code, authToken, msg := rpc.RpcLogicObj.Register(req)
+	if code == tools.CodeFail || authToken == "" {
+		tools.FailWithMsg(c, msg)
 		return
 	}
 	tools.SuccessWithMsg(c, "register success", authToken)
