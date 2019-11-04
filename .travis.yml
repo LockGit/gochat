@@ -9,6 +9,9 @@ env:
   global:
     GO111MODULE: "on"
 
+before_script:
+  - go get -tags "etcd" -v github.com/smallnest/rpcx/...
+
 script: true
 
 
