@@ -215,3 +215,8 @@ you can use your own business logic to customize some requirements and optimize 
 Please contact the relevant issue for any questions in use, 
 and follow up and optimize the relevant code according to the actual situation.
 ```
+
+### license
+```
+gochat is licensed under the MIT License. 
+```

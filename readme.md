@@ -183,5 +183,11 @@ gochat实现了简单聊天室功能,由于精力有限,你可以在此基础上
 使用中的任何问题请提相关issue,后续会根据实际情况完善和优化相关代码。
 ```
 
+### license
+```
+gochat is licensed under the MIT License. 
+```
+
+
 
 
