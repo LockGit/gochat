@@ -216,7 +216,7 @@ Please contact the relevant issue for any questions in use,
 and follow up and optimize the relevant code according to the actual situation.
 ```
 
-### license
+### License
 ```
 gochat is licensed under the MIT License. 
 ```
