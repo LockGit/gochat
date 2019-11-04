@@ -11,7 +11,8 @@ env:
 
 
 script:
-  - go get -v -t -tags "etcd" ./...
+  - go install -tags "etcd" github.com/smallnest/rpcx/...
+  - go get -u -v -t ./...
 
 
 
