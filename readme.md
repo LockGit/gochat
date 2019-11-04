@@ -1,4 +1,4 @@
-# gochat
+# gochat - im server 
 
 [English version(英文版本)](readme.en.md)
 

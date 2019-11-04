@@ -1,3 +1,5 @@
+# gochat - im server 
+
 [中文版本(Chinese version)](readme.md)
 
 ### Gochat is a lightweight im server implemented using pure go
