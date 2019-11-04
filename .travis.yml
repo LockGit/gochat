@@ -1,2 +1,5 @@
 language: go
 script: true
+env:
+  global:
+    GO111MODULE: true
