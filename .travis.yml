@@ -4,5 +4,7 @@ env:
     GO111MODULE: "on"
 script: true
 
+build:
+  - go build -tags="etcd" ./...
 
 
