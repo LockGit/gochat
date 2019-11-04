@@ -1,18 +1,5 @@
-language:
-  go
-
-go:
-  - "1.12"
-  - master
-
-env:
-  global:
-    GO111MODULE: "on"
-
-
-script:
-  - go install -tags "etcd" github.com/smallnest/rpcx/...
-  - go get -u -v -t ./...
+language: go
+script: true
 
 
 
