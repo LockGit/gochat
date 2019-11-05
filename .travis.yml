@@ -10,9 +10,9 @@ env:
     GO111MODULE: "on"
 
 
-install:
-  - go install -tags "etcd" ./...
+install: true
 
 
-
+notifications:
+  email: false
 
