@@ -1,4 +1,4 @@
-# gochat 
+# 🚀 gochat 
 [![Build Status](https://travis-ci.org/LockGit/gochat.svg?branch=master)](https://travis-ci.org/LockGit/gochat)
 <img src="https://img.shields.io/badge/gochat-im-green">
 <img src="https://img.shields.io/badge/documentation-yes-brightgreen.svg">
@@ -200,9 +200,7 @@ gochat实现了简单聊天室功能,由于精力有限,你可以在此基础上
 ```
 
 ### License
-```
 gochat is licensed under the MIT License. 
-```
 
 
 
