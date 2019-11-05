@@ -1,5 +1,3 @@
-// +build etcd
-
 package client
 
 import (
@@ -28,6 +26,8 @@ type EtcdDiscovery struct {
 
 	// -1 means it always retry to watch until zookeeper is ok, 0 means no retry.
 	RetriesAfterWatchFailed int
+
+	filter ServiceDiscoveryFilter
 
 	stopCh chan struct{}
 }
@@ -76,7 +76,11 @@ func NewEtcdDiscoveryStore(basePath string, kv store.Store) ServiceDiscovery {
 			}
 		}
 		k := strings.TrimPrefix(p.Key, prefix)
-		pairs = append(pairs, &KVPair{Key: k, Value: string(p.Value)})
+		pair := &KVPair{Key: k, Value: string(p.Value)}
+		if d.filter != nil && !d.filter(pair) {
+			continue
+		}
+		pairs = append(pairs, pair)
 	}
 	d.pairs = pairs
 	d.RetriesAfterWatchFailed = -1
@@ -105,6 +109,11 @@ func (d EtcdDiscovery) Clone(servicePath string) ServiceDiscovery {
 	return NewEtcdDiscoveryStore(d.basePath+"/"+servicePath, d.kv)
 }
 
+// SetFilter sets the filer.
+func (d EtcdDiscovery) SetFilter(filter ServiceDiscoveryFilter) {
+	d.filter = filter
+}
+
 // GetServices returns the servers
 func (d EtcdDiscovery) GetServices() []*KVPair {
 	return d.pairs
@@ -112,6 +121,9 @@ func (d EtcdDiscovery) GetServices() []*KVPair {
 
 // WatchService returns a nil chan.
 func (d *EtcdDiscovery) WatchService() chan []*KVPair {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	ch := make(chan []*KVPair, 10)
 	d.chans = append(d.chans, ch)
 	return ch
@@ -140,7 +152,7 @@ func (d *EtcdDiscovery) watch() {
 		var tempDelay time.Duration
 
 		retry := d.RetriesAfterWatchFailed
-		for d.RetriesAfterWatchFailed == -1 || retry > 0 {
+		for d.RetriesAfterWatchFailed == -1 || retry >= 0 {
 			c, err = d.kv.WatchTree(d.basePath, nil)
 			if err != nil {
 				if d.RetriesAfterWatchFailed > 0 {
@@ -195,10 +207,15 @@ func (d *EtcdDiscovery) watch() {
 						}
 					}
 					k := strings.TrimPrefix(p.Key, prefix)
-					pairs = append(pairs, &KVPair{Key: k, Value: string(p.Value)})
+					pair := &KVPair{Key: k, Value: string(p.Value)}
+					if d.filter != nil && !d.filter(pair) {
+						continue
+					}
+					pairs = append(pairs, pair)
 				}
 				d.pairs = pairs
 
+				d.mu.Lock()
 				for _, ch := range d.chans {
 					ch := ch
 					go func() {
@@ -215,6 +232,7 @@ func (d *EtcdDiscovery) watch() {
 						}
 					}()
 				}
+				d.mu.Unlock()
 			}
 		}
 

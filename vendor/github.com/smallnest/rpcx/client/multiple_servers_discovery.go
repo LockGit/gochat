@@ -12,7 +12,8 @@ import (
 type MultipleServersDiscovery struct {
 	pairs []*KVPair
 	chans []chan []*KVPair
-	mu    sync.Mutex
+
+	mu sync.Mutex
 }
 
 // NewMultipleServersDiscovery returns a new MultipleServersDiscovery.
@@ -27,6 +28,11 @@ func (d MultipleServersDiscovery) Clone(servicePath string) ServiceDiscovery {
 	return &d
 }
 
+// SetFilter sets the filer.
+func (d MultipleServersDiscovery) SetFilter(filter ServiceDiscoveryFilter) {
+
+}
+
 // GetServices returns the configured server
 func (d MultipleServersDiscovery) GetServices() []*KVPair {
 	return d.pairs
@@ -34,6 +40,9 @@ func (d MultipleServersDiscovery) GetServices() []*KVPair {
 
 // WatchService returns a nil chan.
 func (d *MultipleServersDiscovery) WatchService() chan []*KVPair {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	ch := make(chan []*KVPair, 10)
 	d.chans = append(d.chans, ch)
 	return ch
@@ -57,6 +66,9 @@ func (d *MultipleServersDiscovery) RemoveWatcher(ch chan []*KVPair) {
 
 // Update is used to update servers at runtime.
 func (d *MultipleServersDiscovery) Update(pairs []*KVPair) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	for _, ch := range d.chans {
 		ch := ch
 		go func() {

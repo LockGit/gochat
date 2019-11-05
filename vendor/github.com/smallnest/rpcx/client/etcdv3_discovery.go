@@ -1,5 +1,3 @@
-// +build etcd
-
 package client
 
 import (
@@ -29,6 +27,8 @@ type EtcdV3Discovery struct {
 	// -1 means it always retry to watch until zookeeper is ok, 0 means no retry.
 	RetriesAfterWatchFailed int
 
+	filter ServiceDiscoveryFilter
+
 	stopCh chan struct{}
 }
 
@@ -54,7 +54,7 @@ func NewEtcdV3DiscoveryStore(basePath string, kv store.Store) ServiceDiscovery {
 
 	ps, err := kv.List(basePath)
 	if err != nil {
-		log.Infof("cannot get services of from registry: %v, err: %v", basePath, err)
+		log.Errorf("cannot get services of from registry: %v, err: %v", basePath, err)
 		panic(err)
 	}
 	var pairs = make([]*KVPair, 0, len(ps))
@@ -79,7 +79,11 @@ func NewEtcdV3DiscoveryStore(basePath string, kv store.Store) ServiceDiscovery {
 			continue
 		}
 		k := strings.TrimPrefix(p.Key, prefix)
-		pairs = append(pairs, &KVPair{Key: k, Value: string(p.Value)})
+		pair := &KVPair{Key: k, Value: string(p.Value)}
+		if d.filter != nil && !d.filter(pair) {
+			continue
+		}
+		pairs = append(pairs, pair)
 	}
 	d.pairs = pairs
 	d.RetriesAfterWatchFailed = -1
@@ -94,7 +98,7 @@ func NewEtcdV3DiscoveryTemplate(basePath string, etcdAddr []string, options *sto
 		basePath = basePath[:len(basePath)-1]
 	}
 
-	kv, err := libkv.NewStore(store.ETCD, etcdAddr, options)
+	kv, err := libkv.NewStore(etcd.ETCDV3, etcdAddr, options)
 	if err != nil {
 		log.Infof("cannot create store: %v", err)
 		panic(err)
@@ -108,6 +112,11 @@ func (d EtcdV3Discovery) Clone(servicePath string) ServiceDiscovery {
 	return NewEtcdV3DiscoveryStore(d.basePath+"/"+servicePath, d.kv)
 }
 
+// SetFilter sets the filer.
+func (d EtcdV3Discovery) SetFilter(filter ServiceDiscoveryFilter) {
+	d.filter = filter
+}
+
 // GetServices returns the servers
 func (d EtcdV3Discovery) GetServices() []*KVPair {
 	return d.pairs
@@ -115,6 +124,9 @@ func (d EtcdV3Discovery) GetServices() []*KVPair {
 
 // WatchService returns a nil chan.
 func (d *EtcdV3Discovery) WatchService() chan []*KVPair {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	ch := make(chan []*KVPair, 10)
 	d.chans = append(d.chans, ch)
 	return ch
@@ -143,7 +155,7 @@ func (d *EtcdV3Discovery) watch() {
 		var tempDelay time.Duration
 
 		retry := d.RetriesAfterWatchFailed
-		for d.RetriesAfterWatchFailed == -1 || retry > 0 {
+		for d.RetriesAfterWatchFailed == -1 || retry >= 0 {
 			c, err = d.kv.WatchTree(d.basePath, nil)
 			if err != nil {
 				if d.RetriesAfterWatchFailed > 0 {
@@ -202,10 +214,15 @@ func (d *EtcdV3Discovery) watch() {
 					}
 
 					k := strings.TrimPrefix(p.Key, prefix)
-					pairs = append(pairs, &KVPair{Key: k, Value: string(p.Value)})
+					pair := &KVPair{Key: k, Value: string(p.Value)}
+					if d.filter != nil && !d.filter(pair) {
+						continue
+					}
+					pairs = append(pairs, pair)
 				}
 				d.pairs = pairs
 
+				d.mu.Lock()
 				for _, ch := range d.chans {
 					ch := ch
 					go func() {
@@ -222,6 +239,7 @@ func (d *EtcdV3Discovery) watch() {
 						}
 					}()
 				}
+				d.mu.Unlock()
 			}
 		}
 

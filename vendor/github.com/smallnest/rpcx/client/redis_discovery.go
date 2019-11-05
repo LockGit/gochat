@@ -1,5 +1,3 @@
-// +build redis
-
 package client
 
 import (
@@ -9,8 +7,8 @@ import (
 
 	"github.com/abronan/valkeyrie"
 	"github.com/abronan/valkeyrie/store"
-	"github.com/abronan/valkeyrie/store/redis"
 	"github.com/smallnest/rpcx/log"
+	"github.com/smallnest/valkeyrie/store/redis"
 )
 
 func init() {
@@ -28,6 +26,8 @@ type RedisDiscovery struct {
 
 	// -1 means it always retry to watch until zookeeper is ok, 0 means no retry.
 	RetriesAfterWatchFailed int
+
+	filter ServiceDiscoveryFilter
 
 	stopCh chan struct{}
 }
@@ -79,7 +79,11 @@ func NewRedisDiscoveryStore(basePath string, kv store.Store) ServiceDiscovery {
 			continue
 		}
 		k := strings.TrimPrefix(p.Key, prefix)
-		pairs = append(pairs, &KVPair{Key: k, Value: string(p.Value)})
+		pair := &KVPair{Key: k, Value: string(p.Value)}
+		if d.filter != nil && !d.filter(pair) {
+			continue
+		}
+		pairs = append(pairs, pair)
 	}
 	d.pairs = pairs
 	d.RetriesAfterWatchFailed = -1
@@ -108,6 +112,11 @@ func (d RedisDiscovery) Clone(servicePath string) ServiceDiscovery {
 	return NewRedisDiscoveryStore(d.basePath+"/"+servicePath, d.kv)
 }
 
+// SetFilter sets the filer.
+func (d RedisDiscovery) SetFilter(filter ServiceDiscoveryFilter) {
+	d.filter = filter
+}
+
 // GetServices returns the servers
 func (d RedisDiscovery) GetServices() []*KVPair {
 	return d.pairs
@@ -115,6 +124,9 @@ func (d RedisDiscovery) GetServices() []*KVPair {
 
 // WatchService returns a nil chan.
 func (d *RedisDiscovery) WatchService() chan []*KVPair {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	ch := make(chan []*KVPair, 10)
 	d.chans = append(d.chans, ch)
 	return ch
@@ -143,7 +155,7 @@ func (d *RedisDiscovery) watch() {
 		var tempDelay time.Duration
 
 		retry := d.RetriesAfterWatchFailed
-		for d.RetriesAfterWatchFailed == -1 || retry > 0 {
+		for d.RetriesAfterWatchFailed == -1 || retry >= 0 {
 			c, err = d.kv.WatchTree(d.basePath, nil, nil)
 			if err != nil {
 				if d.RetriesAfterWatchFailed > 0 {
@@ -202,10 +214,15 @@ func (d *RedisDiscovery) watch() {
 					}
 
 					k := strings.TrimPrefix(p.Key, prefix)
-					pairs = append(pairs, &KVPair{Key: k, Value: string(p.Value)})
+					pair := &KVPair{Key: k, Value: string(p.Value)}
+					if d.filter != nil && !d.filter(pair) {
+						continue
+					}
+					pairs = append(pairs, pair)
 				}
 				d.pairs = pairs
 
+				d.mu.Lock()
 				for _, ch := range d.chans {
 					ch := ch
 					go func() {
@@ -222,6 +239,7 @@ func (d *RedisDiscovery) watch() {
 						}
 					}()
 				}
+				d.mu.Unlock()
 			}
 		}
 

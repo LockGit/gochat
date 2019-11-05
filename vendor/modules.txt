@@ -1,7 +1,8 @@
+# github.com/BurntSushi/toml v0.3.1
+github.com/BurntSushi/toml
 # github.com/abronan/valkeyrie v0.0.0-20190822142731-f2e1850dc905
 github.com/abronan/valkeyrie
 github.com/abronan/valkeyrie/store
-github.com/abronan/valkeyrie/store/redis
 # github.com/anacrolix/missinggo v1.2.1
 github.com/anacrolix/missinggo
 github.com/anacrolix/missinggo/inproc
@@ -24,7 +25,7 @@ github.com/cenk/backoff
 github.com/cenkalti/backoff
 # github.com/cheekybits/genny v1.0.0
 github.com/cheekybits/genny/generic
-# github.com/coreos/etcd v3.3.13+incompatible
+# github.com/coreos/etcd v3.3.17+incompatible
 github.com/coreos/etcd/client
 github.com/coreos/etcd/clientv3/concurrency
 github.com/coreos/etcd/pkg/pathutil
@@ -35,9 +36,22 @@ github.com/coreos/etcd/clientv3
 github.com/coreos/etcd/etcdserver/etcdserverpb
 github.com/coreos/etcd/mvcc/mvccpb
 github.com/coreos/etcd/auth/authpb
+github.com/coreos/etcd/clientv3/balancer
+github.com/coreos/etcd/clientv3/balancer/picker
+github.com/coreos/etcd/clientv3/balancer/resolver/endpoint
+github.com/coreos/etcd/clientv3/credentials
 github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes
+github.com/coreos/etcd/pkg/logutil
+github.com/coreos/etcd/clientv3/balancer/connectivity
+github.com/coreos/etcd/pkg/systemd
+github.com/coreos/etcd/raft
+github.com/coreos/etcd/raft/raftpb
 # github.com/coreos/go-semver v0.2.0
 github.com/coreos/go-semver/semver
+# github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
+github.com/coreos/go-systemd/journal
+# github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f
+github.com/coreos/pkg/capnslog
 # github.com/dgryski/go-jump v0.0.0-20170409065014-e1f439676b57
 github.com/dgryski/go-jump
 # github.com/docker/libkv v0.2.1
@@ -69,16 +83,19 @@ github.com/go-redis/redis/internal/hashtag
 github.com/go-redis/redis/internal/pool
 github.com/go-redis/redis/internal/proto
 github.com/go-redis/redis/internal/util
-# github.com/gogo/protobuf v1.2.1
+# github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 # github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
+github.com/golang/protobuf/protoc-gen-go/descriptor
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/google/uuid v1.1.1
+github.com/google/uuid
 # github.com/gorilla/websocket v1.4.0
 github.com/gorilla/websocket
 # github.com/grandcat/zeroconf v0.0.0-20190424104450-85eadb44205c
@@ -189,9 +206,9 @@ github.com/rubyist/circuitbreaker
 github.com/samuel/go-zookeeper/zk
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
-# github.com/smallnest/libkv-etcdv3-store v0.0.0-20190919063216-0c1616a1351d
+# github.com/smallnest/libkv-etcdv3-store v0.0.0-20191101045330-f92940446965
 github.com/smallnest/libkv-etcdv3-store
-# github.com/smallnest/rpcx v0.0.0-20190920111107-cc22806312fd
+# github.com/smallnest/rpcx v0.0.0-20191101045608-2a801682117a
 github.com/smallnest/rpcx/client
 github.com/smallnest/rpcx/server
 github.com/smallnest/rpcx/serverplugin
@@ -201,6 +218,8 @@ github.com/smallnest/rpcx/protocol
 github.com/smallnest/rpcx/share
 github.com/smallnest/rpcx/util
 github.com/smallnest/rpcx/codec
+# github.com/smallnest/valkeyrie v0.0.0-20191030064635-54a884e4b303
+github.com/smallnest/valkeyrie/store/redis
 # github.com/soheilhy/cmux v0.1.4
 github.com/soheilhy/cmux
 # github.com/spf13/afero v1.1.2
@@ -231,7 +250,7 @@ github.com/vmihailenco/msgpack
 github.com/vmihailenco/msgpack/codes
 # github.com/xtaci/kcp-go v5.4.4+incompatible
 github.com/xtaci/kcp-go
-# go.etcd.io/etcd v3.3.13+incompatible
+# go.etcd.io/etcd v3.3.17+incompatible
 go.etcd.io/etcd/clientv3
 # go.opencensus.io v0.22.0
 go.opencensus.io/trace
@@ -239,6 +258,19 @@ go.opencensus.io/internal
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/tracestate
 go.opencensus.io
+# go.uber.org/atomic v1.5.0
+go.uber.org/atomic
+# go.uber.org/multierr v1.3.0
+go.uber.org/multierr
+# go.uber.org/tools v0.0.0-20190618225709-2cfd321de3ee
+go.uber.org/tools/update-license
+# go.uber.org/zap v1.12.0
+go.uber.org/zap
+go.uber.org/zap/zapcore
+go.uber.org/zap/internal/bufferpool
+go.uber.org/zap/buffer
+go.uber.org/zap/internal/color
+go.uber.org/zap/internal/exit
 # golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/cast5
@@ -258,7 +290,10 @@ golang.org/x/crypto/curve25519
 golang.org/x/crypto/internal/chacha20
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/cryptobyte/asn1
-# golang.org/x/net v0.0.0-20190613194153-d28f0bde5980
+# golang.org/x/lint v0.0.0-20190930215403-16217165b5de
+golang.org/x/lint/golint
+golang.org/x/lint
+# golang.org/x/net v0.0.0-20191028085509-fe3aa8a45271
 golang.org/x/net/context
 golang.org/x/net/ipv4
 golang.org/x/net/ipv6
@@ -272,7 +307,7 @@ golang.org/x/net/http/httpguts
 golang.org/x/net/idna
 golang.org/x/net/trace
 golang.org/x/net/internal/timeseries
-# golang.org/x/sys v0.0.0-20190801041406-cbf593c0f2f3
+# golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/cpu
@@ -281,6 +316,22 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 golang.org/x/text/secure/bidirule
 golang.org/x/text/unicode/bidi
+# golang.org/x/tools v0.0.0-20191031220737-6d8f1af9ccc0
+golang.org/x/tools/go/analysis
+golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/go/gcexportdata
+golang.org/x/tools/go/packages
+golang.org/x/tools/go/types/objectpath
+golang.org/x/tools/go/buildutil
+golang.org/x/tools/go/analysis/passes/inspect
+golang.org/x/tools/go/ast/inspector
+golang.org/x/tools/go/types/typeutil
+golang.org/x/tools/go/internal/gcimporter
+golang.org/x/tools/go/internal/packagesdriver
+golang.org/x/tools/internal/gopathwalk
+golang.org/x/tools/internal/semver
+golang.org/x/tools/internal/span
+golang.org/x/tools/internal/fastwalk
 # google.golang.org/appengine v1.4.0
 google.golang.org/appengine/datastore
 google.golang.org/appengine
@@ -291,20 +342,23 @@ google.golang.org/appengine/internal/modules
 google.golang.org/appengine/internal/base
 google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
-# google.golang.org/genproto v0.0.0-20190425155659-357c62f0e4bb
+# google.golang.org/genproto v0.0.0-20191028173616-919d9bdd9fe6
+google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.21.0
+# google.golang.org/grpc v1.24.0
 google.golang.org/grpc
 google.golang.org/grpc/codes
 google.golang.org/grpc/credentials
 google.golang.org/grpc/grpclog
-google.golang.org/grpc/health/grpc_health_v1
 google.golang.org/grpc/keepalive
 google.golang.org/grpc/metadata
 google.golang.org/grpc/status
 google.golang.org/grpc/balancer
-google.golang.org/grpc/balancer/roundrobin
 google.golang.org/grpc/connectivity
+google.golang.org/grpc/resolver
+google.golang.org/grpc/resolver/dns
+google.golang.org/grpc/resolver/passthrough
+google.golang.org/grpc/balancer/roundrobin
 google.golang.org/grpc/encoding
 google.golang.org/grpc/encoding/proto
 google.golang.org/grpc/internal
@@ -318,9 +372,7 @@ google.golang.org/grpc/internal/grpcsync
 google.golang.org/grpc/internal/transport
 google.golang.org/grpc/naming
 google.golang.org/grpc/peer
-google.golang.org/grpc/resolver
-google.golang.org/grpc/resolver/dns
-google.golang.org/grpc/resolver/passthrough
+google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/tap
 google.golang.org/grpc/credentials/internal
@@ -338,3 +390,29 @@ gopkg.in/redis.v5/internal/pool
 gopkg.in/redis.v5/internal/proto
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
+# honnef.co/go/tools v0.0.1-2019.2.3
+honnef.co/go/tools/cmd/staticcheck
+honnef.co/go/tools/lint
+honnef.co/go/tools/lint/lintutil
+honnef.co/go/tools/simple
+honnef.co/go/tools/staticcheck
+honnef.co/go/tools/stylecheck
+honnef.co/go/tools/unused
+honnef.co/go/tools/config
+honnef.co/go/tools/facts
+honnef.co/go/tools/internal/cache
+honnef.co/go/tools/loader
+honnef.co/go/tools/lint/lintutil/format
+honnef.co/go/tools/version
+honnef.co/go/tools/arg
+honnef.co/go/tools/internal/passes/buildssa
+honnef.co/go/tools/internal/sharedcheck
+honnef.co/go/tools/lint/lintdsl
+honnef.co/go/tools/deprecated
+honnef.co/go/tools/functions
+honnef.co/go/tools/printf
+honnef.co/go/tools/ssa
+honnef.co/go/tools/ssautil
+honnef.co/go/tools/staticcheck/vrp
+honnef.co/go/tools/go/types/typeutil
+honnef.co/go/tools/internal/renameio

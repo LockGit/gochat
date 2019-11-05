@@ -1,5 +1,3 @@
-// +build etcd
-
 package serverplugin
 
 import (
@@ -122,7 +120,7 @@ func (p *EtcdV3RegisterPlugin) Stop() error {
 	<-p.done
 
 	if p.kv == nil {
-		kv, err := libkv.NewStore(store.ETCD, p.EtcdServers, p.Options)
+		kv, err := libkv.NewStore(etcd.ETCDV3, p.EtcdServers, p.Options)
 		if err != nil {
 			log.Errorf("cannot create etcd registry: %v", err)
 			return err
@@ -164,7 +162,7 @@ func (p *EtcdV3RegisterPlugin) Register(name string, rcvr interface{}, metadata 
 
 	if p.kv == nil {
 		etcd.Register()
-		kv, err := libkv.NewStore(store.ETCD, p.EtcdServers, nil)
+		kv, err := libkv.NewStore(etcd.ETCDV3, p.EtcdServers, nil)
 		if err != nil {
 			log.Errorf("cannot create etcd registry: %v", err)
 			return err
@@ -215,7 +213,7 @@ func (p *EtcdV3RegisterPlugin) Unregister(name string) (err error) {
 
 	if p.kv == nil {
 		etcd.Register()
-		kv, err := libkv.NewStore(store.ETCD, p.EtcdServers, nil)
+		kv, err := libkv.NewStore(etcd.ETCDV3, p.EtcdServers, nil)
 		if err != nil {
 			log.Errorf("cannot create etcd registry: %v", err)
 			return err

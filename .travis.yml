@@ -10,8 +10,7 @@ env:
     GO111MODULE: "on"
 
 
-script:
-  - "cd $GOPATH/gochat && go build -o gochat.bin -tags=etcd main.go"
+script: true
 
 
 notifications:

@@ -1,5 +1,3 @@
-// +build zookeeper
-
 package client
 
 import (
@@ -28,6 +26,8 @@ type ZookeeperDiscovery struct {
 
 	// -1 means it always retry to watch until zookeeper is ok, 0 means no retry.
 	RetriesAfterWatchFailed int
+
+	filter ServiceDiscoveryFilter
 
 	stopCh chan struct{}
 }
@@ -67,7 +67,11 @@ func NewZookeeperDiscoveryWithStore(basePath string, kv store.Store) ServiceDisc
 
 	var pairs = make([]*KVPair, 0, len(ps))
 	for _, p := range ps {
-		pairs = append(pairs, &KVPair{Key: p.Key, Value: string(p.Value)})
+		pair := &KVPair{Key: p.Key, Value: string(p.Value)}
+		if d.filter != nil && !d.filter(pair) {
+			continue
+		}
+		pairs = append(pairs, pair)
 	}
 	d.pairs = pairs
 	d.RetriesAfterWatchFailed = -1
@@ -100,6 +104,11 @@ func (d ZookeeperDiscovery) Clone(servicePath string) ServiceDiscovery {
 	return NewZookeeperDiscoveryWithStore(d.basePath+"/"+servicePath, d.kv)
 }
 
+// SetFilter sets the filer.
+func (d ZookeeperDiscovery) SetFilter(filter ServiceDiscoveryFilter) {
+	d.filter = filter
+}
+
 // GetServices returns the servers
 func (d ZookeeperDiscovery) GetServices() []*KVPair {
 	return d.pairs
@@ -107,6 +116,9 @@ func (d ZookeeperDiscovery) GetServices() []*KVPair {
 
 // WatchService returns a nil chan.
 func (d *ZookeeperDiscovery) WatchService() chan []*KVPair {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	ch := make(chan []*KVPair, 10)
 	d.chans = append(d.chans, ch)
 	return ch
@@ -135,7 +147,7 @@ func (d *ZookeeperDiscovery) watch() {
 		var tempDelay time.Duration
 
 		retry := d.RetriesAfterWatchFailed
-		for d.RetriesAfterWatchFailed == -1 || retry > 0 {
+		for d.RetriesAfterWatchFailed == -1 || retry >= 0 {
 			c, err = d.kv.WatchTree(d.basePath, nil)
 			if err != nil {
 				if d.RetriesAfterWatchFailed > 0 {
@@ -177,10 +189,15 @@ func (d *ZookeeperDiscovery) watch() {
 				}
 				var pairs []*KVPair // latest servers
 				for _, p := range ps {
-					pairs = append(pairs, &KVPair{Key: p.Key, Value: string(p.Value)})
+					pair := &KVPair{Key: p.Key, Value: string(p.Value)}
+					if d.filter != nil && !d.filter(pair) {
+						continue
+					}
+					pairs = append(pairs, pair)
 				}
 				d.pairs = pairs
 
+				d.mu.Lock()
 				for _, ch := range d.chans {
 					ch := ch
 					go func() {
@@ -196,6 +213,7 @@ func (d *ZookeeperDiscovery) watch() {
 						}
 					}()
 				}
+				d.mu.Unlock()
 			}
 		}
 

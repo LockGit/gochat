@@ -11,6 +11,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563
 	github.com/sirupsen/logrus v1.4.2
-	github.com/smallnest/rpcx v0.0.0-20190920111107-cc22806312fd
+	github.com/smallnest/rpcx v0.0.0-20191101045608-2a801682117a
 	github.com/spf13/viper v1.4.0
+	sigs.k8s.io/yaml v1.1.0 // indirect
 )

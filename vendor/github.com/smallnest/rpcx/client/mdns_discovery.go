@@ -29,6 +29,8 @@ type MDNSDiscovery struct {
 
 	mu sync.Mutex
 
+	filter ServiceDiscoveryFilter
+
 	stopCh chan struct{}
 }
 
@@ -63,6 +65,11 @@ func (d MDNSDiscovery) Clone(servicePath string) ServiceDiscovery {
 	return NewMDNSDiscovery(servicePath, d.Timeout, d.WatchInterval, d.domain)
 }
 
+// SetFilter sets the filer.
+func (d MDNSDiscovery) SetFilter(filter ServiceDiscoveryFilter) {
+	d.filter = filter
+}
+
 // GetServices returns the servers
 func (d MDNSDiscovery) GetServices() []*KVPair {
 	return d.pairs
@@ -70,6 +77,9 @@ func (d MDNSDiscovery) GetServices() []*KVPair {
 
 // WatchService returns a nil chan.
 func (d *MDNSDiscovery) WatchService() chan []*KVPair {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	ch := make(chan []*KVPair, 10)
 	d.chans = append(d.chans, ch)
 	return ch
@@ -104,6 +114,8 @@ func (d *MDNSDiscovery) watch() {
 			pairs, err := d.browse()
 			if err == nil {
 				d.pairs = pairs
+
+				d.mu.Lock()
 				for _, ch := range d.chans {
 					ch := ch
 					go func() {
@@ -119,6 +131,7 @@ func (d *MDNSDiscovery) watch() {
 						}
 					}()
 				}
+				d.mu.Unlock()
 			}
 		}
 	}
@@ -146,10 +159,15 @@ func (d *MDNSDiscovery) browse() ([]*KVPair, error) {
 			}
 
 			for _, sm := range services {
-				totalServices = append(totalServices, &KVPair{
+
+				pair := &KVPair{
 					Key:   sm.ServiceAddress,
 					Value: sm.Meta,
-				})
+				}
+				if d.filter != nil && !d.filter(pair) {
+					continue
+				}
+				totalServices = append(totalServices, pair)
 			}
 		}
 

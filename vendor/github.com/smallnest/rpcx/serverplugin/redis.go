@@ -1,5 +1,3 @@
-// +build redis
-
 package serverplugin
 
 import (
@@ -14,9 +12,9 @@ import (
 
 	"github.com/abronan/valkeyrie"
 	"github.com/abronan/valkeyrie/store"
-	"github.com/abronan/valkeyrie/store/redis"
 	metrics "github.com/rcrowley/go-metrics"
 	"github.com/smallnest/rpcx/log"
+	"github.com/smallnest/valkeyrie/store/redis"
 )
 
 func init() {
