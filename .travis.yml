@@ -3,7 +3,7 @@ language:
 
 go:
   - "1.12"
-#  - master
+  - master
 
 env:
   global:
@@ -14,5 +14,5 @@ script: true
 
 
 notifications:
-  email: false
+  email: true
 
