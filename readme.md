@@ -1,6 +1,9 @@
-# gochat - im server 
+# gochat
+[![Build Status](https://travis-ci.org/LockGit/gochat.svg?branch=master)](https://travis-ci.org/LockGit/gochat)
+<img src="https://img.shields.io/badge/documentation-yes-brightgreen.svg">
+<img src="https://img.shields.io/badge/license-MIT-green">
 
-[English version(英文版本)](readme.en.md)
+### [English version(英文版本)](readme.en.md)
 
 ### gochat是一个使用纯go实现的轻量级im系统 
 ```
