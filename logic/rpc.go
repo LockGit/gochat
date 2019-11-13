@@ -25,6 +25,10 @@ type RpcLogic struct {
 func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, reply *proto.RegisterReply) (err error) {
 	reply.Code = config.FailReplyCode
 	u := new(dao.User)
+	uData := u.CheckHaveUserName(args.Name)
+	if uData.Id > 0 {
+		return errors.New("this user name already have , please login !!!")
+	}
 	u.UserName = args.Name
 	u.Password = args.Password
 	userId, err := u.Add()
