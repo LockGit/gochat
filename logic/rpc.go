@@ -35,9 +35,6 @@ func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, 
 	if userId == 0 {
 		return errors.New("register userId empty!")
 	}
-	if userId > 0 {
-		return errors.New("user already have,please login!")
-	}
 	//set token
 	randToken := tools.GetRandomToken(32)
 	sessionId := tools.CreateSessionId(randToken)
