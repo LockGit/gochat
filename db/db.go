@@ -10,8 +10,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/sirupsen/logrus"
 	"gochat/config"
-	"runtime"
-	"strings"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -26,8 +25,7 @@ func init() {
 func initDB(dbName string) {
 	var e error
 	// if prod env , you should change mysql driver for yourself !!!
-	pathArr := strings.Split(getFilePath(), "/")
-	realPath := strings.Join(pathArr[0:len(pathArr)-2], "/")
+	realPath, _ := filepath.Abs("./")
 	configFilePath := realPath + "/db/gochat.sqlite3"
 	syncLock.Lock()
 	dbMap[dbName], e = gorm.Open("sqlite3", configFilePath)
@@ -56,9 +54,4 @@ type DbGoChat struct {
 
 func (*DbGoChat) GetDbName() string {
 	return "gochat"
-}
-
-func getFilePath() string {
-	_, file, _, _ := runtime.Caller(0)
-	return file
 }
