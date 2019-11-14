@@ -8,8 +8,7 @@ package config
 import (
 	"github.com/spf13/viper"
 	"os"
-	"runtime"
-	"strings"
+	"path/filepath"
 	"sync"
 )
 
@@ -46,16 +45,10 @@ func init() {
 	Init()
 }
 
-func getFilePath() string {
-	_, file, _, _ := runtime.Caller(0)
-	return file
-}
-
 func Init() {
 	once.Do(func() {
 		env := GetMode()
-		pathArr := strings.Split(getFilePath(), "/")
-		realPath = strings.Join(pathArr[0:len(pathArr)-2], "/")
+		realPath, _ := filepath.Abs("./")
 		configFilePath := realPath + "/config/" + env + "/"
 		viper.SetConfigType("toml")
 		viper.SetConfigName("/connect")
