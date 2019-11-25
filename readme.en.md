@@ -232,5 +232,15 @@ Please contact the relevant issue for any questions in use,
 and follow up and optimize the relevant code according to the actual situation.
 ```
 
+### Discuss
+```
+Because some students mentioned the issue proposal to establish a communication group, 
+the following two QR codes are provided for technical learning exchange and recording related technical experience, 
+and advertising is prohibited.
+```
+![QQ](https://github.com/LockGit/gochat/blob/master/architecture/gochat-qq.jpg)
+![Wechat](https://github.com/LockGit/gochat/blob/master/architecture/gochat-wx.jpg)
+
+
 ### License
 gochat is licensed under the MIT License. 

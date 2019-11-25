@@ -196,8 +196,15 @@ docker build -f docker/Dockerfile . -t lockgit/gochat
 ### 后续
 ```
 gochat实现了简单聊天室功能,由于精力有限,你可以在此基础上使用自己的业务逻辑定制一些需求,并优掉一些gochat中的代码。
-使用中的任何问题请提相关issue,后续会根据实际情况完善和优化相关代码。
+使用中的任何问题请提相关issue,后续会根据实际情况完善和优化相关代码与设计。
 ```
+
+### 交流群
+```
+因有同学提issue建议建立交流群，所以提供以下两个二维码，用于技术学习交流和记录相关技术心得，禁止广告。
+```
+![QQ群](https://github.com/LockGit/gochat/blob/master/architecture/gochat-qq.jpg)
+![微信](https://github.com/LockGit/gochat/blob/master/architecture/gochat-wx.jpg)
 
 ### License
 gochat is licensed under the MIT License. 
