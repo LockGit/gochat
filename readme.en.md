@@ -210,7 +210,7 @@ you only need to build the Dockerfile under the docker file.
 Docker build -f docker/Dockerfile . -t lockgit/gochat
 then execute:
 1,git clone git@github.com:LockGit/gochat.git
-2,cd cd gochat && sh run.sh dev 即可 
+2,cd gochat && sh run.sh dev 
 
 If you want to deploy on personal vps, 
 remember to change the address of socketUrl and apiUrl in site/js/common.js to your ip address of vps.
