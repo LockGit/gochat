@@ -200,14 +200,17 @@ demo        111111
 test        111111
 admin       111111
 1,docker pull lockgit/gochat:latest
-2,sh run.sh dev
-3,visit http://127.0.0.1:8080 to open the chat room
+2,git clone git@github.com:LockGit/gochat.git
+3,cd gochat && sh run.sh dev
+4,visit http://127.0.0.1:8080 to open the chat room
 
 
 If you want to build an image yourself, 
 you only need to build the Dockerfile under the docker file.
 Docker build -f docker/Dockerfile . -t lockgit/gochat
-then execute sh run.sh dev
+then execute:
+1,git clone git@github.com:LockGit/gochat.git
+2,cd cd gochat && sh run.sh dev 即可 
 
 If you want to deploy on personal vps, 
 remember to change the address of socketUrl and apiUrl in site/js/common.js to your ip address of vps.
