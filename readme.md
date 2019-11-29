@@ -164,6 +164,7 @@ go build -o gochat.bin -tags=etcd main.go
 ### 使用docker一键启动 
 ```
 如果你觉得以上步骤过于繁琐,你可以使用以下docker镜像构建所有依赖环境并快速启动一个聊天室
+执行docker相关步骤的时候,会到hub.docker.com拉取相关镜像,可能需要翻墙,具体看你的网络。
 
 你可以使用我推到docker hub上的镜像:
 默认镜像中已经创建了几个测试用户：
@@ -173,15 +174,15 @@ test  111111
 admin 111111
 1,docker pull lockgit/gochat:latest
 2,git clone git@github.com:LockGit/gochat.git
-3,cd gochat && sh run.sh dev
+3,cd gochat && sh run.sh dev (该步骤需要一定时间编译各个模块，耐心等待即可）
 4,访问 http://127.0.0.1:8080 开启聊天室
 
 
 如果你想自己构建一个镜像,那么只需要build docker文件下的Dockerfile
 docker build -f docker/Dockerfile . -t lockgit/gochat
-然后执行:
+上面build过程可能需要翻墙且需要一定时间，完成后执行:
 1,git clone git@github.com:LockGit/gochat.git
-2,cd gochat && sh run.sh dev 
+2,cd gochat && sh run.sh dev (该步骤需要一定时间编译各个模块，耐心等待即可）
 
 如果你要部署在个人vps上,记得修改site/js/common.js中socketUrl与apiUrl的地址为你的vps的ip地址,
 并确保vps上没有针对相关端口的防火墙限制。
