@@ -246,7 +246,7 @@ and advertising is prohibited.
 
 ![QQ](https://github.com/LockGit/gochat/blob/master/architecture/gochat-qq.jpg)
 
->Wechat
+>Wechat (Share something interesting from time to time)
 
 ![Wechat](https://github.com/LockGit/gochat/blob/master/architecture/gochat-wx.jpg)
 
