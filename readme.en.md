@@ -242,7 +242,12 @@ Because some students mentioned the issue proposal to establish a communication 
 the following two QR codes are provided for technical learning exchange and recording related technical experience, 
 and advertising is prohibited.
 ```
+>QQ Group
+
 ![QQ](https://github.com/LockGit/gochat/blob/master/architecture/gochat-qq.jpg)
+
+>Wechat
+
 ![Wechat](https://github.com/LockGit/gochat/blob/master/architecture/gochat-wx.jpg)
 
 

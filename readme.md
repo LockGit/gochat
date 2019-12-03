@@ -208,7 +208,12 @@ gochat实现了简单聊天室功能,由于精力有限,你可以在此基础上
 ```
 因有同学提issue建议建立交流群，所以提供以下两个二维码，用于技术学习交流和记录相关技术心得，禁止广告。
 ```
+>QQ群 
+
 ![QQ群](https://github.com/LockGit/gochat/blob/master/architecture/gochat-qq.jpg)
+
+>公众号 (不定时分享一些有意思的东西)
+
 ![微信](https://github.com/LockGit/gochat/blob/master/architecture/gochat-wx.jpg)
 
 ### License
