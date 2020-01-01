@@ -253,7 +253,7 @@ and advertising is prohibited.
 ### Backer and Sponsor
 >jetbrains
 
-<a href="https://www.jetbrains.com/?from=gochat" target="_blank">
+<a href="https://www.jetbrains.com/?from=LockGit/gochat" target="_blank">
 <img src="https://github.com/LockGit/gochat/blob/master/architecture/jetbrains-gold-reseller.svg" width="100px" height="100px">
 </a>
 

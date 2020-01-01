@@ -219,7 +219,7 @@ gochat实现了简单聊天室功能,由于精力有限,你可以在此基础上
 ### Backer and Sponsor
 >jetbrains
 
-<a href="https://www.jetbrains.com/?from=gochat" target="_blank">
+<a href="https://www.jetbrains.com/?from=LockGit/gochat" target="_blank">
 <img src="https://github.com/LockGit/gochat/blob/master/architecture/jetbrains-gold-reseller.svg" width="100px" height="100px">
 </a>
 
