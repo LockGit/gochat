@@ -216,14 +216,14 @@ gochat实现了简单聊天室功能,由于精力有限,你可以在此基础上
 
 ![微信](https://github.com/LockGit/gochat/blob/master/architecture/gochat-wx.jpg)
 
-### License
-gochat is licensed under the MIT License. 
+### Backer and Sponsor
+>jetbrains
 
-### support
-```
-1，jetbrains
-```
 <a href="https://www.jetbrains.com/?from=gochat" target="_blank">
 <img src="https://github.com/LockGit/gochat/blob/master/architecture/jetbrains-gold-reseller.svg" width="100px" height="100px">
 </a>
+
+### License
+gochat is licensed under the MIT License. 
+
 

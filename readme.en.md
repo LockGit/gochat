@@ -250,14 +250,12 @@ and advertising is prohibited.
 
 ![Wechat](https://github.com/LockGit/gochat/blob/master/architecture/gochat-wx.jpg)
 
+### Backer and Sponsor
+>jetbrains
 
-### License
-gochat is licensed under the MIT License. 
-
-### support
-```
-1，jetbrains
-```
 <a href="https://www.jetbrains.com/?from=gochat" target="_blank">
 <img src="https://github.com/LockGit/gochat/blob/master/architecture/jetbrains-gold-reseller.svg" width="100px" height="100px">
 </a>
+
+### License
+gochat is licensed under the MIT License. 
