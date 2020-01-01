@@ -13,6 +13,7 @@
 <img src="https://img.shields.io/docker/pulls/lockgit/gochat">
 <img src="https://img.shields.io/github/repo-size/LockGit/gochat">
 <img src="https://img.shields.io/github/followers/LockGit">
+<img src="https://github.com/LockGit/gochat/blob/master/architecture/jetbrains-gold-reseller.svg">
 
 ### [English version(英文版本)](readme.en.md)
 

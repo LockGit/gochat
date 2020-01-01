@@ -135,6 +135,9 @@ func (c *Connect) createConnectRpcServer(network string, addr string) {
 	s := server.NewServer()
 	addRegistryPlugin(s, network, addr)
 	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathConnect, new(RpcConnectPush), fmt.Sprintf("%d", config.Conf.Common.CommonEtcd.ServerId))
+	s.RegisterOnShutdown(func(s *server.Server) {
+		s.UnregisterAll()
+	})
 	s.Serve(network, addr)
 }
 
