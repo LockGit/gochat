@@ -13,7 +13,6 @@
 <img src="https://img.shields.io/docker/pulls/lockgit/gochat">
 <img src="https://img.shields.io/github/repo-size/LockGit/gochat">
 <img src="https://img.shields.io/github/followers/LockGit">
-<img src="https://github.com/LockGit/gochat/blob/master/architecture/jetbrains-gold-reseller.svg">
 
 ### [中文版本(Chinese version)](readme.md)
 
@@ -254,3 +253,11 @@ and advertising is prohibited.
 
 ### License
 gochat is licensed under the MIT License. 
+
+### support
+```
+1，jetbrains
+```
+<a href="https://www.jetbrains.com/?from=gochat" target="_blank">
+<img src="https://github.com/LockGit/gochat/blob/master/architecture/jetbrains-gold-reseller.svg" width="100px" height="100px">
+</a>
