@@ -197,6 +197,15 @@ docker build -f docker/Dockerfile . -t lockgit/gochat
 然后,体验不同账号之间聊天以及消息投递效果。
 ```
 
+### 相关问题解答
+```
+整理出了几个讨论比较多的问题:
+1，在发送消息的时候是通过http,为什么不是websockt?
+这是server demo im,完全可以通过websockt来发送，效果一样，把相关逻辑处理放到websockt里即可，目前的消息通过http发送后也是rpc call后面的链接层进入队列
+
+2，消息是否存储数据库?
+没有存储，消息目前仅仅是在队列里流了一遍后投递出去，可以自己加存储逻辑
+```
 
 ### 后续
 ```
