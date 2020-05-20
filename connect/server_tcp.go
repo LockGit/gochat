@@ -1,0 +1,201 @@
+/**
+ * Created by lock
+ * Date: 2020/4/14
+ */
+package connect
+
+import (
+	"bufio"
+	"bytes"
+	"encoding/binary"
+	"encoding/json"
+	"github.com/sirupsen/logrus"
+	"gochat/config"
+	"gochat/pkg/stickpackage"
+	"gochat/proto"
+	"net"
+	"strings"
+	"time"
+)
+
+const maxInt = 1<<31 - 1
+
+func (c *Connect) InitTcpServer() error {
+	aTcpAddr := strings.Split(config.Conf.Connect.ConnectTcp.Bind, ",")
+	cpuNum := config.Conf.Connect.ConnectBucket.CpuNum
+	var (
+		addr     *net.TCPAddr
+		listener *net.TCPListener
+		err      error
+	)
+	for _, ipPort := range aTcpAddr {
+		if addr, err = net.ResolveTCPAddr("tcp", ipPort); err != nil {
+			logrus.Errorf("server_tcp ResolveTCPAddr error:%s", err.Error())
+			return err
+		}
+		if listener, err = net.ListenTCP("tcp", addr); err != nil {
+			logrus.Errorf("net.ListenTCP(tcp, %s),error(%v)", ipPort, err)
+			return err
+		}
+		logrus.Infof("start tcp listen at:%s", ipPort)
+		// cpu core num
+		for i := 0; i < cpuNum; i++ {
+			go c.acceptTcp(listener)
+		}
+	}
+	return nil
+}
+
+func (c *Connect) acceptTcp(listener *net.TCPListener) {
+	var (
+		conn *net.TCPConn
+		err  error
+		r    int
+	)
+	connectTcpConfig := config.Conf.Connect.ConnectTcp
+	for {
+		if conn, err = listener.AcceptTCP(); err != nil {
+			logrus.Errorf("listener.Accept(\"%s\") error(%v)", listener.Addr().String(), err)
+			return
+		}
+		// set keep alive，client==server ping package check
+		if err = conn.SetKeepAlive(connectTcpConfig.KeepAlive); err != nil {
+			logrus.Errorf("conn.SetKeepAlive() error:%s", err.Error())
+			return
+		}
+		//set ReceiveBuf
+		if err := conn.SetReadBuffer(connectTcpConfig.ReceiveBuf); err != nil {
+			logrus.Errorf("conn.SetReadBuffer() error:%s", err.Error())
+			return
+		}
+		//set SendBuf
+		if err := conn.SetWriteBuffer(connectTcpConfig.SendBuf); err != nil {
+			logrus.Errorf("conn.SetWriteBuffer() error:%s", err.Error())
+			return
+		}
+		go c.ServeTcp(DefaultServer, conn, r)
+		if r++; r == maxInt {
+			r = 0
+		}
+	}
+}
+
+func (c *Connect) ServeTcp(server *Server, conn *net.TCPConn, r int) {
+	var ch *Channel
+	ch = NewChannel(server.Options.BroadcastSize)
+	ch.connTcp = conn
+	go c.readDataFromTcp(server, ch)
+	go c.writeDataToTcp(server, ch)
+}
+
+func (c *Connect) readDataFromTcp(s *Server, ch *Channel) {
+	defer func() {
+		logrus.Infof("start exec disConnect ...")
+		if ch.Room == nil || ch.userId == 0 {
+			logrus.Infof("roomId and userId eq 0")
+			_ = ch.conn.Close()
+			return
+		}
+		logrus.Infof("exec disConnect ...")
+		disConnectRequest := new(proto.DisConnectRequest)
+		disConnectRequest.RoomId = ch.Room.Id
+		disConnectRequest.UserId = ch.userId
+		s.Bucket(ch.userId).DeleteChannel(ch)
+		if err := s.operator.DisConnect(disConnectRequest); err != nil {
+			logrus.Warnf("DisConnect rpc err :%s", err.Error())
+		}
+		if err := ch.connTcp.Close(); err != nil {
+			logrus.Warnf("DisConnect close tcp conn err :%s", err.Error())
+		}
+	}()
+	// scanner
+	scannerPackage := bufio.NewScanner(ch.connTcp)
+	scannerPackage.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		if !atEOF && data[0] == 'v' {
+			if len(data) > stickpackage.TcpHeaderLength {
+				packSumLength := int16(0)
+				_ = binary.Read(bytes.NewReader(data[stickpackage.LengthStartIndex:stickpackage.LengthStopIndex]), binary.BigEndian, &packSumLength)
+				if int(packSumLength) <= len(data) {
+					return int(packSumLength), data[:packSumLength], nil
+				}
+			}
+		}
+		return
+	})
+	for {
+		for scannerPackage.Scan() {
+			scannedPack := new(stickpackage.StickPackage)
+			err := scannedPack.Unpack(bytes.NewReader(scannerPackage.Bytes()))
+			if err != nil {
+				logrus.Errorf("scan tcp package err:%s", err.Error())
+			}
+			//get a full package
+			var connReq *proto.ConnectRequest
+			logrus.Infof("get a tcp message :%s", scannedPack)
+			if err := json.Unmarshal([]byte(scannedPack.Msg), &connReq); err != nil {
+				logrus.Errorf("tcp message struct %+v", connReq)
+			}
+			if connReq.AuthToken == "" {
+				logrus.Errorf("tcp s.operator.Connect no authToken")
+				return
+			}
+			connReq.ServerId = config.Conf.Connect.ConnectBase.ServerId
+			userId, err := s.operator.Connect(connReq)
+			if err != nil {
+				logrus.Errorf("tcp s.operator.Connect error %s", err.Error())
+				return
+			}
+			if userId == 0 {
+				logrus.Error("tcp Invalid AuthToken ,userId empty")
+				return
+			}
+			b := s.Bucket(userId)
+			//insert into a bucket
+			err = b.Put(userId, connReq.RoomId, ch)
+			if err != nil {
+				logrus.Errorf("tcp conn put room err: %s", err.Error())
+				_ = ch.conn.Close()
+				return
+			}
+		}
+		if err := scannerPackage.Err(); err != nil {
+			logrus.Errorf("tcp get a err package:%s", err.Error())
+			return
+		}
+	}
+}
+
+func (c *Connect) writeDataToTcp(s *Server, ch *Channel) {
+	//ping time default 54s
+	ticker := time.NewTicker(DefaultServer.Options.PingPeriod)
+	defer func() {
+		ticker.Stop()
+		_ = ch.connTcp.Close()
+	}()
+	for {
+		select {
+		case message, ok := <-ch.broadcast:
+			if !ok {
+				_ = ch.connTcp.Close()
+				return
+			}
+			msg, _ := json.Marshal(message)
+			pack := stickpackage.StickPackage{
+				Version: stickpackage.VersionContent,
+				Msg:     msg,
+			}
+			pack.Length = pack.GetPackageLength()
+			//send msg
+			if err := pack.Pack(ch.connTcp); err != nil {
+				logrus.Errorf("connTcp.write message err:%s", err.Error())
+				return
+			}
+		case <-ticker.C:
+			logrus.Infof("connTcp.ping message")
+			//send a ping msg ,if error , return
+			if _, err := ch.connTcp.Write([]byte("ping")); err != nil {
+				return
+			}
+		}
+	}
+}

@@ -28,9 +28,9 @@ func (task *Task) InitConnectRpcClient() (err error) {
 	RpcConnectClientList = make(map[int]client.XClient, len(d.GetServices()))
 	for _, connectConf := range d.GetServices() {
 		connectConf.Value = strings.Replace(connectConf.Value, "=&tps=0", "", 1)
-		serverId, error := strconv.ParseInt(connectConf.Value, 10, 8)
-		if error != nil {
-			logrus.Panicf("InitComets err，Can't find serverId. error: %s", error)
+		serverId, err := strconv.ParseInt(connectConf.Value, 10, 8)
+		if err != nil {
+			logrus.Panicf("InitComets err，Can't find serverId. error: %s", err.Error())
 		}
 		d := client.NewPeer2PeerDiscovery(connectConf.Key, "")
 		RpcConnectClientList[int(serverId)] = client.NewXClient(etcdConfig.ServerPathConnect, client.Failtry, client.RandomSelect, d, client.DefaultOption)

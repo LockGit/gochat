@@ -8,6 +8,7 @@ package connect
 import (
 	"github.com/gorilla/websocket"
 	"gochat/proto"
+	"net"
 )
 
 //in fact, Channel it's a user Connect session
@@ -18,6 +19,7 @@ type Channel struct {
 	broadcast chan *proto.Msg
 	userId    int
 	conn      *websocket.Conn
+	connTcp   *net.TCPConn
 }
 
 func NewChannel(size int) (c *Channel) {

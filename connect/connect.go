@@ -55,11 +55,16 @@ func (c *Connect) Run() {
 
 	//init Connect layer rpc server ,task layer will call this
 	if err := c.InitConnectRpcServer(); err != nil {
-		logrus.Panicf("InitConnectRpcServer Fatal error: %s \n", err)
+		logrus.Panicf("InitConnectRpcServer Fatal error: %s \n", err.Error())
 	}
 
 	//start Connect layer server handler persistent connection
 	if err := c.InitWebsocket(); err != nil {
 		logrus.Panicf("Connect layer InitWebsocket() error:  %s \n", err.Error())
+	}
+
+	//start Connect layer server handler persistent connection by tcp
+	if err := c.InitTcpServer(); err != nil {
+		logrus.Panicf("Connect layerInitTcpServer() error:%s\n ", err.Error())
 	}
 }

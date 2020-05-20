@@ -157,11 +157,25 @@ type ConnectWebsocket struct {
 	Bind string `mapstructure:"bind"`
 }
 
+type ConnectTcp struct {
+	Bind          string `mapstructure:"bind"`
+	SendBuf       int    `mapstructure:"sendbuf"`
+	ReceiveBuf    int    `mapstructure:"receivebuf"`
+	KeepAlive     bool   `mapstructure:"keepalive"`
+	Reader        int    `mapstructure:"reader"`
+	ReadBuf       int    `mapstructure:"readBuf"`
+	ReadBufSize   int    `mapstructure:"readBufSize"`
+	Writer        int    `mapstructure:"writer"`
+	WriterBuf     int    `mapstructure:"writerBuf"`
+	WriterBufSize int    `mapstructure:"writeBufSize"`
+}
+
 type ConnectConfig struct {
 	ConnectBase       ConnectBase       `mapstructure:"connect-base"`
 	ConnectRpcAddress ConnectRpcAddress `mapstructure:"connect-rpcAddress"`
 	ConnectBucket     ConnectBucket     `mapstructure:"connect-bucket"`
 	ConnectWebsocket  ConnectWebsocket  `mapstructure:"connect-websocket"`
+	ConnectTcp        ConnectTcp        `mapstructure:"connect-tcp"`
 }
 
 type LogicBase struct {
