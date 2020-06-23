@@ -2,6 +2,8 @@
 # Author : Lock
 # Email: lockexit@gmail.com
 
+echo 'start...'
+
 CONFIG_ENV=$1
 
 if [ ! -n "${CONFIG_ENV}" ]
