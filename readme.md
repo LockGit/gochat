@@ -221,9 +221,6 @@ gochat实现了简单聊天室功能,由于精力有限,你可以在此基础上
 
 ![QQ群](https://github.com/LockGit/gochat/blob/master/architecture/gochat-qq.jpg)
 
->公众号 (不定时分享一些有意思的东西)
-
-![微信](https://github.com/LockGit/gochat/blob/master/architecture/gochat-wx.jpg)
 
 ### Backer and Sponsor
 >jetbrains
