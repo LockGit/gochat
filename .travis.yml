@@ -2,7 +2,7 @@ language:
   go
 
 go:
-  - "1.12"
+  - "1.12.7"
   - master
 
 env:
