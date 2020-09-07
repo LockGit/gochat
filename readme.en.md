@@ -219,7 +219,7 @@ And make sure there are no firewall restrictions on the relevant ports on the vp
 ```
 
 ### Here is an online chat demo site:
-<a href="http://www.lockhack.cf:8080" target="_blank">http://www.lockhack.cf:8080</a>
+<a href="http://www.gochat.ml:8080" target="_blank">http://www.gochat.ml:8080</a>
 ```
 Log in with the above user name and password, or register one by yourself.
 if the provide url can't visit one day，please use the docker above to visit it.
@@ -246,9 +246,6 @@ and advertising is prohibited.
 
 ![QQ](https://github.com/LockGit/gochat/blob/master/architecture/gochat-qq.jpg)
 
->Wechat (Share something interesting from time to time)
-
-![Wechat](https://github.com/LockGit/gochat/blob/master/architecture/gochat-wx.jpg)
 
 ### Backer and Sponsor
 >jetbrains

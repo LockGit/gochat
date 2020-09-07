@@ -190,7 +190,7 @@ docker build -f docker/Dockerfile . -t lockgit/gochat
 ```
 
 ### 这里提供一个在线聊天demo站点：
-<a href="http://www.lockhack.cf:8080" target="_blank">http://www.lockhack.cf:8080</a>
+<a href="http://www.gochat.ml:8080" target="_blank">http://www.gochat.ml:8080</a>
 ```
 用以上用户名密码登录即可,也可以自己注册一个。如果无法访问了，请使用以上docker在本地构建体验。
 可用不同的账号在不同的浏览器登录,如果是Chrome,可用以隐身模式多启动几个浏览器分别以不同账号登录,
@@ -221,9 +221,6 @@ gochat实现了简单聊天室功能,由于精力有限,你可以在此基础上
 
 ![QQ群](https://github.com/LockGit/gochat/blob/master/architecture/gochat-qq.jpg)
 
->公众号 (不定时分享一些有意思的东西)
-
-![微信](https://github.com/LockGit/gochat/blob/master/architecture/gochat-wx.jpg)
 
 ### Backer and Sponsor
 >jetbrains
