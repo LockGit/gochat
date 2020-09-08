@@ -26,7 +26,6 @@ func Test_TestStick(t *testing.T) {
 	_ = pack.Pack(buf)
 	_ = pack.Pack(buf)
 	_ = pack.Pack(buf)
-	_ = pack.Pack(buf)
 	// scanner
 	scanner := bufio.NewScanner(buf)
 	scanner.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
