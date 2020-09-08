@@ -42,8 +42,8 @@ func Test_TestStick(t *testing.T) {
 		return
 	})
 
+	scannedPack := new(StickPackage)
 	for scanner.Scan() {
-		scannedPack := new(StickPackage)
 		err := scannedPack.Unpack(bytes.NewReader(scanner.Bytes()))
 		if err != nil {
 			log.Println(err.Error())
