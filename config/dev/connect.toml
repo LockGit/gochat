@@ -7,7 +7,7 @@ keyPath = ""
 bind = "0.0.0.0:7000"
 
 [connect-tcp]
-bind = "tcp@0.0.0.0:7001,tcp@0.0.0.0:7002"
+bind = "0.0.0.0:7001,0.0.0.0:7002"
 sendbuf = 4096
 receivebuf = 4096
 keepalive = false

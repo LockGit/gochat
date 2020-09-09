@@ -58,10 +58,12 @@ func (c *Connect) Run() {
 		logrus.Panicf("InitConnectRpcServer Fatal error: %s \n", err.Error())
 	}
 
-	//start Connect layer server handler persistent connection
-	if err := c.InitWebsocket(); err != nil {
-		logrus.Panicf("Connect layer InitWebsocket() error:  %s \n", err.Error())
-	}
+	go func() {
+		//start Connect layer server handler persistent connection
+		if err := c.InitWebsocket(); err != nil {
+			logrus.Panicf("Connect layer InitWebsocket() error:  %s \n", err.Error())
+		}
+	}()
 
 	//start Connect layer server handler persistent connection by tcp
 	if err := c.InitTcpServer(); err != nil {

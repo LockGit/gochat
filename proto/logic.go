@@ -83,3 +83,16 @@ type Send struct {
 	Op           int    `json:"op"`
 	CreateTime   string `json:"createTime"`
 }
+
+type SendTcp struct {
+	Code         int    `json:"code"`
+	Msg          string `json:"msg"`
+	FromUserId   int    `json:"fromUserId"`
+	FromUserName string `json:"fromUserName"`
+	ToUserId     int    `json:"toUserId"`
+	ToUserName   string `json:"toUserName"`
+	RoomId       int    `json:"roomId"`
+	Op           int    `json:"op"`
+	CreateTime   string `json:"createTime"`
+	AuthToken    string `json:"authToken"` //仅tcp时使用，发送msg时带上
+}

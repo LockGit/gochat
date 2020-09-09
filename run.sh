@@ -29,7 +29,7 @@ else
     if [ "${CONFIG_ENV}" == "dev" ]
     then
         sudo docker run \
-        --name gochat-${CONFIG_ENV} \
+        --name gochat-im-${CONFIG_ENV} \
         -h gochat-${CONFIG_ENV} \
         -e TZ=Asia/Shanghai \
         -e RUN_MODE=dev \
@@ -42,6 +42,8 @@ else
         -p 8080:8080 \
         -p 7070:7070 \
         -p 7000:7000 \
+        -p 7001:7001 \
+        -p 7002:7002 \
         ${DOCKER_IMAGE} \
         supervisord -n && docker exec gochat-${CONFIG_ENV} /bin/sh './reload.sh'
     else
