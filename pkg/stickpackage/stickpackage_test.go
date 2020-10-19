@@ -8,7 +8,12 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"gochat/config"
+	"gochat/proto"
 	"log"
+	"net"
 	"testing"
 	"time"
 )
@@ -53,5 +58,109 @@ func Test_TestStick(t *testing.T) {
 	if err := scanner.Err(); err != nil {
 		log.Fatal("Invalid data")
 		t.Fail()
+	}
+}
+
+func Test_TcpClient(t *testing.T) {
+	//1,建立tcp链接
+	//2,send msg to tcp conn
+	//3,receive msg from tcp conn
+
+	//authToken := "ivN-ekZS0VnXs_LFI0EVD6eKJiuFlfo_ICBUeZjIDcw=" //lock
+	authToken := "arAAyijgszIT3t2CLwWyVmGJliw2dGl4RCSiEcStz_g=" //demo
+	fromUserId := 3
+	tcpAddrRemote, _ := net.ResolveTCPAddr("tcp4", "127.0.0.1:7001")
+	conn, err := net.DialTCP("tcp", nil, tcpAddrRemote)
+	defer func() {
+		_ = conn.Close()
+	}()
+	if err != nil {
+		panic("conn err:" + err.Error())
+	}
+
+	go func() {
+		//读取服务端广播的信息
+		onMessageReceive := func(conn *net.TCPConn) error {
+			for {
+				scannerPackage := bufio.NewScanner(conn)
+				scannerPackage.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+					if !atEOF && data[0] == 'v' {
+						if len(data) > TcpHeaderLength {
+							packSumLength := int16(0)
+							_ = binary.Read(bytes.NewReader(data[LengthStartIndex:LengthStopIndex]), binary.BigEndian, &packSumLength)
+							if int(packSumLength) <= len(data) {
+								return int(packSumLength), data[:packSumLength], nil
+							}
+						}
+					}
+					return
+				})
+				for {
+					fmt.Println("start read tcp msg from conn...")
+					for scannerPackage.Scan() {
+						scannedPack := new(StickPackage)
+						err := scannedPack.Unpack(bytes.NewReader(scannerPackage.Bytes()))
+						if err != nil {
+							log.Printf("unpack msg err:%s", err.Error())
+						}
+						fmt.Println(fmt.Sprintf("read msg from tcp ok,version is:%s,length is:%d,msg is:%s", scannedPack.Version, scannedPack.Length, scannedPack.Msg))
+						time.Sleep(1 * time.Second)
+					}
+				}
+			}
+		}(conn)
+		fmt.Println("onMessageReceive err is:", onMessageReceive)
+	}()
+
+	var i int
+	for {
+		if i%5 == 0 {
+			//fmt.Println("build tcp heartbeat conn...")
+			//msg := &proto.SendTcp{
+			//	Msg:          "build tcp heartbeat conn",
+			//	FromUserId:   fromUserId,
+			//	FromUserName: "Tcp heartbeat build",
+			//	RoomId:       1,
+			//	Op:           config.OpBuildTcpConn,
+			//	AuthToken:    authToken, //todo 增加token验证，用于验证tcp部分
+			//}
+			//msgBytes, _ := json.Marshal(msg)
+			////生成带房间号的的msg并pack write conn io
+			//pack := &StickPackage{
+			//	Version: VersionContent,
+			//	//Msg:     []byte(("now time:" + time.Now().Format("2006-01-02 15:04:05"))),
+			//	Msg: msgBytes,
+			//}
+			//pack.Length = pack.GetPackageLength()
+			////test package, BigEndian
+			//_ = pack.Pack(conn) //写入要发送的消息
+
+		}
+		time.Sleep(3 * time.Second)
+		msg := &proto.SendTcp{
+			Msg:          "from tcp client,time is:" + time.Now().Format("2006-01-02 15:04:05"),
+			FromUserId:   fromUserId,
+			FromUserName: "I am Tcp",
+			RoomId:       1,
+			Op:           config.OpRoomSend,
+			AuthToken:    authToken, //todo 增加token验证，用于验证tcp部分
+		}
+		msgBytes, _ := json.Marshal(msg)
+		//生成带房间号的的msg并pack write conn io
+		pack := &StickPackage{
+			Version: VersionContent,
+			//Msg:     []byte(("now time:" + time.Now().Format("2006-01-02 15:04:05"))),
+			Msg: msgBytes,
+		}
+		pack.Length = pack.GetPackageLength()
+		//test package, BigEndian
+		_ = pack.Pack(conn) //写入要发送的消息
+
+		//rpc push msg to room
+		//rpc.InitLogicRpcClient()
+		//code, errMsg := rpc.RpcLogicObj.PushRoom(msg)
+		//fmt.Println("push code is:", code, ",msg is:", errMsg)
+		i++
+		fmt.Println(fmt.Sprintf("第%d次send msg to tcp server", i))
 	}
 }

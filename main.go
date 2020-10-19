@@ -26,8 +26,10 @@ func main() {
 	switch module {
 	case "logic":
 		logic.New().Run()
-	case "connect":
+	case "connect_websocket":
 		connect.New().Run()
+	case "connect_tcp":
+		connect.New().RunTcp()
 	case "task":
 		task.New().Run()
 	case "api":

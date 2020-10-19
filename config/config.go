@@ -8,7 +8,8 @@ package config
 import (
 	"github.com/spf13/viper"
 	"os"
-	"path/filepath"
+	"runtime"
+	"strings"
 	"sync"
 )
 
@@ -30,6 +31,7 @@ const (
 	OpRoomSend            = 3 // send to room
 	OpRoomCountSend       = 4 // get online user count
 	OpRoomInfoSend        = 5 // send info to room
+	OpBuildTcpConn        = 6 // build tcp conn
 )
 
 type Config struct {
@@ -45,11 +47,19 @@ func init() {
 	Init()
 }
 
+func getCurrentDir() string {
+	_, fileName, _, _ := runtime.Caller(1)
+	aPath := strings.Split(fileName, "/")
+	dir := strings.Join(aPath[0:len(aPath)-1], "/")
+	return dir
+}
+
 func Init() {
 	once.Do(func() {
 		env := GetMode()
-		realPath, _ := filepath.Abs("./")
-		configFilePath := realPath + "/config/" + env + "/"
+		//realPath, _ := filepath.Abs("./")
+		realPath := getCurrentDir()
+		configFilePath := realPath + "/" + env + "/"
 		viper.SetConfigType("toml")
 		viper.SetConfigName("/connect")
 		viper.AddConfigPath(configFilePath)

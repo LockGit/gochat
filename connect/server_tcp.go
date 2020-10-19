@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"github.com/sirupsen/logrus"
+	"gochat/api/rpc"
 	"gochat/config"
 	"gochat/pkg/stickpackage"
 	"gochat/proto"
@@ -19,6 +20,10 @@ import (
 )
 
 const maxInt = 1<<31 - 1
+
+func init() {
+	rpc.InitLogicRpcClient()
+}
 
 func (c *Connect) InitTcpServer() error {
 	aTcpAddr := strings.Split(config.Conf.Connect.ConnectTcp.Bind, ",")
@@ -84,8 +89,8 @@ func (c *Connect) ServeTcp(server *Server, conn *net.TCPConn, r int) {
 	var ch *Channel
 	ch = NewChannel(server.Options.BroadcastSize)
 	ch.connTcp = conn
-	go c.readDataFromTcp(server, ch)
 	go c.writeDataToTcp(server, ch)
+	go c.readDataFromTcp(server, ch)
 }
 
 func (c *Connect) readDataFromTcp(s *Server, ch *Channel) {
@@ -93,7 +98,7 @@ func (c *Connect) readDataFromTcp(s *Server, ch *Channel) {
 		logrus.Infof("start exec disConnect ...")
 		if ch.Room == nil || ch.userId == 0 {
 			logrus.Infof("roomId and userId eq 0")
-			_ = ch.conn.Close()
+			_ = ch.connTcp.Close()
 			return
 		}
 		logrus.Infof("exec disConnect ...")
@@ -130,32 +135,55 @@ func (c *Connect) readDataFromTcp(s *Server, ch *Channel) {
 				logrus.Errorf("scan tcp package err:%s", err.Error())
 			}
 			//get a full package
-			var connReq *proto.ConnectRequest
+			var connReq proto.ConnectRequest
 			logrus.Infof("get a tcp message :%s", scannedPack)
-			if err := json.Unmarshal([]byte(scannedPack.Msg), &connReq); err != nil {
-				logrus.Errorf("tcp message struct %+v", connReq)
+			var rawTcpMsg proto.SendTcp
+			if err := json.Unmarshal([]byte(scannedPack.Msg), &rawTcpMsg); err != nil {
+				logrus.Errorf("tcp message struct %+v", rawTcpMsg)
 			}
-			if connReq.AuthToken == "" {
+			logrus.Infof("json unmarshal,raw tcp msg is:%+v", rawTcpMsg)
+			if rawTcpMsg.AuthToken == "" {
 				logrus.Errorf("tcp s.operator.Connect no authToken")
 				return
 			}
-			connReq.ServerId = config.Conf.Connect.ConnectBase.ServerId
-			userId, err := s.operator.Connect(connReq)
-			if err != nil {
-				logrus.Errorf("tcp s.operator.Connect error %s", err.Error())
+			if rawTcpMsg.RoomId <= 0 {
+				logrus.Errorf("tcp roomId not allow lgt 0")
 				return
 			}
-			if userId == 0 {
-				logrus.Error("tcp Invalid AuthToken ,userId empty")
-				return
-			}
-			b := s.Bucket(userId)
-			//insert into a bucket
-			err = b.Put(userId, connReq.RoomId, ch)
-			if err != nil {
-				logrus.Errorf("tcp conn put room err: %s", err.Error())
-				_ = ch.conn.Close()
-				return
+			switch rawTcpMsg.Op {
+			case config.OpBuildTcpConn:
+				connReq.AuthToken = rawTcpMsg.AuthToken
+				connReq.RoomId = rawTcpMsg.RoomId
+				connReq.ServerId = config.Conf.Connect.ConnectBase.ServerId
+				userId, err := s.operator.Connect(&connReq)
+				logrus.Infof("tcp s.operator.Connect userId is :%d", userId)
+				if err != nil {
+					logrus.Errorf("tcp s.operator.Connect error %s", err.Error())
+					return
+				}
+				if userId == 0 {
+					logrus.Error("tcp Invalid AuthToken ,userId empty")
+					return
+				}
+				b := s.Bucket(userId)
+				//insert into a bucket
+				err = b.Put(userId, connReq.RoomId, ch)
+				if err != nil {
+					logrus.Errorf("tcp conn put room err: %s", err.Error())
+					_ = ch.connTcp.Close()
+					return
+				}
+			case config.OpRoomSend:
+				//send tcp msg to room
+				req := &proto.Send{
+					Msg:          rawTcpMsg.Msg,
+					FromUserId:   rawTcpMsg.FromUserId,
+					FromUserName: rawTcpMsg.FromUserName,
+					RoomId:       rawTcpMsg.RoomId,
+					Op:           config.OpRoomSend,
+				}
+				code, msg := rpc.RpcLogicObj.PushRoom(req)
+				logrus.Infof("tcp conn push msg to room,err code is:%d,err msg is:%s", code, msg)
 			}
 		}
 		if err := scannerPackage.Err(); err != nil {
@@ -172,6 +200,9 @@ func (c *Connect) writeDataToTcp(s *Server, ch *Channel) {
 		ticker.Stop()
 		_ = ch.connTcp.Close()
 	}()
+	pack := stickpackage.StickPackage{
+		Version: stickpackage.VersionContent,
+	}
 	for {
 		select {
 		case message, ok := <-ch.broadcast:
@@ -179,13 +210,10 @@ func (c *Connect) writeDataToTcp(s *Server, ch *Channel) {
 				_ = ch.connTcp.Close()
 				return
 			}
-			msg, _ := json.Marshal(message)
-			pack := stickpackage.StickPackage{
-				Version: stickpackage.VersionContent,
-				Msg:     msg,
-			}
+			pack.Msg = message.Body
 			pack.Length = pack.GetPackageLength()
 			//send msg
+			logrus.Infof("send tcp msg to conn:%s", pack.String())
 			if err := pack.Pack(ch.connTcp); err != nil {
 				logrus.Errorf("connTcp.write message err:%s", err.Error())
 				return
@@ -193,7 +221,10 @@ func (c *Connect) writeDataToTcp(s *Server, ch *Channel) {
 		case <-ticker.C:
 			logrus.Infof("connTcp.ping message")
 			//send a ping msg ,if error , return
-			if _, err := ch.connTcp.Write([]byte("ping")); err != nil {
+			pack.Msg = []byte("ping msg")
+			pack.Length = pack.GetPackageLength()
+			if err := pack.Pack(ch.connTcp); err != nil {
+				//send ping msg to tcp conn
 				return
 			}
 		}
