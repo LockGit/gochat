@@ -31,6 +31,7 @@ tcp消息投递与接收测试代码在本项目pkg/stickpackage目录中的:sti
 其中stickpackage.go文件主要为实现tcp拆包解包时用到，可以追踪下其中Pack与Unpack方法的调用地方。
 主要原因是tcp是基于第4层的流式协议而非应用层协议，所以才有了这个过程。
 如果是android，ios客户端来链接，那么对应的就是需要用熟悉的语言来实现这个tcp拆包解包的过程，例子中的代码是golang实现的demo。
+go test -v -count=1 *.go -test.run Test_TcpClient
 
 如果是测试tcp消息投递:
 只需要修改这个方法中@todo部分的内容为你测试时正确的内容即可。
@@ -47,6 +48,8 @@ authToken为进行tcp链接时的认证token，这个token是用户标识，在w
 3，task层消费队列中的消息，rpc广播到websocket链接层和tcp链接层的相应房间中，
 链接层获得消息后，把消息投递到对应的远端用户(相当于遍历房间中维护的用户链接会话双向链表)
 ```
+![](https://github.com/LockGit/gochat/blob/master/architecture/gochat_tcp.gif)
+
 
 ### 架构设计
  ![](https://github.com/LockGit/gochat/blob/master/architecture/gochat.png)

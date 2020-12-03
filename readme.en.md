@@ -16,22 +16,39 @@
 
 ### [中文版本(Chinese version)](readme.md)
 
-### Gochat is a lightweight im server implemented using pure go
+### gochat is a lightweight im server implemented using pure go
+* gochat is an instant messaging system based on go. It supports private message messages and room broadcast messages. It communicates with each other through RPC and supports horizontal expansion.
+* Support websocket and TCP access, and support websocket and TCP message interworking in the latest version.
+* Based on etcd service discovery among different layers, it will be much more convenient to expand and deploy.
+* Using redis as the carrier of message storage and delivery is very lightweight, and it can be replaced by heavier Kafka and rabbitmq in actual scenarios.
+* Because of the clear structure of chago, it can run quickly on various platforms.
+* This project provides docker with one click to build all environment dependencies, which is very convenient to install. (if it's an experience, we strongly recommend using docker to build)
+
+### About Websocket && Tcp Support
 ```
-gochat is an instant messaging system implemented by pure go. 
-It supports private message and room broadcast messages. 
-rpc communication is provided between layers to support horizontal expansion.
-Using redis as a carrier for message storage and delivery, 
-it is more convenient and faster to operate than kafka.
-so it is very lightweight. 
-Based on the etcd service discovery between layers, 
-it will be much more convenient when expanding and deploying.
-Due to the cross-compilation feature of go, 
-it can be run on various platforms quickly after compilation. 
-The gochat architecture and directory structure are clear.
-And the project also provides docker one-click to build all environment dependencies, 
-which is very convenient to install.
+The latest version supports websocket and TCP message interworking
+TCP message delivery and receiving test code in the pkg/stickpackage directory of this project: stickpackage_test.go Test in file_Tcpclient method
+among stickpackage.go The file is mainly used for TCP unpacking and unpacking. You can trace where the pack and unpack methods are called.
+The main reason is that TCP is based on the streaming protocol of layer 4 rather than the application layer protocol, so there is this process.
+If it is Android, IOS client to link, then the corresponding is to use a familiar language to implement the TCP unpacking and unpacking process. The code in the example is demo implemented by golang.
+go test -v -count=1 *.go -test.run Test_TcpClient
+
+For test TCP message delivery:
+Just change the @ todo part of this method to the correct content when you tested it.
+AuthToken is the authentication token for TCP link. This token is the user ID. you can see the JSON return in the API return after login on the web, or you can directly find the token of a user in redis.
+When the server receives the authToken, it will add the corresponding user's TCP link session to the session bidirectional list of the corresponding room.
+
+After adding TCP support, if there are both users linking through websocket and users linking through TCP in a room, the general process of message delivery is as follows:
+1. First, the user logs in, carries the token and room number to connect to the websocket and TCP server, and establishes a long link session in the link layer,
+For example, user a is in room 1 and linked through websocket, and user B is also in room 1 through TCP.
+
+2. Users send messages to the room. At present, they directly put the messages into the corresponding message queue through HTTP,
+In fact, this place can also be sent through websocket and TCP, but the final messages are to be queued.
+
+3. The message in the queue is consumed by the task layer, and the RPC is broadcast to the corresponding rooms of the websocket link layer and the TCP link layer,
+After getting the message, the link layer delivers the message to the corresponding remote user (equivalent to traversing the user link session bidirectional list maintained in the room)
 ```
+![](https://github.com/LockGit/gochat/blob/master/architecture/gochat_tcp.gif)
 
 ### Architecture design
  ![](https://github.com/LockGit/gochat/blob/master/architecture/gochat.png)
