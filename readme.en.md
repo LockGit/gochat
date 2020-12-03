@@ -243,6 +243,7 @@ if the provide url can't visit one day，please use the docker above to visit it
 You can log in to different browsers with different accounts. 
 If it is Chrome, you can use several browsers in incognito mode to log in with different accounts.
 Then, experience the chat between different accounts and the effect of message delivery.
+(Note: TCP channel is not enabled in this demo)
 ```
 
 ### Follow-up
