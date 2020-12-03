@@ -272,5 +272,10 @@ and advertising is prohibited.
 <img src="https://github.com/LockGit/gochat/blob/master/architecture/jetbrains-gold-reseller.svg" width="100px" height="100px">
 </a>
 
+```
+JetBrains has an open source sponsorship program that allows you to apply for the JetBrains family bucket license for free through the open source project
+Jetbranins officials will ask for the proposal to add their brand logo to the warehouse when giving the license,
+But all this is the principle of users' willingness
+```
 ### License
 gochat is licensed under the MIT License. 

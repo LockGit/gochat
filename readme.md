@@ -255,6 +255,12 @@ gochat实现了简单聊天室功能,由于精力有限,你可以在此基础上
 <img src="https://github.com/LockGit/gochat/blob/master/architecture/jetbrains-gold-reseller.svg" width="100px" height="100px">
 </a>
 
+```
+jetbrains有一项开源赞助计划，可以通过开源项目免费申请jetbrains全家桶license
+jetbranins官方在赠送license的时候会请求提议加入他们的品牌logo推广放入到仓库中,
+不过这一切都是用户自愿的原则
+```
+
 ### License
 gochat is licensed under the MIT License. 
 
