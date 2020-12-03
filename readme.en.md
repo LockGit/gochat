@@ -26,7 +26,7 @@
 
 ### About Websocket && Tcp Support
 ```
-The latest version supports websocket and TCP message interworking
+The latest version supports websocket and TCP message interworking,(the test TCP port uses 70017002. If you want to use TCP, the firewall also needs to release the two ports.)
 TCP message delivery and receiving test code in the pkg/stickpackage directory of this project: stickpackage_test.go Test in file_Tcpclient method
 among stickpackage.go The file is mainly used for TCP unpacking and unpacking. You can trace where the pack and unpack methods are called.
 The main reason is that TCP is based on the streaming protocol of layer 4 rather than the application layer protocol, so there is this process.
@@ -179,7 +179,7 @@ create table user(
 ### Installation
 ```
 Before starting each layer, 
-Please make sure that the 7000, 7070, 8080 ports are not occupied.
+Please make sure that the 7000, 7070, 8080 ports are not occupied. (the test TCP port uses 70017002. If you want to use TCP, the firewall also needs to release the two ports.)
 make sure that the etcd and redis services and the above database tables have been started, 
 and then start the layers in the following order. 
 

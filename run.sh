@@ -29,7 +29,7 @@ else
     if [ "${CONFIG_ENV}" == "dev" ]
     then
         sudo docker run \
-        --name gochat-im-${CONFIG_ENV} \
+        --name gochat-${CONFIG_ENV} \
         -h gochat-${CONFIG_ENV} \
         -e TZ=Asia/Shanghai \
         -e RUN_MODE=dev \
