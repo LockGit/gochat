@@ -187,14 +187,14 @@ func (rpc *RpcLogic) Push(ctx context.Context, args *proto.Send, reply *proto.Su
 	}
 	logic := new(Logic)
 	userSidKey := logic.getUserKey(fmt.Sprintf("%d", sendData.ToUserId))
-	serverId := RedisSessClient.Get(userSidKey).Val()
-	var serverIdInt int
-	serverIdInt, err = strconv.Atoi(serverId)
+	serverIdStr := RedisSessClient.Get(userSidKey).Val()
+	//var serverIdInt int
+	//serverIdInt, err = strconv.Atoi(serverId)
 	if err != nil {
 		logrus.Errorf("logic,push parse int fail:%s", err.Error())
 		return
 	}
-	err = logic.RedisPublishChannel(serverIdInt, sendData.ToUserId, bodyBytes)
+	err = logic.RedisPublishChannel(serverIdStr, sendData.ToUserId, bodyBytes)
 	if err != nil {
 		logrus.Errorf("logic,redis publish err: %s", err.Error())
 		return
@@ -302,19 +302,19 @@ func (rpc *RpcLogic) Connect(ctx context.Context, args *proto.ConnectRequest, re
 	}
 	reply.UserId, _ = strconv.Atoi(userInfo["userId"])
 	roomUserKey := logic.getRoomUserKey(strconv.Itoa(args.RoomId))
-	if reply.UserId == 0 {
-		reply.UserId = 0
-	} else {
+	if reply.UserId != 0 {
 		userKey := logic.getUserKey(fmt.Sprintf("%d", reply.UserId))
-		logrus.Infof("logic redis set userKey:%s, serverId : %d", userKey, args.ServerId)
+		logrus.Infof("logic redis set userKey:%s, serverId : %s", userKey, args.ServerId)
 		validTime := config.RedisBaseValidTime * time.Second
 		err = RedisClient.Set(userKey, args.ServerId, validTime).Err()
 		if err != nil {
 			logrus.Warnf("logic set err:%s", err)
 		}
-		RedisClient.HSet(roomUserKey, fmt.Sprintf("%d", reply.UserId), userInfo["userName"])
-		// add room user count ++
-		RedisClient.Incr(logic.getRoomOnlineCountKey(fmt.Sprintf("%d", args.RoomId)))
+		if RedisClient.HGet(roomUserKey, fmt.Sprintf("%d", reply.UserId)).Val() == "" {
+			RedisClient.HSet(roomUserKey, fmt.Sprintf("%d", reply.UserId), userInfo["userName"])
+			// add room user count ++
+			RedisClient.Incr(logic.getRoomOnlineCountKey(fmt.Sprintf("%d", args.RoomId)))
+		}
 	}
 	logrus.Infof("logic rpc userId:%d", reply.UserId)
 	return

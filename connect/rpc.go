@@ -63,15 +63,28 @@ func (rpc *RpcConnect) DisConnect(disConnReq *proto.DisConnectRequest) (err erro
 	return
 }
 
-func (c *Connect) InitConnectRpcServer() (err error) {
+func (c *Connect) InitConnectWebsocketRpcServer() (err error) {
 	var network, addr string
-	connectRpcAddress := strings.Split(config.Conf.Connect.ConnectRpcAddress.Address, ",")
+	connectRpcAddress := strings.Split(config.Conf.Connect.ConnectRpcAddressWebSockts.Address, ",")
 	for _, bind := range connectRpcAddress {
 		if network, addr, err = tools.ParseNetwork(bind); err != nil {
-			logrus.Panicf("InitConnectRpcServer ParseNetwork error : %s", err)
+			logrus.Panicf("InitConnectWebsocketRpcServer ParseNetwork error : %s", err)
 		}
 		logrus.Infof("Connect start run at-->%s:%s", network, addr)
-		go c.createConnectRpcServer(network, addr)
+		go c.createConnectWebsocktsRpcServer(network, addr)
+	}
+	return
+}
+
+func (c *Connect) InitConnectTcpRcpServer() (err error) {
+	var network, addr string
+	connectRpcAddress := strings.Split(config.Conf.Connect.ConnectRpcAddressTcp.Address, ",")
+	for _, bind := range connectRpcAddress {
+		if network, addr, err = tools.ParseNetwork(bind); err != nil {
+			logrus.Panicf("InitConnectTcpRcpServer ParseNetwork error : %s", err)
+		}
+		logrus.Infof("Connect start run at-->%s:%s", network, addr)
+		go c.createConnectTcpRpcServer(network, addr)
 	}
 	return
 }
@@ -131,10 +144,21 @@ func (rpc *RpcConnectPush) PushRoomInfo(ctx context.Context, pushRoomMsgReq *pro
 	return
 }
 
-func (c *Connect) createConnectRpcServer(network string, addr string) {
+func (c *Connect) createConnectWebsocktsRpcServer(network string, addr string) {
 	s := server.NewServer()
 	addRegistryPlugin(s, network, addr)
-	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathConnect, new(RpcConnectPush), fmt.Sprintf("%d", config.Conf.Common.CommonEtcd.ServerId))
+	//config.Conf.Connect.ConnectTcp.ServerId
+	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathConnect, new(RpcConnectPush), fmt.Sprintf("%s", config.Conf.Connect.ConnectWebsocket.ServerId))
+	s.RegisterOnShutdown(func(s *server.Server) {
+		s.UnregisterAll()
+	})
+	s.Serve(network, addr)
+}
+
+func (c *Connect) createConnectTcpRpcServer(network string, addr string) {
+	s := server.NewServer()
+	addRegistryPlugin(s, network, addr)
+	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathConnect, new(RpcConnectPush), fmt.Sprintf("%s", config.Conf.Connect.ConnectTcp.ServerId))
 	s.RegisterOnShutdown(func(s *server.Server) {
 		s.UnregisterAll()
 	})

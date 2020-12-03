@@ -14,7 +14,7 @@ import (
 )
 
 type PushParams struct {
-	ServerId int
+	ServerId string
 	UserId   int
 	Msg      []byte
 	RoomId   int

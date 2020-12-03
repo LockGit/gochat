@@ -67,7 +67,7 @@ func Test_TcpClient(t *testing.T) {
 	//3,receive msg from tcp conn
 
 	//authToken := "ivN-ekZS0VnXs_LFI0EVD6eKJiuFlfo_ICBUeZjIDcw=" //lock
-	authToken := "arAAyijgszIT3t2CLwWyVmGJliw2dGl4RCSiEcStz_g=" //demo
+	authToken := "MUJa0nIkpXL1Q4JzDWp5YwXMPNIRv4QRvdOF7eHjJNI=" //demo
 	fromUserId := 3
 	tcpAddrRemote, _ := net.ResolveTCPAddr("tcp4", "127.0.0.1:7001")
 	conn, err := net.DialTCP("tcp", nil, tcpAddrRemote)
@@ -95,52 +95,60 @@ func Test_TcpClient(t *testing.T) {
 					}
 					return
 				})
+				scanErrorTimes := 0
 				for {
+					if scanErrorTimes > 3 {
+						break
+					}
+					scanErrorTimes++
 					fmt.Println("start read tcp msg from conn...")
 					for scannerPackage.Scan() {
 						scannedPack := new(StickPackage)
 						err := scannedPack.Unpack(bytes.NewReader(scannerPackage.Bytes()))
 						if err != nil {
 							log.Printf("unpack msg err:%s", err.Error())
+							break
 						}
 						fmt.Println(fmt.Sprintf("read msg from tcp ok,version is:%s,length is:%d,msg is:%s", scannedPack.Version, scannedPack.Length, scannedPack.Msg))
-						time.Sleep(1 * time.Second)
+					}
+					if scannerPackage.Err() != nil {
+						log.Printf("scannerPackage err:%s", err.Error())
+						break
 					}
 				}
+				return nil
 			}
 		}(conn)
 		fmt.Println("onMessageReceive err is:", onMessageReceive)
 	}()
-
 	var i int
 	for {
-		if i%5 == 0 {
-			//fmt.Println("build tcp heartbeat conn...")
-			//msg := &proto.SendTcp{
-			//	Msg:          "build tcp heartbeat conn",
-			//	FromUserId:   fromUserId,
-			//	FromUserName: "Tcp heartbeat build",
-			//	RoomId:       1,
-			//	Op:           config.OpBuildTcpConn,
-			//	AuthToken:    authToken, //todo 增加token验证，用于验证tcp部分
-			//}
-			//msgBytes, _ := json.Marshal(msg)
-			////生成带房间号的的msg并pack write conn io
-			//pack := &StickPackage{
-			//	Version: VersionContent,
-			//	//Msg:     []byte(("now time:" + time.Now().Format("2006-01-02 15:04:05"))),
-			//	Msg: msgBytes,
-			//}
-			//pack.Length = pack.GetPackageLength()
-			////test package, BigEndian
-			//_ = pack.Pack(conn) //写入要发送的消息
-
+		if i == 0 {
+			fmt.Println("build tcp heartbeat conn...")
+			msg := &proto.SendTcp{
+				Msg:          "build tcp heartbeat conn",
+				FromUserId:   fromUserId,
+				FromUserName: "Tcp heartbeat build",
+				RoomId:       1,
+				Op:           config.OpBuildTcpConn,
+				AuthToken:    authToken, //todo 增加token验证，用于验证tcp部分
+			}
+			msgBytes, _ := json.Marshal(msg)
+			//生成带房间号的的msg并pack write conn io
+			pack := &StickPackage{
+				Version: VersionContent,
+				//Msg:     []byte(("now time:" + time.Now().Format("2006-01-02 15:04:05"))),
+				Msg: msgBytes,
+			}
+			pack.Length = pack.GetPackageLength()
+			//test package, BigEndian
+			_ = pack.Pack(conn) //写入要发送的消息
 		}
-		time.Sleep(3 * time.Second)
+		time.Sleep(1 * time.Second)
 		msg := &proto.SendTcp{
 			Msg:          "from tcp client,time is:" + time.Now().Format("2006-01-02 15:04:05"),
 			FromUserId:   fromUserId,
-			FromUserName: "I am Tcp",
+			FromUserName: "I am Tcp msg",
 			RoomId:       1,
 			Op:           config.OpRoomSend,
 			AuthToken:    authToken, //todo 增加token验证，用于验证tcp部分

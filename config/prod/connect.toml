@@ -1,12 +1,14 @@
 [connect-base]
-serverId = 1
+serverId = "1"
 certPath = ""
 keyPath = ""
 
 [connect-websocket]
+serverId = 1000
 bind = "0.0.0.0:7000"
 
 [connect-tcp]
+serverId = 2000
 bind = "0.0.0.0:7001,0.0.0.0:7002"
 sendbuf = 4096
 receivebuf = 4096
@@ -18,8 +20,12 @@ writer = 32
 writeBuf = 1024
 writeBufSize = 8192
 
-[connect-rpcAddress]
+[connect-rpcAddress-websockts]
 address = "tcp@0.0.0.0:6912,tcp@0.0.0.0:6913"
+
+
+[connect-rpcAddress-tcp]
+address = "tcp@0.0.0.0:6914,tcp@0.0.0.0:6915"
 
 [connect-bucket]
 cpuNum = 4

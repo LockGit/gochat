@@ -8,6 +8,8 @@ package connect
 import (
 	"github.com/sirupsen/logrus"
 	"gochat/config"
+	"net/http"
+	_ "net/http/pprof"
 	"runtime"
 	"time"
 )
@@ -54,8 +56,8 @@ func (c *Connect) Run() {
 	})
 
 	//init Connect layer rpc server ,task layer will call this
-	if err := c.InitConnectRpcServer(); err != nil {
-		logrus.Panicf("InitConnectRpcServer Fatal error: %s \n", err.Error())
+	if err := c.InitConnectWebsocketRpcServer(); err != nil {
+		logrus.Panicf("InitConnectWebsocketRpcServer Fatal error: %s \n", err.Error())
 	}
 
 	//start Connect layer server handler persistent connection
@@ -95,10 +97,12 @@ func (c *Connect) RunTcp() {
 		WriteBufferSize: 1024,
 		BroadcastSize:   512,
 	})
-
+	go func() {
+		http.ListenAndServe("0.0.0.0:9000", nil)
+	}()
 	//init Connect layer rpc server ,task layer will call this
-	if err := c.InitConnectRpcServer(); err != nil {
-		logrus.Panicf("InitConnectRpcServer Fatal error: %s \n", err.Error())
+	if err := c.InitConnectTcpRcpServer(); err != nil {
+		logrus.Panicf("InitConnectWebsocketRpcServer Fatal error: %s \n", err.Error())
 	}
 	//start Connect layer server handler persistent connection by tcp
 	if err := c.InitTcpServer(); err != nil {

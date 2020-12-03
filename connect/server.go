@@ -134,7 +134,7 @@ func (s *Server) readPump(ch *Channel) {
 			logrus.Errorf("s.operator.Connect no authToken")
 			return
 		}
-		connReq.ServerId = config.Conf.Connect.ConnectBase.ServerId
+		connReq.ServerId = config.Conf.Connect.ConnectWebsocket.ServerId
 		userId, err := s.operator.Connect(connReq)
 		if err != nil {
 			logrus.Errorf("s.operator.Connect error %s", err.Error())

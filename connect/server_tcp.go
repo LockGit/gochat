@@ -112,6 +112,7 @@ func (c *Connect) readDataFromTcp(s *Server, ch *Channel) {
 		if err := ch.connTcp.Close(); err != nil {
 			logrus.Warnf("DisConnect close tcp conn err :%s", err.Error())
 		}
+		return
 	}()
 	// scanner
 	scannerPackage := bufio.NewScanner(ch.connTcp)
@@ -127,12 +128,19 @@ func (c *Connect) readDataFromTcp(s *Server, ch *Channel) {
 		}
 		return
 	})
+	scanTimes := 0
 	for {
+		scanTimes++
+		if scanTimes > 3 {
+			logrus.Infof("scannedPack times is:%d", scanTimes)
+			break
+		}
 		for scannerPackage.Scan() {
 			scannedPack := new(stickpackage.StickPackage)
 			err := scannedPack.Unpack(bytes.NewReader(scannerPackage.Bytes()))
 			if err != nil {
 				logrus.Errorf("scan tcp package err:%s", err.Error())
+				break
 			}
 			//get a full package
 			var connReq proto.ConnectRequest
@@ -140,6 +148,7 @@ func (c *Connect) readDataFromTcp(s *Server, ch *Channel) {
 			var rawTcpMsg proto.SendTcp
 			if err := json.Unmarshal([]byte(scannedPack.Msg), &rawTcpMsg); err != nil {
 				logrus.Errorf("tcp message struct %+v", rawTcpMsg)
+				break
 			}
 			logrus.Infof("json unmarshal,raw tcp msg is:%+v", rawTcpMsg)
 			if rawTcpMsg.AuthToken == "" {
@@ -154,7 +163,8 @@ func (c *Connect) readDataFromTcp(s *Server, ch *Channel) {
 			case config.OpBuildTcpConn:
 				connReq.AuthToken = rawTcpMsg.AuthToken
 				connReq.RoomId = rawTcpMsg.RoomId
-				connReq.ServerId = config.Conf.Connect.ConnectBase.ServerId
+				//fix
+				connReq.ServerId = config.Conf.Connect.ConnectTcp.ServerId
 				userId, err := s.operator.Connect(&connReq)
 				logrus.Infof("tcp s.operator.Connect userId is :%d", userId)
 				if err != nil {
@@ -199,6 +209,7 @@ func (c *Connect) writeDataToTcp(s *Server, ch *Channel) {
 	defer func() {
 		ticker.Stop()
 		_ = ch.connTcp.Close()
+		return
 	}()
 	pack := stickpackage.StickPackage{
 		Version: stickpackage.VersionContent,
@@ -219,7 +230,7 @@ func (c *Connect) writeDataToTcp(s *Server, ch *Channel) {
 				return
 			}
 		case <-ticker.C:
-			logrus.Infof("connTcp.ping message")
+			logrus.Infof("connTcp.ping message,send")
 			//send a ping msg ,if error , return
 			pack.Msg = []byte("ping msg")
 			pack.Length = pack.GetPackageLength()

@@ -56,7 +56,7 @@ type CheckAuthResponse struct {
 type ConnectRequest struct {
 	AuthToken string `json:"authToken"`
 	RoomId    int    `json:"roomId"`
-	ServerId  int    `json:"serverId"`
+	ServerId  string `json:"serverId"`
 }
 
 type ConnectReply struct {

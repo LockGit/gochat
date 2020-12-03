@@ -57,7 +57,7 @@ func (logic *Logic) createRpcServer(network string, addr string) {
 	s := server.NewServer()
 	logic.addRegistryPlugin(s, network, addr)
 	// serverId must be unique
-	err := s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathLogic, new(RpcLogic), fmt.Sprintf("%d", config.Conf.Common.CommonEtcd.ServerId))
+	err := s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathLogic, new(RpcLogic), fmt.Sprintf("%s", config.Conf.Logic.LogicBase.ServerId))
 	if err != nil {
 		logrus.Errorf("register error:%s", err.Error())
 	}
@@ -82,7 +82,7 @@ func (logic *Logic) addRegistryPlugin(s *server.Server, network string, addr str
 	s.Plugins.Add(r)
 }
 
-func (logic *Logic) RedisPublishChannel(serverId int, toUserId int, msg []byte) (err error) {
+func (logic *Logic) RedisPublishChannel(serverId string, toUserId int, msg []byte) (err error) {
 	redisMsg := proto.RedisMsg{
 		Op:       config.OpSingleSend,
 		ServerId: serverId,

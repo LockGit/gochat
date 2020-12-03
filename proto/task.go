@@ -7,7 +7,7 @@ package proto
 
 type RedisMsg struct {
 	Op           int               `json:"op"`
-	ServerId     int               `json:"serverId,omitempty"`
+	ServerId     string            `json:"serverId,omitempty"`
 	RoomId       int               `json:"roomId,omitempty"`
 	UserId       int               `json:"userId,omitempty"`
 	Msg          []byte            `json:"msg"`
