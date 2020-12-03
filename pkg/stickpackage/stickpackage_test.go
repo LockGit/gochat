@@ -65,11 +65,10 @@ func Test_TcpClient(t *testing.T) {
 	//1,建立tcp链接
 	//2,send msg to tcp conn
 	//3,receive msg from tcp conn
-
-	//authToken := "ivN-ekZS0VnXs_LFI0EVD6eKJiuFlfo_ICBUeZjIDcw=" //lock
-	authToken := "MUJa0nIkpXL1Q4JzDWp5YwXMPNIRv4QRvdOF7eHjJNI=" //demo
-	fromUserId := 3
-	tcpAddrRemote, _ := net.ResolveTCPAddr("tcp4", "127.0.0.1:7001")
+	roomId := 1                                                      //@todo default roomId
+	authToken := "MUJa0nIkpXL1Q4JzDWp5YwXMPNIRv4QRvdOF7eHjJNI="      //@todo need you modify
+	fromUserId := 3                                                  //@todo need you modify
+	tcpAddrRemote, _ := net.ResolveTCPAddr("tcp4", "127.0.0.1:7001") //@todo default connect address
 	conn, err := net.DialTCP("tcp", nil, tcpAddrRemote)
 	defer func() {
 		_ = conn.Close()
@@ -129,7 +128,7 @@ func Test_TcpClient(t *testing.T) {
 				Msg:          "build tcp heartbeat conn",
 				FromUserId:   fromUserId,
 				FromUserName: "Tcp heartbeat build",
-				RoomId:       1,
+				RoomId:       roomId,
 				Op:           config.OpBuildTcpConn,
 				AuthToken:    authToken, //todo 增加token验证，用于验证tcp部分
 			}
@@ -149,7 +148,7 @@ func Test_TcpClient(t *testing.T) {
 			Msg:          "from tcp client,time is:" + time.Now().Format("2006-01-02 15:04:05"),
 			FromUserId:   fromUserId,
 			FromUserName: "I am Tcp msg",
-			RoomId:       1,
+			RoomId:       roomId,
 			Op:           config.OpRoomSend,
 			AuthToken:    authToken, //todo 增加token验证，用于验证tcp部分
 		}
@@ -163,11 +162,6 @@ func Test_TcpClient(t *testing.T) {
 		pack.Length = pack.GetPackageLength()
 		//test package, BigEndian
 		_ = pack.Pack(conn) //写入要发送的消息
-
-		//rpc push msg to room
-		//rpc.InitLogicRpcClient()
-		//code, errMsg := rpc.RpcLogicObj.PushRoom(msg)
-		//fmt.Println("push code is:", code, ",msg is:", errMsg)
 		i++
 		fmt.Println(fmt.Sprintf("第%d次send msg to tcp server", i))
 	}
