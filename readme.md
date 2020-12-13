@@ -175,7 +175,9 @@ go build -o gochat.bin -tags=etcd main.go
 ./gochat.bin -module logic
 
 2,启动connect层
-./gochat.bin -module connect
+./gochat.bin -module connect_tcp
+或者  
+./gochat.bin -module connect_websocket
 
 3,启动task层
 ./gochat.bin -module task
