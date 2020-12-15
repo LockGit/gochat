@@ -193,7 +193,9 @@ go build -o gochat.bin -tags=etcd main.go
 ./gochat.bin -module logic
 
 2,Start the connect layer
-./gochat.bin -module connect
+./gochat.bin -module connect_tcp
+or  
+./gochat.bin -module connect_websocket
 
 3,Start the task layer
 ./gochat.bin -module task
