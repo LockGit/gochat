@@ -8,19 +8,23 @@ package task
 import (
 	"context"
 	"encoding/json"
+	"github.com/docker/libkv/store"
 	"github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/client"
 	"gochat/config"
 	"gochat/proto"
 	"gochat/tools"
 	"strings"
+	"time"
 )
 
 var RpcConnectClientList map[string]client.XClient
 
 func (task *Task) InitConnectRpcClient() (err error) {
 	etcdConfig := config.Conf.Common.CommonEtcd
-	d := client.NewEtcdV3Discovery(etcdConfig.BasePath, etcdConfig.ServerPathConnect, []string{etcdConfig.Host}, nil)
+	d := client.NewEtcdV3Discovery(etcdConfig.BasePath, etcdConfig.ServerPathConnect, []string{etcdConfig.Host}, &store.Config{
+		ConnectionTimeout: time.Second * time.Duration(config.Conf.Common.CommonEtcd.ConnectionTimeout),
+	})
 	if len(d.GetServices()) <= 0 {
 		logrus.Panicf("no etcd server find!")
 	}

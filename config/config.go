@@ -130,6 +130,7 @@ type CommonEtcd struct {
 	BasePath          string `mapstructure:"basePath"`
 	ServerPathLogic   string `mapstructure:"serverPathLogic"`
 	ServerPathConnect string `mapstructure:"serverPathConnect"`
+	ConnectionTimeout int    `mapstructure:"connectionTimeout"`
 }
 
 type CommonRedis struct {

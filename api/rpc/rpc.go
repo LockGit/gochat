@@ -7,11 +7,13 @@ package rpc
 
 import (
 	"context"
+	"github.com/docker/libkv/store"
 	"github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/client"
 	"gochat/config"
 	"gochat/proto"
 	"sync"
+	"time"
 )
 
 var LogicRpcClient client.XClient
@@ -28,7 +30,9 @@ func InitLogicRpcClient() {
 			config.Conf.Common.CommonEtcd.BasePath,
 			config.Conf.Common.CommonEtcd.ServerPathLogic,
 			[]string{config.Conf.Common.CommonEtcd.Host},
-			nil,
+			&store.Config{
+				ConnectionTimeout: time.Second * time.Duration(config.Conf.Common.CommonEtcd.ConnectionTimeout),
+			},
 		)
 		LogicRpcClient = client.NewXClient(config.Conf.Common.CommonEtcd.ServerPathLogic, client.Failtry, client.RandomSelect, d, client.DefaultOption)
 		RpcLogicObj = new(RpcLogic)

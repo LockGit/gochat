@@ -36,6 +36,14 @@ func GetRedisInstance(redisOpt RedisOption) *redis.Client {
 		DB:         db,
 		MaxConnAge: 20 * time.Second,
 	})
+
+	pong, err := client.Ping().Result()
+	if err != nil {
+		panic(err)
+	} else {
+		fmt.Printf("redis connect ping response:%s\n", pong)
+		fmt.Println("init redis success")
+	}
 	RedisClientMap[addr] = client
 	syncLock.Unlock()
 	return RedisClientMap[addr]

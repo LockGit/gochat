@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/docker/libkv/store"
 	"github.com/rcrowley/go-metrics"
 	"github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/client"
@@ -34,7 +35,9 @@ func (c *Connect) InitLogicRpcClient() (err error) {
 			config.Conf.Common.CommonEtcd.BasePath,
 			config.Conf.Common.CommonEtcd.ServerPathLogic,
 			[]string{config.Conf.Common.CommonEtcd.Host},
-			nil,
+			&store.Config{
+				ConnectionTimeout: time.Second * time.Duration(config.Conf.Common.CommonEtcd.ConnectionTimeout),
+			},
 		)
 		logicRpcClient = client.NewXClient(config.Conf.Common.CommonEtcd.ServerPathLogic, client.Failtry, client.RandomSelect, d, client.DefaultOption)
 	})
