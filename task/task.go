@@ -30,6 +30,7 @@ func (task *Task) Run() {
 	if err := task.InitConnectRpcClient(); err != nil {
 		logrus.Panicf("task init InitConnectRpcClient fail,err:%s", err.Error())
 	}
+	//@todo need watch etcd connect layer serverId kv change
 	//GoPush
 	task.GoPush()
 }

@@ -66,7 +66,7 @@ func Test_TcpClient(t *testing.T) {
 	//2,send msg to tcp conn
 	//3,receive msg from tcp conn
 	roomId := 1                                                      //@todo default roomId
-	authToken := "1zMQM1eL0HYi8r07zhJ4zxoyiPxKLMTOTsrhFysHY7Y="      //@todo need you modify
+	authToken := "1kHYNlHaQTjGd0BWuECkw80ZAIquoU30f0gFPxqpEhQ="      //@todo need you modify
 	fromUserId := 3                                                  //@todo need you modify
 	tcpAddrRemote, _ := net.ResolveTCPAddr("tcp4", "127.0.0.1:7001") //@todo default connect address
 	conn, err := net.DialTCP("tcp", nil, tcpAddrRemote)

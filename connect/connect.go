@@ -6,9 +6,10 @@
 package connect
 
 import (
+	"fmt"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gochat/config"
-	"net/http"
 	_ "net/http/pprof"
 	"runtime"
 	"time"
@@ -17,6 +18,7 @@ import (
 var DefaultServer *Server
 
 type Connect struct {
+	ServerId string
 }
 
 func New() *Connect {
@@ -54,7 +56,7 @@ func (c *Connect) Run() {
 		WriteBufferSize: 1024,
 		BroadcastSize:   512,
 	})
-
+	c.ServerId = fmt.Sprintf("%s-%s", "ws", uuid.New().String())
 	//init Connect layer rpc server ,task layer will call this
 	if err := c.InitConnectWebsocketRpcServer(); err != nil {
 		logrus.Panicf("InitConnectWebsocketRpcServer Fatal error: %s \n", err.Error())
@@ -97,11 +99,12 @@ func (c *Connect) RunTcp() {
 		WriteBufferSize: 1024,
 		BroadcastSize:   512,
 	})
-	go func() {
-		http.ListenAndServe("0.0.0.0:9000", nil)
-	}()
+	//go func() {
+	//	http.ListenAndServe("0.0.0.0:9000", nil)
+	//}()
+	c.ServerId = fmt.Sprintf("%s-%s", "tcp", uuid.New().String())
 	//init Connect layer rpc server ,task layer will call this
-	if err := c.InitConnectTcpRcpServer(); err != nil {
+	if err := c.InitConnectTcpRpcServer(); err != nil {
 		logrus.Panicf("InitConnectWebsocketRpcServer Fatal error: %s \n", err.Error())
 	}
 	//start Connect layer server handler persistent connection by tcp

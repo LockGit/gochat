@@ -80,6 +80,7 @@ func (c *Connect) acceptTcp(listener *net.TCPListener) {
 		}
 		go c.ServeTcp(DefaultServer, conn, r)
 		if r++; r == maxInt {
+			logrus.Infof("conn.acceptTcp num is:%d", r)
 			r = 0
 		}
 	}
@@ -164,7 +165,8 @@ func (c *Connect) readDataFromTcp(s *Server, ch *Channel) {
 				connReq.AuthToken = rawTcpMsg.AuthToken
 				connReq.RoomId = rawTcpMsg.RoomId
 				//fix
-				connReq.ServerId = config.Conf.Connect.ConnectTcp.ServerId
+				//connReq.ServerId = config.Conf.Connect.ConnectTcp.ServerId
+				connReq.ServerId = c.ServerId
 				userId, err := s.operator.Connect(&connReq)
 				logrus.Infof("tcp s.operator.Connect userId is :%d", userId)
 				if err != nil {

@@ -40,7 +40,7 @@ func (c *Connect) serveWs(server *Server, w http.ResponseWriter, r *http.Request
 	ch = NewChannel(server.Options.BroadcastSize)
 	ch.conn = conn
 	//send data to websocket conn
-	go server.writePump(ch)
+	go server.writePump(ch, c)
 	//get data from websocket conn
-	go server.readPump(ch)
+	go server.readPump(ch, c)
 }

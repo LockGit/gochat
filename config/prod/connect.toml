@@ -1,14 +1,13 @@
 [connect-base]
-serverId = "1"
 certPath = ""
 keyPath = ""
 
 [connect-websocket]
-serverId = 1000
+#serverId = "1000"
 bind = "0.0.0.0:7000"
 
 [connect-tcp]
-serverId = 2000
+#serverId = "2000"
 bind = "0.0.0.0:7001,0.0.0.0:7002"
 sendbuf = 4096
 receivebuf = 4096

@@ -5,9 +5,3 @@ redisPassword = ""
 rpcAddress = "tcp@localhost:6923"
 pushChan = 2
 pushChanSize = 50
-
-
-[[task-cometsAddrs]]
-key = 1
-addr = "tcp@0.0.0.0:6912"
-

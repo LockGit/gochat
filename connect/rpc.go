@@ -76,12 +76,12 @@ func (c *Connect) InitConnectWebsocketRpcServer() (err error) {
 	return
 }
 
-func (c *Connect) InitConnectTcpRcpServer() (err error) {
+func (c *Connect) InitConnectTcpRpcServer() (err error) {
 	var network, addr string
 	connectRpcAddress := strings.Split(config.Conf.Connect.ConnectRpcAddressTcp.Address, ",")
 	for _, bind := range connectRpcAddress {
 		if network, addr, err = tools.ParseNetwork(bind); err != nil {
-			logrus.Panicf("InitConnectTcpRcpServer ParseNetwork error : %s", err)
+			logrus.Panicf("InitConnectTcpRpcServer ParseNetwork error : %s", err)
 		}
 		logrus.Infof("Connect start run at-->%s:%s", network, addr)
 		go c.createConnectTcpRpcServer(network, addr)
@@ -148,7 +148,8 @@ func (c *Connect) createConnectWebsocktsRpcServer(network string, addr string) {
 	s := server.NewServer()
 	addRegistryPlugin(s, network, addr)
 	//config.Conf.Connect.ConnectTcp.ServerId
-	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathConnect, new(RpcConnectPush), fmt.Sprintf("%s", config.Conf.Connect.ConnectWebsocket.ServerId))
+	//s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathConnect, new(RpcConnectPush), fmt.Sprintf("%s", config.Conf.Connect.ConnectWebsocket.ServerId))
+	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathConnect, new(RpcConnectPush), fmt.Sprintf("%s", c.ServerId))
 	s.RegisterOnShutdown(func(s *server.Server) {
 		s.UnregisterAll()
 	})
@@ -158,7 +159,8 @@ func (c *Connect) createConnectWebsocktsRpcServer(network string, addr string) {
 func (c *Connect) createConnectTcpRpcServer(network string, addr string) {
 	s := server.NewServer()
 	addRegistryPlugin(s, network, addr)
-	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathConnect, new(RpcConnectPush), fmt.Sprintf("%s", config.Conf.Connect.ConnectTcp.ServerId))
+	//s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathConnect, new(RpcConnectPush), fmt.Sprintf("%s", config.Conf.Connect.ConnectTcp.ServerId))
+	s.RegisterName(config.Conf.Common.CommonEtcd.ServerPathConnect, new(RpcConnectPush), fmt.Sprintf("%s", c.ServerId))
 	s.RegisterOnShutdown(func(s *server.Server) {
 		s.UnregisterAll()
 	})

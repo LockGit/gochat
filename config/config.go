@@ -201,21 +201,8 @@ type LogicBase struct {
 	KeyPath    string `mapstructure:"keyPath"`
 }
 
-type LogicRedis struct {
-	RedisAddress  string `mapstructure:"redisAddress"`
-	RedisPassword string `mapstructure:"redisPassword"`
-}
-
-type LogicEtcd struct {
-	Host     string `mapstructure:"host"`
-	BasePath string `mapstructure:"basePath"`
-	ServerId string `mapstructure:"serverId"`
-}
-
 type LogicConfig struct {
-	LogicBase  LogicBase  `mapstructure:"logic-base"`
-	LogicRedis LogicRedis `mapstructure:"logic-redis"`
-	LogicEtcd  LogicEtcd  `mapstructure:"logic-etcd"`
+	LogicBase LogicBase `mapstructure:"logic-base"`
 }
 
 type TaskBase struct {
