@@ -325,7 +325,10 @@ func (rpc *RpcLogic) DisConnect(ctx context.Context, args *proto.DisConnectReque
 	roomUserKey := logic.getRoomUserKey(strconv.Itoa(args.RoomId))
 	// room user count --
 	if args.RoomId > 0 {
-		RedisClient.Decr(logic.getRoomOnlineCountKey(fmt.Sprintf("%d", args.RoomId))).Result()
+		count, _ := RedisSessClient.Get(logic.getRoomOnlineCountKey(fmt.Sprintf("%d", args.RoomId))).Int()
+		if count > 0 {
+			RedisClient.Decr(logic.getRoomOnlineCountKey(fmt.Sprintf("%d", args.RoomId))).Result()
+		}
 	}
 	// room login user--
 	if args.UserId != 0 {
