@@ -10,7 +10,7 @@
 <img src="https://img.shields.io/github/issues/LockGit/gochat"> 
 <img src="https://img.shields.io/github/forks/LockGit/gochat"> 
 <img src="https://img.shields.io/github/stars/LockGit/gochat">
-<img src="https://img.shields.io/docker/pulls/lockgit/gochat">
+<img src="https://img.shields.io/docke****r/pulls/lockgit/gochat">
 <img src="https://img.shields.io/github/repo-size/LockGit/gochat">
 <img src="https://img.shields.io/github/followers/LockGit">
 
@@ -48,18 +48,18 @@ authToken为进行tcp链接时的认证token，这个token是用户标识，在w
 3，task层消费队列中的消息，rpc广播到websocket链接层和tcp链接层的相应房间中，
 链接层获得消息后，把消息投递到对应的远端用户(相当于遍历房间中维护的用户链接会话双向链表)
 ```
-![](https://github.com/LockGit/gochat/blob/master/architecture/gochat_tcp.gif)
+![](./architecture/gochat_tcp.gif)
 
 
 ### 架构设计
- ![](https://github.com/LockGit/gochat/blob/master/architecture/gochat.png)
+ ![](./architecture/gochat.png)
 
 ### 服务发现
-![](https://github.com/LockGit/gochat/blob/master/architecture/gochat_discovery.png)
+![](./architecture/gochat_discovery.png)
 
 
 ### 消息投递 
-![](https://github.com/LockGit/gochat/blob/master/architecture/single_send.png)
+![](./architecture/single_send.png)
 ```
 消息发送必须在登录状态下,如上图,用户A向用户B发送了一条消息。那么经历了如下历程：
 1,用户A调用api层接口登录系统,登录成功后与connect层认证保持长链接,
@@ -90,7 +90,19 @@ connect层:
 ```
 
 ### 聊天室预览
-![](https://github.com/LockGit/gochat/blob/master/architecture/gochat.gif)
+![](./architecture/gochat.gif)
+
+### 用户长链接会话内部结构
+![](./architecture/session.png)
+
+### 划分bucket减小锁竞争
+![](./architecture/lock_competition.png)
+
+### 基于CityHash让hash分布的更均匀
+![](./architecture/hash.png)
+
+### 简单压测
+![](./architecture/pressure_test.png)
 
 ### 目录结构
 ```
@@ -240,15 +252,6 @@ docker build -f docker/Dockerfile . -t lockgit/gochat
 gochat实现了简单聊天室功能,由于精力有限,你可以在此基础上使用自己的业务逻辑定制一些需求,并优掉一些gochat中的代码。
 使用中的任何问题请提相关issue,后续会根据实际情况完善和优化相关代码与设计。
 ```
-
-### 交流群
-```
-因有同学提issue建议建立交流群，所以提供以下两个二维码，用于技术学习交流和记录相关技术心得，禁止广告。
-```
->QQ群 
-
-![QQ群](https://github.com/LockGit/gochat/blob/master/architecture/gochat-qq.jpg)
-
 
 ### Backer and Sponsor
 >jetbrains

@@ -48,17 +48,17 @@ In fact, this place can also be sent through websocket and TCP, but the final me
 3. The message in the queue is consumed by the task layer, and the RPC is broadcast to the corresponding rooms of the websocket link layer and the TCP link layer,
 After getting the message, the link layer delivers the message to the corresponding remote user (equivalent to traversing the user link session bidirectional list maintained in the room)
 ```
-![](https://github.com/LockGit/gochat/blob/master/architecture/gochat_tcp.gif)
+![](./architecture/gochat_tcp.gif)
 
 ### Architecture design
- ![](https://github.com/LockGit/gochat/blob/master/architecture/gochat.png)
+ ![](./architecture/gochat.png)
 
 ### Service discovery
-![](https://github.com/LockGit/gochat/blob/master/architecture/gochat_discovery.png)
+![](./architecture/gochat_discovery.png)
 
 
 ### Message delivery
-![](https://github.com/LockGit/gochat/blob/master/architecture/single_send.png)
+![](./architecture/single_send.png)
 ```
 The message must be sent in the login state. As shown above, User A sends a message to User B. 
 Then experienced the following process:
@@ -98,8 +98,19 @@ Connect layer:
 ```
 
 ### Chat room preview
-![](https://github.com/LockGit/gochat/blob/master/architecture/gochat.gif)
+![](./architecture/gochat.gif)
 
+### Internal structure of user long connect session
+![](./architecture/session.png)
+
+### Dividing buckets to reduce lock competition
+![](./architecture/lock_competition.png)
+
+### Making hash distribution more uniform based on cityhash
+![](./architecture/hash.png)
+
+### Simple pressure measurement
+![](./architecture/pressure_test.png)
 
 ### Directory Structure
 ```
@@ -255,17 +266,6 @@ you can use your own business logic to customize some requirements and optimize 
 Please contact the relevant issue for any questions in use, 
 and follow up and optimize the relevant code according to the actual situation.
 ```
-
-### Discuss
-```
-Because some students mentioned the issue proposal to establish a communication group, 
-the following two QR codes are provided for technical learning exchange and recording related technical experience, 
-and advertising is prohibited.
-```
->QQ Group
-
-![QQ](https://github.com/LockGit/gochat/blob/master/architecture/gochat-qq.jpg)
-
 
 ### Backer and Sponsor
 >jetbrains
