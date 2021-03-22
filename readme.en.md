@@ -109,6 +109,9 @@ Connect layer:
 ### Making hash distribution more uniform based on cityhash
 ![](./architecture/hash.png)
 
+### Preview of the internal structure of a single server in the connect layer
+![](./architecture/gochat_room.png)
+
 ### Simple pressure measurement
 ![](./architecture/pressure_test.png)
 

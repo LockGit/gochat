@@ -101,6 +101,9 @@ connect层:
 ### 基于CityHash让hash分布的更均匀
 ![](./architecture/hash.png)
 
+### 链接层的单个server内部结构预览
+![](./architecture/gochat_room.png)
+
 ### 简单压测
 ![](./architecture/pressure_test.png)
 
