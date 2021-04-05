@@ -8,6 +8,7 @@
 <img src="https://img.shields.io/github/last-commit/LockGit/gochat">
 <img src="https://img.shields.io/github/issues/LockGit/gochat"> 
 <img src="https://img.shields.io/github/forks/LockGit/gochat">
+<img src="https://img.shields.io/github/stars/LockGit/gochat">
 <img src="https://img.shields.io/github/repo-size/LockGit/gochat">
 <img src="https://img.shields.io/github/followers/LockGit">
 
