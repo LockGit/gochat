@@ -23,7 +23,7 @@ func (task *Task) Run() {
 	taskConfig := config.Conf.Task
 	runtime.GOMAXPROCS(taskConfig.TaskBase.CpuNum)
 	//read from redis queue
-	if err := task.InitSubscribeRedisClient(); err != nil {
+	if err := task.InitQueueRedisClient(); err != nil {
 		logrus.Panicf("task init publishRedisClient fail,err:%s", err.Error())
 	}
 	//rpc call connect layer send msg

@@ -4,13 +4,10 @@
 <img src="https://img.shields.io/badge/documentation-yes-brightgreen.svg">
 <img src="https://img.shields.io/github/license/LockGit/gochat">
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/LockGit/gochat/issues)
-[![HitCount](http://hits.dwyl.io/LockGit/gochat.svg)](http://hits.dwyl.io/LockGit/gochat)
 <img src="https://img.shields.io/github/contributors/LockGit/gochat">
 <img src="https://img.shields.io/github/last-commit/LockGit/gochat">
 <img src="https://img.shields.io/github/issues/LockGit/gochat"> 
-<img src="https://img.shields.io/github/forks/LockGit/gochat"> 
-<img src="https://img.shields.io/github/stars/LockGit/gochat">
-<img src="https://img.shields.io/docke****r/pulls/lockgit/gochat">
+<img src="https://img.shields.io/github/forks/LockGit/gochat">
 <img src="https://img.shields.io/github/repo-size/LockGit/gochat">
 <img src="https://img.shields.io/github/followers/LockGit">
 
