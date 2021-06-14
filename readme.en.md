@@ -281,5 +281,13 @@ JetBrains has an open source sponsorship program that allows you to apply for th
 Jetbranins officials will ask for the proposal to add their brand logo to the warehouse when giving the license,
 But all this is the principle of users' willingness
 ```
+
+### Support gochat
+```
+Your support is also a kind of affirmation and fate, if you find it helpful, 
+you can also scan the WeChat QR code below to support the author to continue to optimize and improve gochat
+```
+![](./architecture/support.png)
+
 ### License
 gochat is licensed under the MIT License. 
