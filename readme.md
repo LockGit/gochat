@@ -269,7 +269,7 @@ jetbranins官方在赠送license的时候会请求提议加入他们的品牌log
 
 ### Support gochat
 ```
-您的支持也是一种肯定与缘分，如果您觉得有帮助也可以通过扫描下面的微信二维码支持作者继续优化和完善gochat
+您的支持也是一种肯定，如果您觉得有帮助也可以通过扫描下面的微信二维码支持作者继续优化和完善gochat
 ```
 ![](./architecture/support.png)
 

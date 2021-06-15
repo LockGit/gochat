@@ -284,7 +284,7 @@ But all this is the principle of users' willingness
 
 ### Support gochat
 ```
-Your support is also a kind of affirmation and fate, if you find it helpful, 
+Your support is also a kind of affirmation, if you find it helpful, 
 you can also scan the WeChat QR code below to support the author to continue to optimize and improve gochat
 ```
 ![](./architecture/support.png)
