@@ -69,18 +69,35 @@ func (logic *Logic) createRpcServer(network string, addr string) {
 }
 
 func (logic *Logic) addRegistryPlugin(s *server.Server, network string, addr string) {
-	r := &serverplugin.EtcdV3RegisterPlugin{
-		ServiceAddress: network + "@" + addr,
-		EtcdServers:    []string{config.Conf.Common.CommonEtcd.Host},
-		BasePath:       config.Conf.Common.CommonEtcd.BasePath,
-		Metrics:        metrics.NewRegistry(),
-		UpdateInterval: time.Minute,
+	if config.Conf.Common.Registy == "etcd" {
+		r := &serverplugin.EtcdV3RegisterPlugin{
+			ServiceAddress: network + "@" + addr,
+			EtcdServers:    []string{config.Conf.Common.CommonEtcd.Host},
+			BasePath:       config.Conf.Common.CommonEtcd.BasePath,
+			Metrics:        metrics.NewRegistry(),
+			UpdateInterval: time.Minute,
+		}
+		err := r.Start()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		s.Plugins.Add(r)
 	}
-	err := r.Start()
-	if err != nil {
-		logrus.Fatal(err)
+	if config.Conf.Common.Registy == "zookeeper" {
+		r := &serverplugin.ZooKeeperRegisterPlugin{
+			ServiceAddress:   network + "@" + addr,
+			ZooKeeperServers: []string{config.Conf.Common.CommonZookeeper.Host},
+			BasePath:         config.Conf.Common.CommonZookeeper.BasePath,
+			Metrics:          metrics.NewRegistry(),
+			UpdateInterval:   time.Minute,
+		}
+		err := r.Start()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		s.Plugins.Add(r)
 	}
-	s.Plugins.Add(r)
+
 }
 
 func (logic *Logic) RedisPublishChannel(serverId string, toUserId int, msg []byte) (err error) {

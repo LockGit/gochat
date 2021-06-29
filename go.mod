@@ -6,6 +6,7 @@ require (
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/gin-gonic/gin v1.4.0
 	github.com/go-redis/redis v6.15.2+incompatible
+	github.com/google/uuid v1.1.1 // indirect
 	github.com/gorilla/websocket v1.4.0
 	github.com/jinzhu/gorm v1.9.10
 	github.com/pkg/errors v0.8.1

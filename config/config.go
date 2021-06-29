@@ -131,6 +131,12 @@ type CommonEtcd struct {
 	ServerPathLogic   string `mapstructure:"serverPathLogic"`
 	ServerPathConnect string `mapstructure:"serverPathConnect"`
 }
+type CommonZookeeper struct {
+	Host              string `mapstructure:"host"`
+	BasePath          string `mapstructure:"basePath"`
+	ServerPathLogic   string `mapstructure:"serverPathLogic"`
+	ServerPathConnect string `mapstructure:"serverPathConnect"`
+}
 
 type CommonRedis struct {
 	RedisAddress  string `mapstructure:"redisAddress"`
@@ -139,8 +145,10 @@ type CommonRedis struct {
 }
 
 type Common struct {
-	CommonEtcd  CommonEtcd  `mapstructure:"common-etcd"`
-	CommonRedis CommonRedis `mapstructure:"common-redis"`
+	Registy         string          `mapstructure:"registy"`
+	CommonEtcd      CommonEtcd      `mapstructure:"common-etcd"`
+	CommonZookeeper CommonZookeeper `mapstructure:"common-zookeeper"`
+	CommonRedis     CommonRedis     `mapstructure:"common-redis"`
 }
 
 type ConnectBase struct {

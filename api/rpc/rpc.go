@@ -24,12 +24,21 @@ var RpcLogicObj *RpcLogic
 
 func InitLogicRpcClient() {
 	once.Do(func() {
-		d := client.NewEtcdV3Discovery(
-			config.Conf.Common.CommonEtcd.BasePath,
-			config.Conf.Common.CommonEtcd.ServerPathLogic,
-			[]string{config.Conf.Common.CommonEtcd.Host},
-			nil,
-		)
+		var d client.ServiceDiscovery
+		if config.Conf.Common.Registy == "etcd" {
+			d = client.NewEtcdV3Discovery(
+				config.Conf.Common.CommonEtcd.BasePath,
+				config.Conf.Common.CommonEtcd.ServerPathLogic,
+				[]string{config.Conf.Common.CommonEtcd.Host},
+				nil,
+			)
+		}
+		if config.Conf.Common.Registy == "zookeeper" {
+			d = client.NewZookeeperDiscovery(config.Conf.Common.CommonZookeeper.BasePath,
+				config.Conf.Common.CommonZookeeper.ServerPathLogic,
+				[]string{config.Conf.Common.CommonZookeeper.Host},
+				nil)
+		}
 		LogicRpcClient = client.NewXClient(config.Conf.Common.CommonEtcd.ServerPathLogic, client.Failtry, client.RandomSelect, d, client.DefaultOption)
 		RpcLogicObj = new(RpcLogic)
 	})
