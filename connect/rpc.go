@@ -30,12 +30,21 @@ type RpcConnect struct {
 
 func (c *Connect) InitLogicRpcClient() (err error) {
 	once.Do(func() {
-		d := client.NewEtcdV3Discovery(
-			config.Conf.Common.CommonEtcd.BasePath,
-			config.Conf.Common.CommonEtcd.ServerPathLogic,
-			[]string{config.Conf.Common.CommonEtcd.Host},
-			nil,
-		)
+		var d client.ServiceDiscovery
+		if config.Conf.Common.Registy == "etcd" {
+			d = client.NewEtcdV3Discovery(
+				config.Conf.Common.CommonEtcd.BasePath,
+				config.Conf.Common.CommonEtcd.ServerPathLogic,
+				[]string{config.Conf.Common.CommonEtcd.Host},
+				nil,
+			)
+		}
+		if config.Conf.Common.Registy == "zookeeper" {
+			d = client.NewZookeeperDiscovery(config.Conf.Common.CommonZookeeper.BasePath,
+				config.Conf.Common.CommonZookeeper.ServerPathLogic,
+				[]string{config.Conf.Common.CommonZookeeper.Host},
+				nil)
+		}
 		logicRpcClient = client.NewXClient(config.Conf.Common.CommonEtcd.ServerPathLogic, client.Failtry, client.RandomSelect, d, client.DefaultOption)
 	})
 	if logicRpcClient == nil {
@@ -168,16 +177,34 @@ func (c *Connect) createConnectTcpRpcServer(network string, addr string) {
 }
 
 func addRegistryPlugin(s *server.Server, network string, addr string) {
-	r := &serverplugin.EtcdV3RegisterPlugin{
-		ServiceAddress: network + "@" + addr,
-		EtcdServers:    []string{config.Conf.Common.CommonEtcd.Host},
-		BasePath:       config.Conf.Common.CommonEtcd.BasePath,
-		Metrics:        metrics.NewRegistry(),
-		UpdateInterval: time.Minute,
+
+	if config.Conf.Common.Registy == "etcd" {
+		r := &serverplugin.EtcdV3RegisterPlugin{
+			ServiceAddress: network + "@" + addr,
+			EtcdServers:    []string{config.Conf.Common.CommonEtcd.Host},
+			BasePath:       config.Conf.Common.CommonEtcd.BasePath,
+			Metrics:        metrics.NewRegistry(),
+			UpdateInterval: time.Minute,
+		}
+		err := r.Start()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		s.Plugins.Add(r)
 	}
-	err := r.Start()
-	if err != nil {
-		logrus.Fatal(err)
+	if config.Conf.Common.Registy == "zookeeper" {
+		r := &serverplugin.ZooKeeperRegisterPlugin{
+			ServiceAddress:   network + "@" + addr,
+			ZooKeeperServers: []string{config.Conf.Common.CommonZookeeper.Host},
+			BasePath:         config.Conf.Common.CommonZookeeper.BasePath,
+			Metrics:          metrics.NewRegistry(),
+			UpdateInterval:   time.Minute,
+		}
+		err := r.Start()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		s.Plugins.Add(r)
 	}
-	s.Plugins.Add(r)
+
 }

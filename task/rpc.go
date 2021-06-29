@@ -19,8 +19,31 @@ import (
 var RpcConnectClientList map[string]client.XClient
 
 func (task *Task) InitConnectRpcClient() (err error) {
-	etcdConfig := config.Conf.Common.CommonEtcd
-	d := client.NewEtcdV3Discovery(etcdConfig.BasePath, etcdConfig.ServerPathConnect, []string{etcdConfig.Host}, nil)
+	//etcdConfig := config.Conf.Common.CommonEtcd
+	//zookkperConfig := config.Conf.Common.CommonZookeeper
+	////d := client.NewEtcdV3Discovery(etcdConfig.BasePath, etcdConfig.ServerPathConnect, []string{etcdConfig.Host}, nil)
+	//d := client.NewZookeeperDiscovery(zookkperConfig.BasePath, zookkperConfig.ServerPathConnect, []string{zookkperConfig.Host}, nil)
+
+
+	var d client.ServiceDiscovery
+	var ServerPathConnect string
+	if config.Conf.Common.Registy == "etcd" {
+		ServerPathConnect=config.Conf.Common.CommonEtcd.ServerPathConnect
+		d = client.NewEtcdV3Discovery(
+			config.Conf.Common.CommonEtcd.BasePath,
+			config.Conf.Common.CommonEtcd.ServerPathConnect,
+			[]string{config.Conf.Common.CommonEtcd.Host},
+			nil,
+		)
+	}
+	if config.Conf.Common.Registy == "zookeeper" {
+		ServerPathConnect=config.Conf.Common.CommonZookeeper.ServerPathConnect
+		d = client.NewZookeeperDiscovery(config.Conf.Common.CommonZookeeper.BasePath,
+			config.Conf.Common.CommonZookeeper.ServerPathConnect,
+			[]string{config.Conf.Common.CommonZookeeper.Host},
+			nil)
+	}
+
 	if len(d.GetServices()) <= 0 {
 		logrus.Panicf("no etcd server find!")
 	}
@@ -35,7 +58,7 @@ func (task *Task) InitConnectRpcClient() (err error) {
 		}
 		d := client.NewPeer2PeerDiscovery(connectConf.Key, "")
 		//under serverId
-		RpcConnectClientList[serverId] = client.NewXClient(etcdConfig.ServerPathConnect, client.Failtry, client.RandomSelect, d, client.DefaultOption)
+		RpcConnectClientList[serverId] = client.NewXClient(ServerPathConnect, client.Failtry, client.RandomSelect, d, client.DefaultOption)
 		logrus.Infof("InitConnectRpcClient addr %s, v %+v", connectConf.Key, RpcConnectClientList[serverId])
 	}
 	return
