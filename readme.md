@@ -231,7 +231,7 @@ docker build -f docker/Dockerfile . -t lockgit/gochat
 ```
 
 ### 这里提供一个在线聊天demo站点：
-<a href="http://207.246.91.166:8080" target="_blank">http://207.246.91.166:8080</a>
+<a href="http://207.148.16.84:8080" target="_blank">http://207.148.16.84:8080</a>
 ```
 用以上用户名密码登录即可,也可以自己注册一个。如果无法访问了，请使用以上docker在本地构建体验。
 可用不同的账号在不同的浏览器登录,如果是Chrome,可用以隐身模式多启动几个浏览器分别以不同账号登录,
