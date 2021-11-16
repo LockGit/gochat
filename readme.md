@@ -231,12 +231,15 @@ docker build -f docker/Dockerfile . -t lockgit/gochat
 ```
 
 ### 这里提供一个在线聊天demo站点：
-<a href="http://207.148.16.84:8080" target="_blank">http://207.148.16.84:8080</a>
+<a href="http://45.63.4.69:8080" target="_blank">http://45.63.4.69:8080</a>
 ```
 用以上用户名密码登录即可,也可以自己注册一个。如果无法访问了，请使用以上docker在本地构建体验。
 可用不同的账号在不同的浏览器登录,如果是Chrome,可用以隐身模式多启动几个浏览器分别以不同账号登录,
 然后,体验不同账号之间聊天以及消息投递效果。(注:本demo未开启tcp的通道)
 ```
+如果想部署类似的私人im聊天服务到公网体验，也可在vultr上注册账号购买一个vps主机，部署im服务体验：
+<a href="https://www.vultr.com/?ref=8981750-8H" target="_blank">https://www.vultr.com/?ref=8981750-8H</a>
+
 
 ### 相关问题解答
 ```

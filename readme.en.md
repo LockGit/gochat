@@ -251,7 +251,7 @@ And make sure there are no firewall restrictions on the relevant ports on the vp
 ```
 
 ### Here is an online chat demo site:
-<a href="http://207.148.16.84:8080" target="_blank">http://207.148.16.84:8080</a>
+<a href="http://45.63.4.69:8080" target="_blank">http://45.63.4.69:8080</a>
 ```
 Log in with the above user name and password, or register one by yourself.
 if the provide url can't visit one day，please use the docker above to visit it.
@@ -260,6 +260,9 @@ If it is Chrome, you can use several browsers in incognito mode to log in with d
 Then, experience the chat between different accounts and the effect of message delivery.
 (Note: TCP channel is not enabled in this demo)
 ```
+If you want to deploy a similar private IM chat service to the public network experience, 
+you can also register an account on vultr and purchase a VPS host to deploy the IM service experience:
+<a href="https://www.vultr.com/?ref=8981750-8H" target="_blank">https://www.vultr.com/?ref=8981750-8H</a>
 
 ### Follow-up
 ```
