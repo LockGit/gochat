@@ -7,6 +7,7 @@ package connect
 
 import (
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"gochat/proto"
 	"sync"
 )
@@ -51,7 +52,9 @@ func (r *Room) Put(ch *Channel) (err error) {
 func (r *Room) Push(msg *proto.Msg) {
 	r.rLock.RLock()
 	for ch := r.next; ch != nil; ch = ch.Next {
-		ch.Push(msg)
+		if err := ch.Push(msg); err != nil {
+			logrus.Infof("push msg err:%s", err.Error())
+		}
 	}
 	r.rLock.RUnlock()
 	return
