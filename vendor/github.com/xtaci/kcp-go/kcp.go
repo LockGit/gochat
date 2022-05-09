@@ -28,6 +28,7 @@ const (
 	IKCP_THRESH_MIN  = 2
 	IKCP_PROBE_INIT  = 7000   // 7 secs to probe window size
 	IKCP_PROBE_LIMIT = 120000 // up to 120 secs to probe window
+	IKCP_SN_OFFSET   = 12
 )
 
 // monotonic reference time point
@@ -774,7 +775,7 @@ func (kcp *KCP) flush(ackOnly bool) uint32 {
 
 	// check for retransmissions
 	current := currentMs()
-	var change, lost, lostSegs, fastRetransSegs, earlyRetransSegs uint64
+	var change, lostSegs, fastRetransSegs, earlyRetransSegs uint64
 	minrto := int32(kcp.interval)
 
 	ref := kcp.snd_buf[:len(kcp.snd_buf)] // for bounds check elimination
@@ -788,16 +789,6 @@ func (kcp *KCP) flush(ackOnly bool) uint32 {
 			needsend = true
 			segment.rto = kcp.rx_rto
 			segment.resendts = current + segment.rto
-		} else if _itimediff(current, segment.resendts) >= 0 { // RTO
-			needsend = true
-			if kcp.nodelay == 0 {
-				segment.rto += kcp.rx_rto
-			} else {
-				segment.rto += kcp.rx_rto / 2
-			}
-			segment.resendts = current + segment.rto
-			lost++
-			lostSegs++
 		} else if segment.fastack >= resent { // fast retransmit
 			needsend = true
 			segment.fastack = 0
@@ -812,6 +803,16 @@ func (kcp *KCP) flush(ackOnly bool) uint32 {
 			segment.resendts = current + segment.rto
 			change++
 			earlyRetransSegs++
+		} else if _itimediff(current, segment.resendts) >= 0 { // RTO
+			needsend = true
+			if kcp.nodelay == 0 {
+				segment.rto += kcp.rx_rto
+			} else {
+				segment.rto += kcp.rx_rto / 2
+			}
+			segment.fastack = 0
+			segment.resendts = current + segment.rto
+			lostSegs++
 		}
 
 		if needsend {
@@ -873,7 +874,7 @@ func (kcp *KCP) flush(ackOnly bool) uint32 {
 		}
 
 		// congestion control, https://tools.ietf.org/html/rfc5681
-		if lost > 0 {
+		if lostSegs > 0 {
 			kcp.ssthresh = cwnd / 2
 			if kcp.ssthresh < IKCP_THRESH_MIN {
 				kcp.ssthresh = IKCP_THRESH_MIN
@@ -1050,4 +1051,20 @@ func (kcp *KCP) remove_front(q []segment, n int) []segment {
 		return q[:newn]
 	}
 	return q[n:]
+}
+
+// Release all cached outgoing segments
+func (kcp *KCP) ReleaseTX() {
+	for k := range kcp.snd_queue {
+		if kcp.snd_queue[k].data != nil {
+			xmitBuf.Put(kcp.snd_queue[k].data)
+		}
+	}
+	for k := range kcp.snd_buf {
+		if kcp.snd_buf[k].data != nil {
+			xmitBuf.Put(kcp.snd_buf[k].data)
+		}
+	}
+	kcp.snd_queue = nil
+	kcp.snd_buf = nil
 }

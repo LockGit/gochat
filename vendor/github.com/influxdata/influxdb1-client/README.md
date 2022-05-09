@@ -1,5 +1,5 @@
 # influxdb1-clientv2
-influxdb1-clientv2 is the current Go client API for InfluxDB 1.x. A Go client for the 2.0 API will be coming soon.
+influxdb1-clientv2 is the current Go client API for InfluxDB 1.x. For connecting to InfluxDB 2.x see the [influxdb-client-go](https://github.com/influxdata/influxdb-client-go) client library.
 
 InfluxDB is an open-source distributed time series database, find more about [InfluxDB](https://www.influxdata.com/time-series-platform/influxdb/) at https://docs.influxdata.com/influxdb/latest
 

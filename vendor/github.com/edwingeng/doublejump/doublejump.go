@@ -2,7 +2,7 @@
 package doublejump
 
 import (
-	"sync"
+	"math/rand"
 
 	"github.com/dgryski/go-jump"
 )
@@ -108,22 +108,12 @@ func (this *compactHolder) get(key uint64) interface{} {
 // Hash is a revamped Google's jump consistent hash. It overcomes the shortcoming of the
 // original implementation - not being able to remove nodes.
 type Hash struct {
-	mu      sync.RWMutex
 	loose   looseHolder
 	compact compactHolder
-	lock    bool
 }
 
-// NewHash creates a new doublejump hash instance, which is threadsafe.
+// NewHash creates a new doublejump hash instance, which does NOT threadsafe.
 func NewHash() *Hash {
-	hash := &Hash{lock: true}
-	hash.loose.m = make(map[interface{}]int)
-	hash.compact.m = make(map[interface{}]int)
-	return hash
-}
-
-// NewHashWithoutLock creates a new doublejump hash instance, which does NOT threadsafe.
-func NewHashWithoutLock() *Hash {
 	hash := &Hash{}
 	hash.loose.m = make(map[interface{}]int)
 	hash.compact.m = make(map[interface{}]int)
@@ -132,13 +122,8 @@ func NewHashWithoutLock() *Hash {
 
 // Add adds an object to the hash.
 func (this *Hash) Add(obj interface{}) {
-	if this == nil || obj == nil {
+	if obj == nil {
 		return
-	}
-
-	if this.lock {
-		this.mu.Lock()
-		defer this.mu.Unlock()
 	}
 
 	this.loose.add(obj)
@@ -147,13 +132,8 @@ func (this *Hash) Add(obj interface{}) {
 
 // Remove removes an object from the hash.
 func (this *Hash) Remove(obj interface{}) {
-	if this == nil || obj == nil {
+	if obj == nil {
 		return
-	}
-
-	if this.lock {
-		this.mu.Lock()
-		defer this.mu.Unlock()
 	}
 
 	this.loose.remove(obj)
@@ -162,73 +142,47 @@ func (this *Hash) Remove(obj interface{}) {
 
 // Len returns the number of objects in the hash.
 func (this *Hash) Len() int {
-	if this == nil {
-		return 0
-	}
-
-	if this.lock {
-		this.mu.RLock()
-		n := len(this.compact.a)
-		this.mu.RUnlock()
-		return n
-	}
-
 	return len(this.compact.a)
 }
 
 // LooseLen returns the size of the inner loose object holder.
 func (this *Hash) LooseLen() int {
-	if this == nil {
-		return 0
-	}
-
-	if this.lock {
-		this.mu.RLock()
-		n := len(this.loose.a)
-		this.mu.RUnlock()
-		return n
-	}
-
 	return len(this.loose.a)
 }
 
 // Shrink removes all empty slots from the hash.
 func (this *Hash) Shrink() {
-	if this == nil {
-		return
-	}
-
-	if this.lock {
-		this.mu.Lock()
-		defer this.mu.Unlock()
-	}
-
 	this.loose.shrink()
 	this.compact.shrink(this.loose.a)
 }
 
 // Get returns an object according to the key provided.
 func (this *Hash) Get(key uint64) interface{} {
-	if this == nil {
+	obj := this.loose.get(key)
+	switch obj {
+	case nil:
+		return this.compact.get(key)
+	default:
+		return obj
+	}
+}
+
+// All returns all the objects in this Hash.
+func (this *Hash) All() []interface{} {
+	n := len(this.compact.a)
+	if n == 0 {
 		return nil
 	}
+	all := make([]interface{}, n)
+	copy(all, this.compact.a)
+	return all
+}
 
-	var obj interface{}
-	if this.lock {
-		this.mu.RLock()
-		obj = this.loose.get(key)
-		switch obj {
-		case nil:
-			obj = this.compact.get(key)
-		}
-		this.mu.RUnlock()
-	} else {
-		obj = this.loose.get(key)
-		switch obj {
-		case nil:
-			obj = this.compact.get(key)
-		}
+// Random returns a random object.
+func (this *Hash) Random() interface{} {
+	if n := len(this.compact.a); n > 0 {
+		idx := rand.Intn(n)
+		return this.compact.a[idx]
 	}
-
-	return obj
+	return nil
 }

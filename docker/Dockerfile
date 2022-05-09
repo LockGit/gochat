@@ -1,4 +1,4 @@
-FROM golang:1.12
+FROM golang:1.18
 
 MAINTAINER Lock <lockexit@gmail.com>
 
@@ -16,12 +16,12 @@ RUN cd /tmp && wget https://github.com/etcd-io/etcd/releases/download/v3.4.3/etc
     && rm -rf etcd-v3.4.3-linux-amd64.tar.gz && rm -rf etcd-v3.4.3-linux-amd64
 
 
-RUN cd /tmp && wget http://download.redis.io/releases/redis-5.0.4.tar.gz -O redis.tar.gz \
+RUN cd /tmp && wget http://download.redis.io/releases/redis-5.0.9.tar.gz -O redis.tar.gz \
     && tar -zxvf redis.tar.gz \
-    && cd redis-5.0.4 && make \
+    && cd redis-5.0.9 && make \
     && cp ./src/redis-server /bin/ \
     && cp ./src/redis-cli /bin/ \
-    && rm -rf redis.tar.gz && rm -rf redis-5.0.4
+    && rm -rf redis.tar.gz && rm -rf redis-5.0.9
 
 # default eq dev , you can change this to prod , then will use prod dir config file
 ENV RUN_MODE dev

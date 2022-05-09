@@ -24,7 +24,7 @@ func getTCPSockaddr(proto, addr string) (sa syscall.Sockaddr, soType int, err er
 	var tcp *net.TCPAddr
 
 	tcp, err = net.ResolveTCPAddr(proto, addr)
-	if err != nil && tcp.IP != nil {
+	if err != nil {
 		return nil, -1, err
 	}
 
@@ -40,7 +40,11 @@ func getTCPSockaddr(proto, addr string) (sa syscall.Sockaddr, soType int, err er
 		sa := &syscall.SockaddrInet4{Port: tcp.Port}
 
 		if tcp.IP != nil {
-			copy(sa.Addr[:], tcp.IP[12:16]) // copy last 4 bytes of slice to array
+			if len(tcp.IP) == 16 {
+				copy(sa.Addr[:], tcp.IP[12:16]) // copy last 4 bytes of slice to array
+			} else {
+				copy(sa.Addr[:], tcp.IP) // copy all bytes of slice to array
+			}
 		}
 
 		return sa, syscall.AF_INET, nil

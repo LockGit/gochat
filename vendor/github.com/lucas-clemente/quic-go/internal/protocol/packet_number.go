@@ -5,14 +5,12 @@ type PacketNumber int64
 
 // InvalidPacketNumber is a packet number that is never sent.
 // In QUIC, 0 is a valid packet number.
-const InvalidPacketNumber = -1
+const InvalidPacketNumber PacketNumber = -1
 
 // PacketNumberLen is the length of the packet number in bytes
 type PacketNumberLen uint8
 
 const (
-	// PacketNumberLenInvalid is the default value and not a valid length for a packet number
-	PacketNumberLenInvalid PacketNumberLen = 0
 	// PacketNumberLen1 is a packet number length of 1 byte
 	PacketNumberLen1 PacketNumberLen = 1
 	// PacketNumberLen2 is a packet number length of 2 bytes

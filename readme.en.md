@@ -23,6 +23,12 @@
 * Because of the clear structure of chago, it can run quickly on various platforms.
 * This project provides docker with one click to build all environment dependencies, which is very convenient to install. (if it's an experience, we strongly recommend using docker to build)
 
+### Renew
+* At present, the version of golang has been upgraded to 1.18. If docker is not used, choose to compile and install by yourself. Please ensure whether your own version of go meets the requirements
+* The vendor is also packaged in the warehouse. In addition, the size of the whole vendor project is about 66m. It can be used after git clone. Due to irresistible network factors, it may take a long time
+* Some package dependent versions have been upgraded. It is not recommended to try to compile this project on a lower version of golang, and try to upgrade to 1.18+
+* Optimization: dynamically update the service IP address according to the kV change in watch etcd to ensure that other layers can perceive after adding / removing each layer
+
 ### About Websocket && Tcp Support
 ```
 The latest version supports websocket and TCP message interworking,(the test TCP port uses 70017002. If you want to use TCP, the firewall also needs to release the two ports.)

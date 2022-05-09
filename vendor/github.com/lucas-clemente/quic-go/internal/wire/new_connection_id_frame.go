@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/lucas-clemente/quic-go/internal/utils"
-
 	"github.com/lucas-clemente/quic-go/internal/protocol"
+	"github.com/lucas-clemente/quic-go/quicvarint"
 )
 
 // A NewConnectionIDFrame is a NEW_CONNECTION_ID frame
@@ -15,7 +14,7 @@ type NewConnectionIDFrame struct {
 	SequenceNumber      uint64
 	RetirePriorTo       uint64
 	ConnectionID        protocol.ConnectionID
-	StatelessResetToken [16]byte
+	StatelessResetToken protocol.StatelessResetToken
 }
 
 func parseNewConnectionIDFrame(r *bytes.Reader, _ protocol.VersionNumber) (*NewConnectionIDFrame, error) {
@@ -23,19 +22,23 @@ func parseNewConnectionIDFrame(r *bytes.Reader, _ protocol.VersionNumber) (*NewC
 		return nil, err
 	}
 
-	seq, err := utils.ReadVarInt(r)
+	seq, err := quicvarint.Read(r)
 	if err != nil {
 		return nil, err
 	}
-	ret, err := utils.ReadVarInt(r)
+	ret, err := quicvarint.Read(r)
 	if err != nil {
 		return nil, err
+	}
+	if ret > seq {
+		//nolint:stylecheck
+		return nil, fmt.Errorf("Retire Prior To value (%d) larger than Sequence Number (%d)", ret, seq)
 	}
 	connIDLen, err := r.ReadByte()
 	if err != nil {
 		return nil, err
 	}
-	if connIDLen < 4 || connIDLen > 18 {
+	if connIDLen > protocol.MaxConnIDLen {
 		return nil, fmt.Errorf("invalid connection ID length: %d", connIDLen)
 	}
 	connID, err := protocol.ReadConnectionID(r, int(connIDLen))
@@ -59,10 +62,10 @@ func parseNewConnectionIDFrame(r *bytes.Reader, _ protocol.VersionNumber) (*NewC
 
 func (f *NewConnectionIDFrame) Write(b *bytes.Buffer, _ protocol.VersionNumber) error {
 	b.WriteByte(0x18)
-	utils.WriteVarInt(b, f.SequenceNumber)
-	utils.WriteVarInt(b, f.RetirePriorTo)
+	quicvarint.Write(b, f.SequenceNumber)
+	quicvarint.Write(b, f.RetirePriorTo)
 	connIDLen := f.ConnectionID.Len()
-	if connIDLen < 4 || connIDLen > 18 {
+	if connIDLen > protocol.MaxConnIDLen {
 		return fmt.Errorf("invalid connection ID length: %d", connIDLen)
 	}
 	b.WriteByte(uint8(connIDLen))
@@ -73,5 +76,5 @@ func (f *NewConnectionIDFrame) Write(b *bytes.Buffer, _ protocol.VersionNumber) 
 
 // Length of a written frame
 func (f *NewConnectionIDFrame) Length(protocol.VersionNumber) protocol.ByteCount {
-	return 1 + utils.VarIntLen(f.SequenceNumber) + utils.VarIntLen(f.RetirePriorTo) + 1 /* connection ID length */ + protocol.ByteCount(f.ConnectionID.Len()) + 16
+	return 1 + quicvarint.Len(f.SequenceNumber) + quicvarint.Len(f.RetirePriorTo) + 1 /* connection ID length */ + protocol.ByteCount(f.ConnectionID.Len()) + 16
 }

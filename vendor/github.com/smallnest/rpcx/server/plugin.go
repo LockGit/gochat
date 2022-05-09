@@ -6,10 +6,11 @@ import (
 
 	"github.com/smallnest/rpcx/errors"
 	"github.com/smallnest/rpcx/protocol"
+	"github.com/soheilhy/cmux"
 )
 
-//PluginContainer represents a plugin container that defines all methods to manage plugins.
-//And it also defines all extension points.
+// PluginContainer represents a plugin container that defines all methods to manage plugins.
+// And it also defines all extension points.
 type PluginContainer interface {
 	Add(plugin Plugin)
 	Remove(plugin Plugin)
@@ -26,17 +27,22 @@ type PluginContainer interface {
 	DoPostReadRequest(ctx context.Context, r *protocol.Message, e error) error
 
 	DoPreHandleRequest(ctx context.Context, req *protocol.Message) error
+	DoPreCall(ctx context.Context, serviceName, methodName string, args interface{}) (interface{}, error)
+	DoPostCall(ctx context.Context, serviceName, methodName string, args, reply interface{}) (interface{}, error)
 
-	DoPreWriteResponse(context.Context, *protocol.Message, *protocol.Message) error
+	DoPreWriteResponse(context.Context, *protocol.Message, *protocol.Message, error) error
 	DoPostWriteResponse(context.Context, *protocol.Message, *protocol.Message, error) error
 
 	DoPreWriteRequest(ctx context.Context) error
 	DoPostWriteRequest(ctx context.Context, r *protocol.Message, e error) error
+
+	DoHeartbeatRequest(ctx context.Context, req *protocol.Message) error
+
+	MuxMatch(m cmux.CMux)
 }
 
 // Plugin is the server plugin interface.
-type Plugin interface {
-}
+type Plugin interface{}
 
 type (
 	// RegisterPlugin is .
@@ -51,7 +57,7 @@ type (
 	}
 
 	// PostConnAcceptPlugin represents connection accept plugin.
-	// if returns false, it means subsequent IPostConnAcceptPlugins should not contiune to handle this conn
+	// if returns false, it means subsequent IPostConnAcceptPlugins should not continue to handle this conn
 	// and this conn has been closed.
 	PostConnAcceptPlugin interface {
 		HandleConnAccept(net.Conn) (net.Conn, bool)
@@ -62,39 +68,56 @@ type (
 		HandleConnClose(net.Conn) bool
 	}
 
-	//PreReadRequestPlugin represents .
+	// PreReadRequestPlugin represents .
 	PreReadRequestPlugin interface {
 		PreReadRequest(ctx context.Context) error
 	}
 
-	//PostReadRequestPlugin represents .
+	// PostReadRequestPlugin represents .
 	PostReadRequestPlugin interface {
 		PostReadRequest(ctx context.Context, r *protocol.Message, e error) error
 	}
 
-	//PreHandleRequestPlugin represents .
+	// PreHandleRequestPlugin represents .
 	PreHandleRequestPlugin interface {
 		PreHandleRequest(ctx context.Context, r *protocol.Message) error
 	}
 
-	//PreWriteResponsePlugin represents .
-	PreWriteResponsePlugin interface {
-		PreWriteResponse(context.Context, *protocol.Message, *protocol.Message) error
+	PreCallPlugin interface {
+		PreCall(ctx context.Context, serviceName, methodName string, args interface{}) (interface{}, error)
 	}
 
-	//PostWriteResponsePlugin represents .
+	PostCallPlugin interface {
+		PostCall(ctx context.Context, serviceName, methodName string, args, reply interface{}) (interface{}, error)
+	}
+
+	// PreWriteResponsePlugin represents .
+	PreWriteResponsePlugin interface {
+		PreWriteResponse(context.Context, *protocol.Message, *protocol.Message, error) error
+	}
+
+	// PostWriteResponsePlugin represents .
 	PostWriteResponsePlugin interface {
 		PostWriteResponse(context.Context, *protocol.Message, *protocol.Message, error) error
 	}
 
-	//PreWriteRequestPlugin represents .
+	// PreWriteRequestPlugin represents .
 	PreWriteRequestPlugin interface {
 		PreWriteRequest(ctx context.Context) error
 	}
 
-	//PostWriteRequestPlugin represents .
+	// PostWriteRequestPlugin represents .
 	PostWriteRequestPlugin interface {
 		PostWriteRequest(ctx context.Context, r *protocol.Message, e error) error
+	}
+
+	// HeartbeatPlugin is .
+	HeartbeatPlugin interface {
+		HeartbeatRequest(ctx context.Context, req *protocol.Message) error
+	}
+
+	CMuxPlugin interface {
+		MuxMatch(m cmux.CMux)
 	}
 )
 
@@ -114,7 +137,7 @@ func (p *pluginContainer) Remove(plugin Plugin) {
 		return
 	}
 
-	var plugins []Plugin
+	plugins := make([]Plugin, 0, len(p.plugins))
 	for _, p := range p.plugins {
 		if p != plugin {
 			plugins = append(plugins, p)
@@ -182,13 +205,13 @@ func (p *pluginContainer) DoUnregister(name string) error {
 	return nil
 }
 
-//DoPostConnAccept handles accepted conn
+// DoPostConnAccept handles accepted conn
 func (p *pluginContainer) DoPostConnAccept(conn net.Conn) (net.Conn, bool) {
 	var flag bool
 	for i := range p.plugins {
 		if plugin, ok := p.plugins[i].(PostConnAcceptPlugin); ok {
 			conn, flag = plugin.HandleConnAccept(conn)
-			if !flag { //interrupt
+			if !flag { // interrupt
 				conn.Close()
 				return conn, false
 			}
@@ -197,7 +220,7 @@ func (p *pluginContainer) DoPostConnAccept(conn net.Conn) (net.Conn, bool) {
 	return conn, true
 }
 
-//DoPostConnClose handles closed conn
+// DoPostConnClose handles closed conn
 func (p *pluginContainer) DoPostConnClose(conn net.Conn) bool {
 	var flag bool
 	for i := range p.plugins {
@@ -253,11 +276,41 @@ func (p *pluginContainer) DoPreHandleRequest(ctx context.Context, r *protocol.Me
 	return nil
 }
 
+// DoPreCall invokes PreCallPlugin plugin.
+func (p *pluginContainer) DoPreCall(ctx context.Context, serviceName, methodName string, args interface{}) (interface{}, error) {
+	var err error
+	for i := range p.plugins {
+		if plugin, ok := p.plugins[i].(PreCallPlugin); ok {
+			args, err = plugin.PreCall(ctx, serviceName, methodName, args)
+			if err != nil {
+				return args, err
+			}
+		}
+	}
+
+	return args, err
+}
+
+// DoPostCall invokes PostCallPlugin plugin.
+func (p *pluginContainer) DoPostCall(ctx context.Context, serviceName, methodName string, args, reply interface{}) (interface{}, error) {
+	var err error
+	for i := range p.plugins {
+		if plugin, ok := p.plugins[i].(PostCallPlugin); ok {
+			reply, err = plugin.PostCall(ctx, serviceName, methodName, args, reply)
+			if err != nil {
+				return reply, err
+			}
+		}
+	}
+
+	return reply, err
+}
+
 // DoPreWriteResponse invokes PreWriteResponse plugin.
-func (p *pluginContainer) DoPreWriteResponse(ctx context.Context, req *protocol.Message, res *protocol.Message) error {
+func (p *pluginContainer) DoPreWriteResponse(ctx context.Context, req *protocol.Message, res *protocol.Message, err error) error {
 	for i := range p.plugins {
 		if plugin, ok := p.plugins[i].(PreWriteResponsePlugin); ok {
-			err := plugin.PreWriteResponse(ctx, req, res)
+			err := plugin.PreWriteResponse(ctx, req, res, err)
 			if err != nil {
 				return err
 			}
@@ -307,4 +360,27 @@ func (p *pluginContainer) DoPostWriteRequest(ctx context.Context, r *protocol.Me
 	}
 
 	return nil
+}
+
+// DoHeartbeatRequest invokes HeartbeatRequest plugin.
+func (p *pluginContainer) DoHeartbeatRequest(ctx context.Context, r *protocol.Message) error {
+	for i := range p.plugins {
+		if plugin, ok := p.plugins[i].(HeartbeatPlugin); ok {
+			err := plugin.HeartbeatRequest(ctx, r)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// MuxMatch adds cmux Match.
+func (p *pluginContainer) MuxMatch(m cmux.CMux) {
+	for i := range p.plugins {
+		if plugin, ok := p.plugins[i].(CMuxPlugin); ok {
+			plugin.MuxMatch(m)
+		}
+	}
 }

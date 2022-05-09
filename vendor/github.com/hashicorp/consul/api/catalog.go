@@ -1,5 +1,10 @@
 package api
 
+import (
+	"net"
+	"strconv"
+)
+
 type Weights struct {
 	Passing int
 	Warning int
@@ -14,6 +19,12 @@ type Node struct {
 	Meta            map[string]string
 	CreateIndex     uint64
 	ModifyIndex     uint64
+	Partition       string `json:",omitempty"`
+}
+
+type ServiceAddress struct {
+	Address string
+	Port    int
 }
 
 type CatalogService struct {
@@ -26,22 +37,28 @@ type CatalogService struct {
 	ServiceID                string
 	ServiceName              string
 	ServiceAddress           string
+	ServiceTaggedAddresses   map[string]ServiceAddress
 	ServiceTags              []string
 	ServiceMeta              map[string]string
 	ServicePort              int
 	ServiceWeights           Weights
 	ServiceEnableTagOverride bool
-	// DEPRECATED (ProxyDestination) - remove the next comment!
-	// We forgot to ever add ServiceProxyDestination here so no need to deprecate!
-	ServiceProxy *AgentServiceConnectProxyConfig
-	CreateIndex  uint64
-	Checks       HealthChecks
-	ModifyIndex  uint64
+	ServiceProxy             *AgentServiceConnectProxyConfig
+	CreateIndex              uint64
+	Checks                   HealthChecks
+	ModifyIndex              uint64
+	Namespace                string `json:",omitempty"`
+	Partition                string `json:",omitempty"`
 }
 
 type CatalogNode struct {
 	Node     *Node
 	Services map[string]*AgentService
+}
+
+type CatalogNodeServiceList struct {
+	Node     *Node
+	Services []*AgentService
 }
 
 type CatalogRegistration struct {
@@ -55,14 +72,42 @@ type CatalogRegistration struct {
 	Check           *AgentCheck
 	Checks          HealthChecks
 	SkipNodeUpdate  bool
+	Partition       string `json:",omitempty"`
 }
 
 type CatalogDeregistration struct {
 	Node       string
-	Address    string // Obsolete.
+	Address    string `json:",omitempty"` // Obsolete.
 	Datacenter string
 	ServiceID  string
 	CheckID    string
+	Namespace  string `json:",omitempty"`
+	Partition  string `json:",omitempty"`
+}
+
+type CompoundServiceName struct {
+	Name string
+
+	// Namespacing is a Consul Enterprise feature.
+	Namespace string `json:",omitempty"`
+	// Partitions are a Consul Enterprise feature.
+	Partition string `json:",omitempty"`
+}
+
+// GatewayService associates a gateway with a linked service.
+// It also contains service-specific gateway configuration like ingress listener port and protocol.
+type GatewayService struct {
+	Gateway      CompoundServiceName
+	Service      CompoundServiceName
+	GatewayKind  ServiceKind
+	Port         int      `json:",omitempty"`
+	Protocol     string   `json:",omitempty"`
+	Hosts        []string `json:",omitempty"`
+	CAFile       string   `json:",omitempty"`
+	CertFile     string   `json:",omitempty"`
+	KeyFile      string   `json:",omitempty"`
+	SNI          string   `json:",omitempty"`
+	FromWildcard bool     `json:",omitempty"`
 }
 
 // Catalog can be used to query the Catalog endpoints
@@ -79,11 +124,14 @@ func (c *Catalog) Register(reg *CatalogRegistration, q *WriteOptions) (*WriteMet
 	r := c.c.newRequest("PUT", "/v1/catalog/register")
 	r.setWriteOptions(q)
 	r.obj = reg
-	rtt, resp, err := requireOK(c.c.doRequest(r))
+	rtt, resp, err := c.c.doRequest(r)
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
+	defer closeResponseBody(resp)
+	if err := requireOK(resp); err != nil {
+		return nil, err
+	}
 
 	wm := &WriteMeta{}
 	wm.RequestTime = rtt
@@ -95,11 +143,14 @@ func (c *Catalog) Deregister(dereg *CatalogDeregistration, q *WriteOptions) (*Wr
 	r := c.c.newRequest("PUT", "/v1/catalog/deregister")
 	r.setWriteOptions(q)
 	r.obj = dereg
-	rtt, resp, err := requireOK(c.c.doRequest(r))
+	rtt, resp, err := c.c.doRequest(r)
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
+	defer closeResponseBody(resp)
+	if err := requireOK(resp); err != nil {
+		return nil, err
+	}
 
 	wm := &WriteMeta{}
 	wm.RequestTime = rtt
@@ -110,11 +161,14 @@ func (c *Catalog) Deregister(dereg *CatalogDeregistration, q *WriteOptions) (*Wr
 // Datacenters is used to query for all the known datacenters
 func (c *Catalog) Datacenters() ([]string, error) {
 	r := c.c.newRequest("GET", "/v1/catalog/datacenters")
-	_, resp, err := requireOK(c.c.doRequest(r))
+	_, resp, err := c.c.doRequest(r)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp)
+	if err := requireOK(resp); err != nil {
+		return nil, err
+	}
 
 	var out []string
 	if err := decodeBody(resp, &out); err != nil {
@@ -127,11 +181,14 @@ func (c *Catalog) Datacenters() ([]string, error) {
 func (c *Catalog) Nodes(q *QueryOptions) ([]*Node, *QueryMeta, error) {
 	r := c.c.newRequest("GET", "/v1/catalog/nodes")
 	r.setQueryOptions(q)
-	rtt, resp, err := requireOK(c.c.doRequest(r))
+	rtt, resp, err := c.c.doRequest(r)
 	if err != nil {
 		return nil, nil, err
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp)
+	if err := requireOK(resp); err != nil {
+		return nil, nil, err
+	}
 
 	qm := &QueryMeta{}
 	parseQueryMeta(resp, qm)
@@ -148,11 +205,14 @@ func (c *Catalog) Nodes(q *QueryOptions) ([]*Node, *QueryMeta, error) {
 func (c *Catalog) Services(q *QueryOptions) (map[string][]string, *QueryMeta, error) {
 	r := c.c.newRequest("GET", "/v1/catalog/services")
 	r.setQueryOptions(q)
-	rtt, resp, err := requireOK(c.c.doRequest(r))
+	rtt, resp, err := c.c.doRequest(r)
 	if err != nil {
 		return nil, nil, err
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp)
+	if err := requireOK(resp); err != nil {
+		return nil, nil, err
+	}
 
 	qm := &QueryMeta{}
 	parseQueryMeta(resp, qm)
@@ -205,11 +265,14 @@ func (c *Catalog) service(service string, tags []string, q *QueryOptions, connec
 			r.params.Add("tag", tag)
 		}
 	}
-	rtt, resp, err := requireOK(c.c.doRequest(r))
+	rtt, resp, err := c.c.doRequest(r)
 	if err != nil {
 		return nil, nil, err
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp)
+	if err := requireOK(resp); err != nil {
+		return nil, nil, err
+	}
 
 	qm := &QueryMeta{}
 	parseQueryMeta(resp, qm)
@@ -226,11 +289,14 @@ func (c *Catalog) service(service string, tags []string, q *QueryOptions, connec
 func (c *Catalog) Node(node string, q *QueryOptions) (*CatalogNode, *QueryMeta, error) {
 	r := c.c.newRequest("GET", "/v1/catalog/node/"+node)
 	r.setQueryOptions(q)
-	rtt, resp, err := requireOK(c.c.doRequest(r))
+	rtt, resp, err := c.c.doRequest(r)
 	if err != nil {
 		return nil, nil, err
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp)
+	if err := requireOK(resp); err != nil {
+		return nil, nil, err
+	}
 
 	qm := &QueryMeta{}
 	parseQueryMeta(resp, qm)
@@ -241,4 +307,64 @@ func (c *Catalog) Node(node string, q *QueryOptions) (*CatalogNode, *QueryMeta, 
 		return nil, nil, err
 	}
 	return out, qm, nil
+}
+
+// NodeServiceList is used to query for service information about a single node. It differs from
+// the Node function only in its return type which will contain a list of services as opposed to
+// a map of service ids to services. This different structure allows for using the wildcard specifier
+// '*' for the Namespace in the QueryOptions.
+func (c *Catalog) NodeServiceList(node string, q *QueryOptions) (*CatalogNodeServiceList, *QueryMeta, error) {
+	r := c.c.newRequest("GET", "/v1/catalog/node-services/"+node)
+	r.setQueryOptions(q)
+	rtt, resp, err := c.c.doRequest(r)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer closeResponseBody(resp)
+	if err := requireOK(resp); err != nil {
+		return nil, nil, err
+	}
+
+	qm := &QueryMeta{}
+	parseQueryMeta(resp, qm)
+	qm.RequestTime = rtt
+
+	var out *CatalogNodeServiceList
+	if err := decodeBody(resp, &out); err != nil {
+		return nil, nil, err
+	}
+	return out, qm, nil
+}
+
+// GatewayServices is used to query the services associated with an ingress gateway or terminating gateway.
+func (c *Catalog) GatewayServices(gateway string, q *QueryOptions) ([]*GatewayService, *QueryMeta, error) {
+	r := c.c.newRequest("GET", "/v1/catalog/gateway-services/"+gateway)
+	r.setQueryOptions(q)
+	rtt, resp, err := c.c.doRequest(r)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer closeResponseBody(resp)
+	if err := requireOK(resp); err != nil {
+		return nil, nil, err
+	}
+
+	qm := &QueryMeta{}
+	parseQueryMeta(resp, qm)
+	qm.RequestTime = rtt
+
+	var out []*GatewayService
+	if err := decodeBody(resp, &out); err != nil {
+		return nil, nil, err
+	}
+	return out, qm, nil
+}
+
+func ParseServiceAddr(addrPort string) (ServiceAddress, error) {
+	port := 0
+	host, portStr, err := net.SplitHostPort(addrPort)
+	if err == nil {
+		port, err = strconv.Atoi(portStr)
+	}
+	return ServiceAddress{Address: host, Port: port}, err
 }

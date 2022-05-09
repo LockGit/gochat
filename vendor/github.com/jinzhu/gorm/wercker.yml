@@ -143,11 +143,6 @@ build:
                     GORM_DIALECT=postgres GORM_DSN="host=postgres93 user=gorm password=gorm DB.name=gorm port=5432 sslmode=disable" go test -race ./...
 
         - script:
-                name: test mssql
-                code: |
-                    GORM_DIALECT=mssql GORM_DSN="sqlserver://gorm:LoremIpsum86@mssql:1433?database=gorm" go test -race ./...
-
-        - script:
                 name: codecov
                 code: |
                     go test -race -coverprofile=coverage.txt -covermode=atomic ./...

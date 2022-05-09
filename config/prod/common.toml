@@ -3,6 +3,9 @@ host = "127.0.0.1:2379"
 basePath = "/gochat_srv"
 serverPathLogic = "LogicRpc"
 serverPathConnect = "ConnectRpc"
+userName = ""
+password = ""
+connectionTimeout = 5
 
 [common-redis]
 redisAddress = "127.0.0.1:6379"

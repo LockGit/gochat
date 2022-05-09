@@ -1,20 +1,20 @@
 package serverplugin
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
 	"net/url"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/abronan/valkeyrie"
-	"github.com/abronan/valkeyrie/store"
 	metrics "github.com/rcrowley/go-metrics"
+	"github.com/rpcxio/libkv"
+	"github.com/rpcxio/libkv/store"
+	"github.com/rpcxio/libkv/store/redis"
 	"github.com/smallnest/rpcx/log"
-	"github.com/smallnest/valkeyrie/store/redis"
 )
 
 func init() {
@@ -53,9 +53,10 @@ func (p *RedisRegisterPlugin) Start() error {
 	}
 
 	if p.kv == nil {
-		kv, err := valkeyrie.NewStore(store.REDIS, p.RedisServers, p.Options)
+		kv, err := libkv.NewStore(store.REDIS, p.RedisServers, p.Options)
 		if err != nil {
 			log.Errorf("cannot create redis registry: %v", err)
+			close(p.done)
 			return err
 		}
 		p.kv = kv
@@ -64,12 +65,15 @@ func (p *RedisRegisterPlugin) Start() error {
 	err := p.kv.Put(p.BasePath, []byte("rpcx_path"), &store.WriteOptions{IsDir: true})
 	if err != nil && !strings.Contains(err.Error(), "Not a file") {
 		log.Errorf("cannot create redis path %s: %v", p.BasePath, err)
+		close(p.done)
 		return err
 	}
 
 	if p.UpdateInterval > 0 {
-		ticker := time.NewTicker(p.UpdateInterval)
 		go func() {
+			ticker := time.NewTicker(p.UpdateInterval)
+
+			defer ticker.Stop()
 			defer p.kv.Close()
 
 			// refresh service TTL
@@ -79,15 +83,15 @@ func (p *RedisRegisterPlugin) Start() error {
 					close(p.done)
 					return
 				case <-ticker.C:
-					var data []byte
+					extra := make(map[string]string)
 					if p.Metrics != nil {
-						clientMeter := metrics.GetOrRegisterMeter("clientMeter", p.Metrics)
-						data = []byte(strconv.FormatInt(clientMeter.Count()/60, 10))
+						extra["calls"] = fmt.Sprintf("%.2f", metrics.GetOrRegisterMeter("calls", p.Metrics).RateMean())
+						extra["connections"] = fmt.Sprintf("%.2f", metrics.GetOrRegisterMeter("connections", p.Metrics).RateMean())
 					}
 					//set this same metrics for all services at this server
 					for _, name := range p.Services {
 						nodePath := fmt.Sprintf("%s/%s/%s", p.BasePath, name, p.ServiceAddress)
-						kvPair, err := p.kv.Get(nodePath, nil)
+						kvPair, err := p.kv.Get(nodePath)
 						if err != nil {
 							log.Infof("can't get data of node: %s, because of %v", nodePath, err.Error())
 
@@ -95,15 +99,17 @@ func (p *RedisRegisterPlugin) Start() error {
 							meta := p.metas[name]
 							p.metasLock.RUnlock()
 
-							err = p.kv.Put(nodePath, []byte(meta), &store.WriteOptions{TTL: p.UpdateInterval * 3})
+							err = p.kv.Put(nodePath, []byte(meta), &store.WriteOptions{TTL: p.UpdateInterval * 2})
 							if err != nil {
 								log.Errorf("cannot re-create redis path %s: %v", nodePath, err)
 							}
 
 						} else {
 							v, _ := url.ParseQuery(string(kvPair.Value))
-							v.Set("tps", string(data))
-							p.kv.Put(nodePath, []byte(v.Encode()), &store.WriteOptions{TTL: p.UpdateInterval * 3})
+							for key, value := range extra {
+								v.Set(key, value)
+							}
+							p.kv.Put(nodePath, []byte(v.Encode()), &store.WriteOptions{TTL: p.UpdateInterval * 2})
 						}
 					}
 				}
@@ -116,11 +122,8 @@ func (p *RedisRegisterPlugin) Start() error {
 
 // Stop unregister all services.
 func (p *RedisRegisterPlugin) Stop() error {
-	close(p.dying)
-	<-p.done
-
 	if p.kv == nil {
-		kv, err := valkeyrie.NewStore(store.REDIS, p.RedisServers, p.Options)
+		kv, err := libkv.NewStore(store.REDIS, p.RedisServers, p.Options)
 		if err != nil {
 			log.Errorf("cannot create redis registry: %v", err)
 			return err
@@ -130,7 +133,7 @@ func (p *RedisRegisterPlugin) Stop() error {
 
 	for _, name := range p.Services {
 		nodePath := fmt.Sprintf("%s/%s/%s", p.BasePath, name, p.ServiceAddress)
-		exist, err := p.kv.Exists(nodePath, nil)
+		exist, err := p.kv.Exists(nodePath)
 		if err != nil {
 			log.Errorf("cannot delete path %s: %v", nodePath, err)
 			continue
@@ -140,29 +143,40 @@ func (p *RedisRegisterPlugin) Stop() error {
 			log.Infof("delete path %s", nodePath, err)
 		}
 	}
+
+	close(p.dying)
+	<-p.done
+
 	return nil
 }
 
 // HandleConnAccept handles connections from clients
 func (p *RedisRegisterPlugin) HandleConnAccept(conn net.Conn) (net.Conn, bool) {
 	if p.Metrics != nil {
-		clientMeter := metrics.GetOrRegisterMeter("clientMeter", p.Metrics)
-		clientMeter.Mark(1)
+		metrics.GetOrRegisterMeter("connections", p.Metrics).Mark(1)
 	}
 	return conn, true
+}
+
+// PreCall handles rpc call from clients
+func (p *RedisRegisterPlugin) PreCall(_ context.Context, _, _ string, args interface{}) (interface{}, error) {
+	if p.Metrics != nil {
+		metrics.GetOrRegisterMeter("calls", p.Metrics).Mark(1)
+	}
+	return args, nil
 }
 
 // Register handles registering event.
 // this service is registered at BASE/serviceName/thisIpAddress node
 func (p *RedisRegisterPlugin) Register(name string, rcvr interface{}, metadata string) (err error) {
-	if "" == strings.TrimSpace(name) {
+	if strings.TrimSpace(name) == "" {
 		err = errors.New("Register service `name` can't be empty")
 		return
 	}
 
 	if p.kv == nil {
 		redis.Register()
-		kv, err := valkeyrie.NewStore(store.REDIS, p.RedisServers, p.Options)
+		kv, err := libkv.NewStore(store.REDIS, p.RedisServers, p.Options)
 		if err != nil {
 			log.Errorf("cannot create redis registry: %v", err)
 			return err
@@ -202,14 +216,18 @@ func (p *RedisRegisterPlugin) Register(name string, rcvr interface{}, metadata s
 }
 
 func (p *RedisRegisterPlugin) Unregister(name string) (err error) {
-	if "" == strings.TrimSpace(name) {
+	if len(p.Services) == 0 {
+		return nil
+	}
+
+	if strings.TrimSpace(name) == "" {
 		err = errors.New("Register service `name` can't be empty")
 		return
 	}
 
 	if p.kv == nil {
 		redis.Register()
-		kv, err := valkeyrie.NewStore(store.REDIS, p.RedisServers, p.Options)
+		kv, err := libkv.NewStore(store.REDIS, p.RedisServers, p.Options)
 		if err != nil {
 			log.Errorf("cannot create redis registry: %v", err)
 			return err
@@ -234,7 +252,7 @@ func (p *RedisRegisterPlugin) Unregister(name string) (err error) {
 
 	err = p.kv.Delete(nodePath)
 	if err != nil {
-		log.Errorf("cannot create consul path %s: %v", nodePath, err)
+		log.Errorf("cannot remove redis path %s: %v", nodePath, err)
 		return err
 	}
 

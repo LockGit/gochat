@@ -62,11 +62,10 @@ func init() {
 type (
 	// UDPSession defines a KCP session implemented by UDP
 	UDPSession struct {
-		updaterIdx int            // record slice index in updater
-		conn       net.PacketConn // the underlying packet connection
-		kcp        *KCP           // KCP ARQ protocol
-		l          *Listener      // pointing to the Listener object if it's been accepted by a Listener
-		block      BlockCrypt     // block encryption object
+		conn  net.PacketConn // the underlying packet connection
+		kcp   *KCP           // KCP ARQ protocol
+		l     *Listener      // pointing to the Listener object if it's been accepted by a Listener
+		block BlockCrypt     // block encryption object
 
 		// kcp receiving is based on packets
 		// recvbuf turns packets into stream
@@ -175,16 +174,15 @@ func newUDPSession(conv uint32, dataShards, parityShards int, l *Listener, conn 
 	})
 	sess.kcp.ReserveBytes(sess.headerSize)
 
-	// register current session to the global updater,
-	// which call sess.update() periodically.
-	updater.addSession(sess)
-
 	if sess.l == nil { // it's a client connection
 		go sess.readLoop()
 		atomic.AddUint64(&DefaultSnmp.ActiveOpens, 1)
 	} else {
 		atomic.AddUint64(&DefaultSnmp.PassiveOpens, 1)
 	}
+
+	// start per-session updater
+	go sess.updater()
 
 	currestab := atomic.AddUint64(&DefaultSnmp.CurrEstab, 1)
 	maxconn := atomic.LoadUint64(&DefaultSnmp.MaxConn)
@@ -276,7 +274,10 @@ func (s *UDPSession) WriteBuffers(v [][]byte) (n int, err error) {
 		}
 
 		s.mu.Lock()
-		if s.kcp.WaitSnd() < int(s.kcp.snd_wnd) {
+
+		// make sure write do not overflow the max sliding window on both side
+		waitsnd := s.kcp.WaitSnd()
+		if waitsnd < int(s.kcp.snd_wnd) && waitsnd < int(s.kcp.rmt_wnd) {
 			for _, b := range v {
 				n += len(b)
 				for {
@@ -290,7 +291,8 @@ func (s *UDPSession) WriteBuffers(v [][]byte) (n int, err error) {
 				}
 			}
 
-			if s.kcp.WaitSnd() >= int(s.kcp.snd_wnd) || !s.writeDelay {
+			waitsnd = s.kcp.WaitSnd()
+			if waitsnd >= int(s.kcp.snd_wnd) || waitsnd >= int(s.kcp.rmt_wnd) || !s.writeDelay {
 				s.kcp.flush(false)
 				s.uncork()
 			}
@@ -331,6 +333,11 @@ func (s *UDPSession) WriteBuffers(v [][]byte) (n int, err error) {
 func (s *UDPSession) uncork() {
 	if len(s.txqueue) > 0 {
 		s.tx(s.txqueue)
+		// recycle
+		for k := range s.txqueue {
+			xmitBuf.Put(s.txqueue[k].Buffers[0])
+			s.txqueue[k].Buffers = nil
+		}
 		s.txqueue = s.txqueue[:0]
 	}
 	return
@@ -345,9 +352,18 @@ func (s *UDPSession) Close() error {
 	})
 
 	if once {
-		// remove from updater
-		updater.removeSession(s)
 		atomic.AddUint64(&DefaultSnmp.CurrEstab, ^uint64(0))
+
+		// try best to send all queued messages
+		s.mu.Lock()
+		s.kcp.flush(false)
+		s.uncork()
+		// release pending segments
+		s.kcp.ReleaseTX()
+		if s.fecDecoder != nil {
+			s.fecDecoder.release()
+		}
+		s.mu.Unlock()
 
 		if s.l != nil { // belongs to listener
 			s.l.closeSession(s.remote)
@@ -562,17 +578,26 @@ func (s *UDPSession) output(buf []byte) {
 	}
 }
 
-// kcp update, returns interval for next calling
-func (s *UDPSession) update() (interval time.Duration) {
-	s.mu.Lock()
-	waitsnd := s.kcp.WaitSnd()
-	interval = time.Duration(s.kcp.flush(false)) * time.Millisecond
-	if s.kcp.WaitSnd() < waitsnd {
-		s.notifyWriteEvent()
+// sess updater to trigger protocol
+func (s *UDPSession) updater() {
+	timer := time.NewTimer(0)
+	for {
+		select {
+		case <-timer.C:
+			s.mu.Lock()
+			interval := time.Duration(s.kcp.flush(false)) * time.Millisecond
+			waitsnd := s.kcp.WaitSnd()
+			if waitsnd < int(s.kcp.snd_wnd) && waitsnd < int(s.kcp.rmt_wnd) {
+				s.notifyWriteEvent()
+			}
+			s.uncork()
+			s.mu.Unlock()
+			timer.Reset(interval)
+		case <-s.die:
+			timer.Stop()
+			return
+		}
 	}
-	s.uncork()
-	s.mu.Unlock()
-	return
 }
 
 // GetConv gets conversation id of a session
@@ -638,10 +663,10 @@ func (s *UDPSession) kcpInput(data []byte) {
 				if f.flag() == typeParity {
 					fecParityShards++
 				}
-				recovers := s.fecDecoder.decode(f)
 
+				// lock
 				s.mu.Lock()
-				waitsnd := s.kcp.WaitSnd()
+				recovers := s.fecDecoder.decode(f)
 				if f.flag() == typeData {
 					if ret := s.kcp.Input(data[fecHeaderSizePlus2:], true, s.ackNoDelay); ret != 0 {
 						kcpInErrors++
@@ -671,10 +696,12 @@ func (s *UDPSession) kcpInput(data []byte) {
 				if n := s.kcp.PeekSize(); n > 0 {
 					s.notifyReadEvent()
 				}
-				// to notify the writers when queue is shorter(e.g. ACKed)
-				if s.kcp.WaitSnd() < waitsnd {
+				// to notify the writers
+				waitsnd := s.kcp.WaitSnd()
+				if waitsnd < int(s.kcp.snd_wnd) && waitsnd < int(s.kcp.rmt_wnd) {
 					s.notifyWriteEvent()
 				}
+
 				s.uncork()
 				s.mu.Unlock()
 			} else {
@@ -685,14 +712,14 @@ func (s *UDPSession) kcpInput(data []byte) {
 		}
 	} else {
 		s.mu.Lock()
-		waitsnd := s.kcp.WaitSnd()
 		if ret := s.kcp.Input(data, true, s.ackNoDelay); ret != 0 {
 			kcpInErrors++
 		}
 		if n := s.kcp.PeekSize(); n > 0 {
 			s.notifyReadEvent()
 		}
-		if s.kcp.WaitSnd() < waitsnd {
+		waitsnd := s.kcp.WaitSnd()
+		if waitsnd < int(s.kcp.snd_wnd) && waitsnd < int(s.kcp.rmt_wnd) {
 			s.notifyWriteEvent()
 		}
 		s.uncork()
@@ -765,32 +792,39 @@ func (l *Listener) packetInput(data []byte, addr net.Addr) {
 		s, ok := l.sessions[addr.String()]
 		l.sessionLock.Unlock()
 
-		if !ok { // new address:port
-			if len(l.chAccepts) < cap(l.chAccepts) { // do not let the new sessions overwhelm accept queue
-				var conv uint32
-				convValid := false
-				if l.fecDecoder != nil {
-					isfec := binary.LittleEndian.Uint16(data[4:])
-					if isfec == typeData {
-						conv = binary.LittleEndian.Uint32(data[fecHeaderSizePlus2:])
-						convValid = true
-					}
-				} else {
-					conv = binary.LittleEndian.Uint32(data)
-					convValid = true
-				}
-
-				if convValid { // creates a new session only if the 'conv' field in kcp is accessible
-					s := newUDPSession(conv, l.dataShards, l.parityShards, l, l.conn, addr, l.block)
-					s.kcpInput(data)
-					l.sessionLock.Lock()
-					l.sessions[addr.String()] = s
-					l.sessionLock.Unlock()
-					l.chAccepts <- s
-				}
+		var conv, sn uint32
+		convValid := false
+		if l.fecDecoder != nil {
+			isfec := binary.LittleEndian.Uint16(data[4:])
+			if isfec == typeData {
+				conv = binary.LittleEndian.Uint32(data[fecHeaderSizePlus2:])
+				sn = binary.LittleEndian.Uint32(data[fecHeaderSizePlus2+IKCP_SN_OFFSET:])
+				convValid = true
 			}
 		} else {
-			s.kcpInput(data)
+			conv = binary.LittleEndian.Uint32(data)
+			sn = binary.LittleEndian.Uint32(data[IKCP_SN_OFFSET:])
+			convValid = true
+		}
+
+		if ok { // existing connection
+			if !convValid || conv == s.kcp.conv { // parity or valid data shard
+				s.kcpInput(data)
+			} else if sn == 0 { // should replace current connection
+				s.Close()
+				s = nil
+			}
+		}
+
+		if s == nil && convValid { // new session
+			if len(l.chAccepts) < cap(l.chAccepts) { // do not let the new sessions overwhelm accept queue
+				s := newUDPSession(conv, l.dataShards, l.parityShards, l, l.conn, addr, l.block)
+				s.kcpInput(data)
+				l.sessionLock.Lock()
+				l.sessions[addr.String()] = s
+				l.sessionLock.Unlock()
+				l.chAccepts <- s
+			}
 		}
 	}
 }

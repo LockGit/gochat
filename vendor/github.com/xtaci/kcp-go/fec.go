@@ -12,6 +12,7 @@ const (
 	fecHeaderSizePlus2 = fecHeaderSize + 2 // plus 2B data size
 	typeData           = 0xf1
 	typeParity         = 0xf2
+	fecExpire          = 60000
 )
 
 // fecPacket is a decoded FEC packet
@@ -21,13 +22,19 @@ func (bts fecPacket) seqid() uint32 { return binary.LittleEndian.Uint32(bts) }
 func (bts fecPacket) flag() uint16  { return binary.LittleEndian.Uint16(bts[4:]) }
 func (bts fecPacket) data() []byte  { return bts[6:] }
 
+// fecElement has auxcilliary time field
+type fecElement struct {
+	fecPacket
+	ts uint32
+}
+
 // fecDecoder for decoding incoming packets
 type fecDecoder struct {
 	rxlimit      int // queue size limit
 	dataShards   int
 	parityShards int
 	shardSize    int
-	rx           []fecPacket // ordered receive queue
+	rx           []fecElement // ordered receive queue
 
 	// caches
 	decodeCache [][]byte
@@ -81,14 +88,15 @@ func (dec *fecDecoder) decode(in fecPacket) (recovered [][]byte) {
 	// make a copy
 	pkt := fecPacket(xmitBuf.Get().([]byte)[:len(in)])
 	copy(pkt, in)
+	elem := fecElement{pkt, currentMs()}
 
 	// insert into ordered rx queue
 	if insertIdx == n+1 {
-		dec.rx = append(dec.rx, pkt)
+		dec.rx = append(dec.rx, elem)
 	} else {
-		dec.rx = append(dec.rx, fecPacket{})
+		dec.rx = append(dec.rx, fecElement{})
 		copy(dec.rx[insertIdx+1:], dec.rx[insertIdx:]) // shift right
-		dec.rx[insertIdx] = pkt
+		dec.rx[insertIdx] = elem
 	}
 
 	// shard range for current packet
@@ -148,7 +156,7 @@ func (dec *fecDecoder) decode(in fecPacket) (recovered [][]byte) {
 					dlen := len(shards[k])
 					shards[k] = shards[k][:maxlen]
 					copy(shards[k][dlen:], dec.zeros)
-				} else {
+				} else if k < dec.dataShards {
 					shards[k] = xmitBuf.Get().([]byte)[:0]
 				}
 			}
@@ -171,13 +179,27 @@ func (dec *fecDecoder) decode(in fecPacket) (recovered [][]byte) {
 		}
 		dec.rx = dec.freeRange(0, 1, dec.rx)
 	}
+
+	// timeout policy
+	current := currentMs()
+	numExpired := 0
+	for k := range dec.rx {
+		if _itimediff(current, dec.rx[k].ts) > fecExpire {
+			numExpired++
+			continue
+		}
+		break
+	}
+	if numExpired > 0 {
+		dec.rx = dec.freeRange(0, numExpired, dec.rx)
+	}
 	return
 }
 
 // free a range of fecPacket
-func (dec *fecDecoder) freeRange(first, n int, q []fecPacket) []fecPacket {
+func (dec *fecDecoder) freeRange(first, n int, q []fecElement) []fecElement {
 	for i := first; i < first+n; i++ { // recycle buffer
-		xmitBuf.Put([]byte(q[i]))
+		xmitBuf.Put([]byte(q[i].fecPacket))
 	}
 
 	if first == 0 && n < cap(q)/2 {
@@ -185,6 +207,13 @@ func (dec *fecDecoder) freeRange(first, n int, q []fecPacket) []fecPacket {
 	}
 	copy(q[first:], q[first+n:])
 	return q[:len(q)-n]
+}
+
+// release all segments back to xmitBuf
+func (dec *fecDecoder) release() {
+	if n := len(dec.rx); n > 0 {
+		dec.rx = dec.freeRange(0, n, dec.rx)
+	}
 }
 
 type (

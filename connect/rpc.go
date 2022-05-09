@@ -10,10 +10,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rcrowley/go-metrics"
+	"github.com/rpcxio/libkv/store"
+	etcdV3 "github.com/rpcxio/rpcx-etcd/client"
+	"github.com/rpcxio/rpcx-etcd/serverplugin"
 	"github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/client"
 	"github.com/smallnest/rpcx/server"
-	"github.com/smallnest/rpcx/serverplugin"
 	"gochat/config"
 	"gochat/proto"
 	"gochat/tools"
@@ -29,13 +31,26 @@ type RpcConnect struct {
 }
 
 func (c *Connect) InitLogicRpcClient() (err error) {
+	etcdConfigOption := &store.Config{
+		ClientTLS:         nil,
+		TLS:               nil,
+		ConnectionTimeout: time.Duration(config.Conf.Common.CommonEtcd.ConnectionTimeout) * time.Second,
+		Bucket:            "",
+		PersistConnection: true,
+		Username:          config.Conf.Common.CommonEtcd.UserName,
+		Password:          config.Conf.Common.CommonEtcd.Password,
+	}
 	once.Do(func() {
-		d := client.NewEtcdV3Discovery(
+		d, e := etcdV3.NewEtcdV3Discovery(
 			config.Conf.Common.CommonEtcd.BasePath,
 			config.Conf.Common.CommonEtcd.ServerPathLogic,
 			[]string{config.Conf.Common.CommonEtcd.Host},
-			nil,
+			true,
+			etcdConfigOption,
 		)
+		if e != nil {
+			logrus.Fatalf("init connect rpc etcd discovery client fail:%s", e.Error())
+		}
 		logicRpcClient = client.NewXClient(config.Conf.Common.CommonEtcd.ServerPathLogic, client.Failtry, client.RandomSelect, d, client.DefaultOption)
 	})
 	if logicRpcClient == nil {

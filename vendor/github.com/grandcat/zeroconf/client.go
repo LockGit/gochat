@@ -3,7 +3,6 @@ package zeroconf
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"strings"
 
@@ -388,8 +387,7 @@ func (c *client) periodicQuery(ctx context.Context, params *LookupParams) error 
 		// Backoff and cancel logic.
 		wait := bo.NextBackOff()
 		if wait == backoff.Stop {
-			log.Println("periodicQuery: abort due to timeout")
-			return nil
+			return fmt.Errorf("periodicQuery: abort due to timeout")
 		}
 		select {
 		case <-time.After(wait):

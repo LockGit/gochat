@@ -2,9 +2,9 @@
 
 XOR code engine in pure Go
 
-more than 10GB/S per core
+more than 50GB/S per core
 
-see: https://github.com/templexxx/xorsimd
+Move to: https://github.com/templexxx/xorsimd
 
 ## Introduction:
 

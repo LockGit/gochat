@@ -7,11 +7,14 @@ package rpc
 
 import (
 	"context"
+	"github.com/rpcxio/libkv/store"
+	etcdV3 "github.com/rpcxio/rpcx-etcd/client"
 	"github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/client"
 	"gochat/config"
 	"gochat/proto"
 	"sync"
+	"time"
 )
 
 var LogicRpcClient client.XClient
@@ -24,17 +27,30 @@ var RpcLogicObj *RpcLogic
 
 func InitLogicRpcClient() {
 	once.Do(func() {
-		d := client.NewEtcdV3Discovery(
+		etcdConfigOption := &store.Config{
+			ClientTLS:         nil,
+			TLS:               nil,
+			ConnectionTimeout: time.Duration(config.Conf.Common.CommonEtcd.ConnectionTimeout) * time.Second,
+			Bucket:            "",
+			PersistConnection: true,
+			Username:          config.Conf.Common.CommonEtcd.UserName,
+			Password:          config.Conf.Common.CommonEtcd.Password,
+		}
+		d, err := etcdV3.NewEtcdV3Discovery(
 			config.Conf.Common.CommonEtcd.BasePath,
 			config.Conf.Common.CommonEtcd.ServerPathLogic,
 			[]string{config.Conf.Common.CommonEtcd.Host},
-			nil,
+			true,
+			etcdConfigOption,
 		)
+		if err != nil {
+			logrus.Fatalf("init connect rpc etcd discovery client fail:%s", err.Error())
+		}
 		LogicRpcClient = client.NewXClient(config.Conf.Common.CommonEtcd.ServerPathLogic, client.Failtry, client.RandomSelect, d, client.DefaultOption)
 		RpcLogicObj = new(RpcLogic)
 	})
 	if LogicRpcClient == nil {
-		logrus.Errorf("get logic rpc client nil")
+		logrus.Fatalf("get logic rpc client nil")
 	}
 }
 

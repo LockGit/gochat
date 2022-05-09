@@ -39,6 +39,15 @@ var LogFormatter = func(values ...interface{}) (messages []interface{}) {
 
 		messages = []interface{}{source, currentTime}
 
+		if len(values) == 2 {
+			//remove the line break
+			currentTime = currentTime[1:]
+			//remove the brackets
+			source = fmt.Sprintf("\033[35m%v\033[0m", values[1])
+
+			messages = []interface{}{currentTime, source}
+		}
+
 		if level == "sql" {
 			// duration
 			messages = append(messages, fmt.Sprintf(" \033[36;1m[%.2fms]\033[0m ", float64(values[2].(time.Duration).Nanoseconds()/1e4)/100.0))
@@ -49,7 +58,11 @@ var LogFormatter = func(values ...interface{}) (messages []interface{}) {
 				if indirectValue.IsValid() {
 					value = indirectValue.Interface()
 					if t, ok := value.(time.Time); ok {
-						formattedValues = append(formattedValues, fmt.Sprintf("'%v'", t.Format("2006-01-02 15:04:05")))
+						if t.IsZero() {
+							formattedValues = append(formattedValues, fmt.Sprintf("'%v'", "0000-00-00 00:00:00"))
+						} else {
+							formattedValues = append(formattedValues, fmt.Sprintf("'%v'", t.Format("2006-01-02 15:04:05")))
+						}
 					} else if b, ok := value.([]byte); ok {
 						if str := string(b); isPrintable(str) {
 							formattedValues = append(formattedValues, fmt.Sprintf("'%v'", str))
@@ -122,3 +135,7 @@ type Logger struct {
 func (logger Logger) Print(values ...interface{}) {
 	logger.Println(LogFormatter(values...)...)
 }
+
+type nopLogger struct{}
+
+func (nopLogger) Print(values ...interface{}) {}

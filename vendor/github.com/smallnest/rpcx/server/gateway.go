@@ -19,14 +19,19 @@ import (
 )
 
 func (s *Server) startGateway(network string, ln net.Listener) net.Listener {
-	if network != "tcp" && network != "tcp4" && network != "tcp6" {
-		log.Infof("network is not tcp/tcp4/tcp6 so can not start gateway")
+	if network != "tcp" && network != "tcp4" && network != "tcp6" && network != "reuseport" {
+		// log.Infof("network is not tcp/tcp4/tcp6 so can not start gateway")
 		return ln
 	}
 
 	m := cmux.New(ln)
 
 	rpcxLn := m.Match(rpcxPrefixByteMatcher())
+
+	// mux Plugins
+	if s.Plugins != nil {
+		s.Plugins.MuxMatch(m)
+	}
 
 	if !s.DisableJSONRPC {
 		jsonrpc2Ln := m.Match(cmux.HTTP1HeaderField("X-JSONRPC-2.0", "true"))
@@ -72,7 +77,11 @@ func (s *Server) startHTTP1APIGateway(ln net.Listener) {
 	}
 
 	if err := s.gatewayHTTPServer.Serve(ln); err != nil {
-		log.Errorf("error in gateway Serve: %s", err)
+		if err == ErrServerClosed || errors.Is(err, cmux.ErrListenerClosed) {
+			log.Info("gateway server closed")
+		} else {
+			log.Errorf("error in gateway Serve: %T %s", err, err)
+		}
 	}
 }
 
@@ -87,7 +96,7 @@ func (s *Server) closeHTTP1APIGateway(ctx context.Context) error {
 }
 
 func (s *Server) handleGatewayRequest(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	ctx := context.WithValue(r.Context(), RemoteConnContextKey, r.RemoteAddr) // notice: It is a string, different with TCP (net.Conn)
+	ctx := share.WithValue(r.Context(), RemoteConnContextKey, r.RemoteAddr) // notice: It is a string, different with TCP (net.Conn)
 	err := s.Plugins.DoPreReadRequest(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -96,9 +105,7 @@ func (s *Server) handleGatewayRequest(w http.ResponseWriter, r *http.Request, pa
 
 	if r.Header.Get(XServicePath) == "" {
 		servicePath := params.ByName("servicePath")
-		if strings.HasPrefix(servicePath, "/") {
-			servicePath = servicePath[1:]
-		}
+		servicePath = strings.TrimPrefix(servicePath, "/")
 		r.Header.Set(XServicePath, servicePath)
 	}
 	servicePath := r.Header.Get(XServicePath)
@@ -106,7 +113,7 @@ func (s *Server) handleGatewayRequest(w http.ResponseWriter, r *http.Request, pa
 	req, err := HTTPRequest2RpcxRequest(r)
 	defer protocol.FreeMsg(req)
 
-	//set headers
+	// set headers
 	wh.Set(XVersion, r.Header.Get(XVersion))
 	wh.Set(XMessageID, r.Header.Get(XMessageID))
 
@@ -142,14 +149,16 @@ func (s *Server) handleGatewayRequest(w http.ResponseWriter, r *http.Request, pa
 	}
 	err = s.Plugins.DoPostReadRequest(ctx, req, nil)
 	if err != nil {
+		s.Plugins.DoPreWriteResponse(ctx, req, nil, err)
 		http.Error(w, err.Error(), 500)
+		s.Plugins.DoPostWriteResponse(ctx, req, req.Clone(), err)
 		return
 	}
 
-	ctx = context.WithValue(ctx, StartRequestContextKey, time.Now().UnixNano())
+	ctx.SetValue(StartRequestContextKey, time.Now().UnixNano())
 	err = s.auth(ctx, req)
 	if err != nil {
-		s.Plugins.DoPreWriteResponse(ctx, req, nil)
+		s.Plugins.DoPreWriteResponse(ctx, req, nil, err)
 		wh.Set(XMessageStatusType, "Error")
 		wh.Set(XErrorMessage, err.Error())
 		w.WriteHeader(401)
@@ -158,22 +167,31 @@ func (s *Server) handleGatewayRequest(w http.ResponseWriter, r *http.Request, pa
 	}
 
 	resMetadata := make(map[string]string)
-	newCtx := context.WithValue(context.WithValue(ctx, share.ReqMetaDataKey, req.Metadata),
+	newCtx := share.WithLocalValue(share.WithLocalValue(ctx, share.ReqMetaDataKey, req.Metadata),
 		share.ResMetaDataKey, resMetadata)
 
 	res, err := s.handleRequest(newCtx, req)
 	defer protocol.FreeMsg(res)
 
 	if err != nil {
-		log.Warnf("rpcx: failed to handle gateway request: %v", err)
+		// call DoPreWriteResponse
+		s.Plugins.DoPreWriteResponse(ctx, req, nil, err)
+		if s.HandleServiceError != nil {
+			s.HandleServiceError(err)
+		} else {
+			log.Warnf("rpcx:  gateway request: %v", err)
+		}
 		wh.Set(XMessageStatusType, "Error")
 		wh.Set(XErrorMessage, err.Error())
 		w.WriteHeader(500)
+		// call DoPostWriteResponse
+		s.Plugins.DoPostWriteResponse(ctx, req, req.Clone(), err)
 		return
 	}
 
-	s.Plugins.DoPreWriteResponse(newCtx, req, nil)
-	if len(resMetadata) > 0 { //copy meta in context to request
+	// will set res to call
+	s.Plugins.DoPreWriteResponse(newCtx, req, res, nil)
+	if len(resMetadata) > 0 { // copy meta in context to request
 		meta := res.Metadata
 		if meta == nil {
 			res.Metadata = resMetadata

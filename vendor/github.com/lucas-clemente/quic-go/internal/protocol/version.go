@@ -18,16 +18,16 @@ const (
 
 // The version numbers, making grepping easier
 const (
-	VersionTLS      VersionNumber = VersionMilestone0_12_0
-	VersionWhatever VersionNumber = 1 // for when the version doesn't matter
+	VersionTLS      VersionNumber = 0x1
+	VersionWhatever VersionNumber = math.MaxUint32 - 1 // for when the version doesn't matter
 	VersionUnknown  VersionNumber = math.MaxUint32
-
-	VersionMilestone0_12_0 VersionNumber = 0xff000016 // QUIC WG draft-22
+	VersionDraft29  VersionNumber = 0xff00001d
+	Version1        VersionNumber = 0x1
 )
 
 // SupportedVersions lists the versions that the server supports
 // must be in sorted descending order
-var SupportedVersions = []VersionNumber{VersionMilestone0_12_0}
+var SupportedVersions = []VersionNumber{Version1, VersionDraft29}
 
 // IsValidVersion says if the version is known to quic-go
 func IsValidVersion(v VersionNumber) bool {
@@ -35,24 +35,27 @@ func IsValidVersion(v VersionNumber) bool {
 }
 
 func (vn VersionNumber) String() string {
+	// For releases, VersionTLS will be set to a draft version.
+	// A switch statement can't contain duplicate cases.
+	if vn == VersionTLS && VersionTLS != VersionDraft29 && VersionTLS != Version1 {
+		return "TLS dev version (WIP)"
+	}
+	//nolint:exhaustive
 	switch vn {
 	case VersionWhatever:
 		return "whatever"
 	case VersionUnknown:
 		return "unknown"
-	case VersionMilestone0_12_0:
-		return "QUIC WG draft-22"
+	case VersionDraft29:
+		return "draft-29"
+	case Version1:
+		return "v1"
 	default:
 		if vn.isGQUIC() {
 			return fmt.Sprintf("gQUIC %d", vn.toGQUICVersion())
 		}
 		return fmt.Sprintf("%#x", uint32(vn))
 	}
-}
-
-// ToAltSvc returns the representation of the version for the H2 Alt-Svc parameters
-func (vn VersionNumber) ToAltSvc() string {
-	return fmt.Sprintf("%d", vn)
 }
 
 func (vn VersionNumber) isGQUIC() bool {
@@ -105,15 +108,4 @@ func GetGreasedVersions(supported []VersionNumber) []VersionNumber {
 	greased[randPos] = generateReservedVersion()
 	copy(greased[randPos+1:], supported[randPos:])
 	return greased
-}
-
-// StripGreasedVersions strips all greased versions from a slice of versions
-func StripGreasedVersions(versions []VersionNumber) []VersionNumber {
-	realVersions := make([]VersionNumber, 0, len(versions))
-	for _, v := range versions {
-		if v&0x0f0f0f0f != 0x0a0a0a0a {
-			realVersions = append(realVersions, v)
-		}
-	}
-	return realVersions
 }

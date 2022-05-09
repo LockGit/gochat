@@ -225,7 +225,7 @@ func (scope *Scope) SetColumn(column interface{}, value interface{}) error {
 				updateAttrs[field.DBName] = value
 				return field.Set(value)
 			}
-			if (field.DBName == dbName) || (field.Name == name && mostMatchedField == nil) {
+			if !field.IsIgnored && ((field.DBName == dbName) || (field.Name == name && mostMatchedField == nil)) {
 				mostMatchedField = field
 			}
 		}
@@ -257,7 +257,7 @@ func (scope *Scope) CallMethod(methodName string) {
 func (scope *Scope) AddToVars(value interface{}) string {
 	_, skipBindVar := scope.InstanceGet("skip_bindvar")
 
-	if expr, ok := value.(*expr); ok {
+	if expr, ok := value.(*SqlExpr); ok {
 		exp := expr.expr
 		for _, arg := range expr.args {
 			if skipBindVar {
@@ -275,23 +275,6 @@ func (scope *Scope) AddToVars(value interface{}) string {
 		return "?"
 	}
 	return scope.Dialect().BindVar(len(scope.SQLVars))
-}
-
-// IsCompleteParentheses check if the string has complete parentheses to prevent SQL injection
-func (scope *Scope) IsCompleteParentheses(value string) bool {
-	count := 0
-	for i, _ := range value {
-		if value[i] == 40 { // (
-			count++
-		} else if value[i] == 41 { // )
-			count--
-		}
-		if count < 0 {
-			break
-		}
-		i++
-	}
-	return count == 0
 }
 
 // SelectAttrs return selected attributes
@@ -375,7 +358,7 @@ func (scope *Scope) Raw(sql string) *Scope {
 
 // Exec perform generated SQL
 func (scope *Scope) Exec() *Scope {
-	defer scope.trace(scope.db.nowFunc())
+	defer scope.trace(NowFunc())
 
 	if !scope.HasError() {
 		if result, err := scope.SQLDB().Exec(scope.SQL, scope.SQLVars...); scope.Err(err) == nil {
@@ -573,10 +556,6 @@ func (scope *Scope) buildCondition(clause map[string]interface{}, include bool) 
 		}
 
 		if value != "" {
-			if !scope.IsCompleteParentheses(value) {
-				scope.Err(fmt.Errorf("incomplete parentheses found: %v", value))
-				return
-			}
 			if !include {
 				if comparisonRegexp.MatchString(value) {
 					str = fmt.Sprintf("NOT (%v)", value)
@@ -611,7 +590,7 @@ func (scope *Scope) buildCondition(clause map[string]interface{}, include bool) 
 		}
 		scopeQuotedTableName := newScope.QuotedTableName()
 		for _, field := range newScope.Fields() {
-			if !field.IsIgnored && !field.IsBlank {
+			if !field.IsIgnored && !field.IsBlank && field.Relationship == nil {
 				sqls = append(sqls, fmt.Sprintf("(%v.%v %s %v)", scopeQuotedTableName, scope.Quote(field.DBName), equalSQL, scope.AddToVars(field.Field.Interface())))
 			}
 		}
@@ -806,7 +785,7 @@ func (scope *Scope) orderSQL() string {
 	for _, order := range scope.Search.orders {
 		if str, ok := order.(string); ok {
 			orders = append(orders, scope.quoteIfPossible(str))
-		} else if expr, ok := order.(*expr); ok {
+		} else if expr, ok := order.(*SqlExpr); ok {
 			exp := expr.expr
 			for _, arg := range expr.args {
 				exp = strings.Replace(exp, "?", scope.AddToVars(arg), 1)
@@ -818,7 +797,9 @@ func (scope *Scope) orderSQL() string {
 }
 
 func (scope *Scope) limitAndOffsetSQL() string {
-	return scope.Dialect().LimitAndOffsetSQL(scope.Search.limit, scope.Search.offset)
+	sql, err := scope.Dialect().LimitAndOffsetSQL(scope.Search.limit, scope.Search.offset)
+	scope.Err(err)
+	return sql
 }
 
 func (scope *Scope) groupSQL() string {
@@ -932,28 +913,32 @@ func (scope *Scope) updatedAttrsWithValues(value interface{}) (results map[strin
 	results = map[string]interface{}{}
 
 	for key, value := range convertInterfaceToMap(value, true, scope.db) {
-		if field, ok := scope.FieldByName(key); ok && scope.changeableField(field) {
-			if _, ok := value.(*expr); ok {
-				hasUpdate = true
-				results[field.DBName] = value
-			} else {
-				err := field.Set(value)
-				if field.IsNormal && !field.IsIgnored {
+		if field, ok := scope.FieldByName(key); ok {
+			if scope.changeableField(field) {
+				if _, ok := value.(*SqlExpr); ok {
 					hasUpdate = true
-					if err == ErrUnaddressable {
-						results[field.DBName] = value
-					} else {
-						results[field.DBName] = field.Field.Interface()
+					results[field.DBName] = value
+				} else {
+					err := field.Set(value)
+					if field.IsNormal && !field.IsIgnored {
+						hasUpdate = true
+						if err == ErrUnaddressable {
+							results[field.DBName] = value
+						} else {
+							results[field.DBName] = field.Field.Interface()
+						}
 					}
 				}
 			}
+		} else {
+			results[key] = value
 		}
 	}
 	return
 }
 
 func (scope *Scope) row() *sql.Row {
-	defer scope.trace(scope.db.nowFunc())
+	defer scope.trace(NowFunc())
 
 	result := &RowQueryResult{}
 	scope.InstanceSet("row_query_result", result)
@@ -963,7 +948,7 @@ func (scope *Scope) row() *sql.Row {
 }
 
 func (scope *Scope) rows() (*sql.Rows, error) {
-	defer scope.trace(scope.db.nowFunc())
+	defer scope.trace(NowFunc())
 
 	result := &RowsQueryResult{}
 	scope.InstanceSet("row_query_result", result)

@@ -13,12 +13,10 @@ import (
 	"sync"
 	"time"
 
-	opentracing "github.com/opentracing/opentracing-go"
 	circuit "github.com/rubyist/circuitbreaker"
 	"github.com/smallnest/rpcx/log"
 	"github.com/smallnest/rpcx/protocol"
 	"github.com/smallnest/rpcx/share"
-	"go.opencensus.io/trace"
 )
 
 const (
@@ -44,12 +42,15 @@ func (e ServiceError) Error() string {
 
 // DefaultOption is a common option configuration for client.
 var DefaultOption = Option{
-	Retries:        3,
-	RPCPath:        share.DefaultRPCPath,
-	ConnectTimeout: 10 * time.Second,
-	SerializeType:  protocol.MsgPack,
-	CompressType:   protocol.None,
-	BackupLatency:  10 * time.Millisecond,
+	Retries:             3,
+	RPCPath:             share.DefaultRPCPath,
+	ConnectTimeout:      time.Second,
+	SerializeType:       protocol.MsgPack,
+	CompressType:        protocol.None,
+	BackupLatency:       10 * time.Millisecond,
+	MaxWaitForHeartbeat: 30 * time.Second,
+	TCPKeepAlivePeriod:  time.Minute,
+	BidirectionalBlock:  false,
 }
 
 // Breaker is a CircuitBreaker interface.
@@ -85,12 +86,15 @@ type RPCClient interface {
 	Call(ctx context.Context, servicePath, serviceMethod string, args interface{}, reply interface{}) error
 	SendRaw(ctx context.Context, r *protocol.Message) (map[string]string, []byte, error)
 	Close() error
+	RemoteAddr() string
 
 	RegisterServerMessageChan(ch chan<- *protocol.Message)
 	UnregisterServerMessageChan()
 
 	IsClosing() bool
 	IsShutdown() bool
+
+	GetConn() net.Conn
 }
 
 // Client represents a RPC client.
@@ -99,7 +103,7 @@ type Client struct {
 
 	Conn net.Conn
 	r    *bufio.Reader
-	//w    *bufio.Writer
+	// w    *bufio.Writer
 
 	mutex        sync.Mutex // protects following
 	seq          uint64
@@ -120,6 +124,16 @@ func NewClient(option Option) *Client {
 	}
 }
 
+// RemoteAddr returns the remote address.
+func (client *Client) RemoteAddr() string {
+	return client.Conn.RemoteAddr().String()
+}
+
+// GetConn returns the underlying conn.
+func (client *Client) GetConn() net.Conn {
+	return client.Conn
+}
+
 // Option contains all options for creating clients.
 type Option struct {
 	// Group is used to select the services in the same group. Services set group info in their meta.
@@ -135,12 +149,10 @@ type Option struct {
 	Block interface{}
 	// RPCPath for http connection
 	RPCPath string
-	//ConnectTimeout sets timeout for dialing
+	// ConnectTimeout sets timeout for dialing
 	ConnectTimeout time.Duration
-	// ReadTimeout sets readdeadline for underlying net.Conns
-	ReadTimeout time.Duration
-	// WriteTimeout sets writedeadline for underlying net.Conns
-	WriteTimeout time.Duration
+	// IdleTimeout sets max idle time for underlying net.Conns
+	IdleTimeout time.Duration
 
 	// BackupLatency is used for Failbackup mode. rpcx will sends another request if the first response doesn't return in BackupLatency time.
 	BackupLatency time.Duration
@@ -151,15 +163,23 @@ type Option struct {
 	SerializeType protocol.SerializeType
 	CompressType  protocol.CompressType
 
-	Heartbeat         bool
-	HeartbeatInterval time.Duration
+	// send heartbeat message to service and check responses
+	Heartbeat bool
+	// interval for heartbeat
+	HeartbeatInterval   time.Duration
+	MaxWaitForHeartbeat time.Duration
+
+	// TCPKeepAlive, if it is zero we don't set keepalive
+	TCPKeepAlivePeriod time.Duration
+	// bidirectional mode, if true serverMessageChan will block to wait message for consume. default false.
+	BidirectionalBlock bool
 }
 
 // Call represents an active RPC.
 type Call struct {
 	ServicePath   string            // The name of the service and method to call.
 	ServiceMethod string            // The name of the service and method to call.
-	Metadata      map[string]string //metadata
+	Metadata      map[string]string // metadata
 	ResMetadata   map[string]string
 	Args          interface{} // The argument to the function (*struct).
 	Reply         interface{} // The reply from the function (*struct).
@@ -211,17 +231,13 @@ func (client *Client) Go(ctx context.Context, servicePath, serviceMethod string,
 	call.ServicePath = servicePath
 	call.ServiceMethod = serviceMethod
 	meta := ctx.Value(share.ReqMetaDataKey)
-	if meta != nil { //copy meta in context to meta in requests
+	if meta != nil { // copy meta in context to meta in requests
 		call.Metadata = meta.(map[string]string)
 	}
 
 	if _, ok := ctx.(*share.Context); !ok {
 		ctx = share.NewContext(ctx)
 	}
-
-	// TODO: should implement as plugin
-	client.injectOpenTracingSpan(ctx, call)
-	client.injectOpenCensusSpan(ctx, call)
 
 	call.Args = args
 	call.Reply = reply
@@ -237,61 +253,12 @@ func (client *Client) Go(ctx context.Context, servicePath, serviceMethod string,
 		}
 	}
 	call.Done = done
+
+	if share.Trace {
+		log.Debugf("client.Go send request for %s.%s, args: %+v in case of client call", servicePath, serviceMethod, args)
+	}
 	client.send(ctx, call)
 	return call
-}
-
-func (client *Client) injectOpenTracingSpan(ctx context.Context, call *Call) {
-	var rpcxContext *share.Context
-	var ok bool
-	if rpcxContext, ok = ctx.(*share.Context); !ok {
-		return
-	}
-	sp := rpcxContext.Value(share.OpentracingSpanClientKey)
-	if sp == nil { // have not config opentracing plugin
-		return
-	}
-
-	span := sp.(opentracing.Span)
-	if call.Metadata == nil {
-		call.Metadata = make(map[string]string)
-	}
-	meta := call.Metadata
-
-	err := opentracing.GlobalTracer().Inject(
-		span.Context(),
-		opentracing.TextMap,
-		opentracing.TextMapCarrier(meta))
-	if err != nil {
-		log.Errorf("failed to inject span: %v", err)
-	}
-}
-
-func (client *Client) injectOpenCensusSpan(ctx context.Context, call *Call) {
-	var rpcxContext *share.Context
-	var ok bool
-	if rpcxContext, ok = ctx.(*share.Context); !ok {
-		return
-	}
-	sp := rpcxContext.Value(share.OpencensusSpanClientKey)
-	if sp == nil { // have not config opencensus plugin
-		return
-	}
-
-	span := sp.(*trace.Span)
-	if span == nil {
-		return
-	}
-	if call.Metadata == nil {
-		call.Metadata = make(map[string]string)
-	}
-	meta := call.Metadata
-
-	spanContext := span.SpanContext()
-	scData := make([]byte, 24)
-	copy(scData[:16], spanContext.TraceID[:])
-	copy(scData[16:24], spanContext.SpanID[:])
-	meta[share.OpencensusSpanRequestKey] = string(scData)
 }
 
 // Call invokes the named function, waits for it to complete, and returns its error status.
@@ -302,11 +269,19 @@ func (client *Client) Call(ctx context.Context, servicePath, serviceMethod strin
 func (client *Client) call(ctx context.Context, servicePath, serviceMethod string, args interface{}, reply interface{}) error {
 	seq := new(uint64)
 	ctx = context.WithValue(ctx, seqKey{}, seq)
+
+	if share.Trace {
+		log.Debugf("client.call for %s.%s, args: %+v in case of client call", servicePath, serviceMethod, args)
+		defer func() {
+			log.Debugf("client.call done for %s.%s, args: %+v in case of client call", servicePath, serviceMethod, args)
+		}()
+	}
+
 	Done := client.Go(ctx, servicePath, serviceMethod, args, reply, make(chan *Call, 1)).Done
 
 	var err error
 	select {
-	case <-ctx.Done(): //cancel by context
+	case <-ctx.Done(): // cancel by context
 		client.mutex.Lock()
 		call := client.pending[*seq]
 		delete(client.pending, *seq)
@@ -325,13 +300,15 @@ func (client *Client) call(ctx context.Context, servicePath, serviceMethod strin
 			for k, v := range call.ResMetadata {
 				resMeta[k] = v
 			}
+
+			resMeta[share.ServerAddress] = client.Conn.RemoteAddr().String()
 		}
 	}
 
 	return err
 }
 
-// SendRaw sends raw messages. You don't care args and replys.
+// SendRaw sends raw messages. You don't care args and replies.
 func (client *Client) SendRaw(ctx context.Context, r *protocol.Message) (map[string]string, []byte, error) {
 	ctx = context.WithValue(ctx, seqKey{}, r.Seq())
 
@@ -356,10 +333,14 @@ func (client *Client) SendRaw(ctx context.Context, r *protocol.Message) (map[str
 		}
 	}
 
-	if meta != nil { //copy meta in context to meta in requests
+	if meta != nil { // copy meta in context to meta in requests
 		call.Metadata = rmeta
 	}
 	r.Metadata = rmeta
+
+	if _, ok := ctx.(*share.Context); !ok {
+		ctx = share.NewContext(ctx)
+	}
 
 	done := make(chan *Call, 10)
 	call.Done = done
@@ -372,8 +353,10 @@ func (client *Client) SendRaw(ctx context.Context, r *protocol.Message) (map[str
 	client.pending[seq] = call
 	client.mutex.Unlock()
 
-	data := r.Encode()
-	_, err := client.Conn.Write(data)
+	data := r.EncodeSlicePointer()
+	_, err := client.Conn.Write(*data)
+	protocol.PutData(data)
+
 	if err != nil {
 		client.mutex.Lock()
 		call = client.pending[seq]
@@ -400,7 +383,7 @@ func (client *Client) SendRaw(ctx context.Context, r *protocol.Message) (map[str
 	var payload []byte
 
 	select {
-	case <-ctx.Done(): //cancel by context
+	case <-ctx.Done(): // cancel by context
 		client.mutex.Lock()
 		call := client.pending[seq]
 		delete(client.pending, seq)
@@ -437,9 +420,9 @@ func convertRes2Raw(res *protocol.Message) (map[string]string, []byte, error) {
 		m[XMessageStatusType] = "Normal"
 	}
 
-	if res.CompressType() == protocol.Gzip {
-		m["Content-Encoding"] = "gzip"
-	}
+	// if res.CompressType() == protocol.Gzip {
+	// 	m["Content-Encoding"] = "gzip"
+	// }
 
 	m[XMeta] = urlencode(res.Metadata)
 	m[XSerializeType] = strconv.Itoa(int(res.SerializeType()))
@@ -464,8 +447,8 @@ func urlencode(data map[string]string) string {
 	s := buf.String()
 	return s[0 : len(s)-1]
 }
-func (client *Client) send(ctx context.Context, call *Call) {
 
+func (client *Client) send(ctx context.Context, call *Call) {
 	// Register this call.
 	client.mutex.Lock()
 	if client.shutdown || client.closing {
@@ -475,7 +458,12 @@ func (client *Client) send(ctx context.Context, call *Call) {
 		return
 	}
 
-	codec := share.Codecs[client.option.SerializeType]
+	isHeartbeat := call.ServicePath == "" && call.ServiceMethod == ""
+	serializeType := client.option.SerializeType
+	if isHeartbeat {
+		serializeType = protocol.MsgPack
+	}
+	codec := share.Codecs[serializeType]
 	if codec == nil {
 		call.Error = ErrUnsupportedCodec
 		client.mutex.Unlock()
@@ -496,7 +484,7 @@ func (client *Client) send(ctx context.Context, call *Call) {
 		*cseq = seq
 	}
 
-	//req := protocol.NewMessage()
+	// req := protocol.NewMessage()
 	req := protocol.GetPooledMsg()
 	req.SetMessageType(protocol.Request)
 	req.SetSeq(seq)
@@ -504,37 +492,50 @@ func (client *Client) send(ctx context.Context, call *Call) {
 		req.SetOneway(true)
 	}
 
-	// heartbeat
-	if call.ServicePath == "" && call.ServiceMethod == "" {
+	// heartbeat, and use default SerializeType (msgpack)
+	if isHeartbeat {
 		req.SetHeartbeat(true)
+		req.SetSerializeType(protocol.MsgPack)
 	} else {
 		req.SetSerializeType(client.option.SerializeType)
-		if call.Metadata != nil {
-			req.Metadata = call.Metadata
-		}
-
-		req.ServicePath = call.ServicePath
-		req.ServiceMethod = call.ServiceMethod
-
-		data, err := codec.Encode(call.Args)
-		if err != nil {
-			call.Error = err
-			call.done()
-			return
-		}
-		if len(data) > 1024 && client.option.CompressType != protocol.None {
-			req.SetCompressType(client.option.CompressType)
-		}
-
-		req.Payload = data
 	}
+
+	if call.Metadata != nil {
+		req.Metadata = call.Metadata
+	}
+
+	req.ServicePath = call.ServicePath
+	req.ServiceMethod = call.ServiceMethod
+
+	data, err := codec.Encode(call.Args)
+	if err != nil {
+		client.mutex.Lock()
+		delete(client.pending, seq)
+		client.mutex.Unlock()
+		call.Error = err
+		call.done()
+		return
+	}
+	if len(data) > 1024 && client.option.CompressType != protocol.None {
+		req.SetCompressType(client.option.CompressType)
+	}
+
+	req.Payload = data
 
 	if client.Plugins != nil {
-		client.Plugins.DoClientBeforeEncode(req)
+		_ = client.Plugins.DoClientBeforeEncode(req)
 	}
-	data := req.Encode()
 
-	_, err := client.Conn.Write(data)
+	if share.Trace {
+		log.Debugf("client.send for %s.%s, args: %+v in case of client call", call.ServicePath, call.ServiceMethod, call.Args)
+	}
+	allData := req.EncodeSlicePointer()
+	_, err = client.Conn.Write(*allData)
+	protocol.PutData(allData)
+	if share.Trace {
+		log.Debugf("client.sent for %s.%s, args: %+v in case of client call", call.ServicePath, call.ServiceMethod, call.Args)
+	}
+
 	if err != nil {
 		client.mutex.Lock()
 		call = client.pending[seq]
@@ -544,6 +545,7 @@ func (client *Client) send(ctx context.Context, call *Call) {
 			call.Error = err
 			call.done()
 		}
+		protocol.FreeMsg(req)
 		return
 	}
 
@@ -560,19 +562,18 @@ func (client *Client) send(ctx context.Context, call *Call) {
 		}
 	}
 
-	if client.option.WriteTimeout != 0 {
-		client.Conn.SetWriteDeadline(time.Now().Add(client.option.WriteTimeout))
+	if client.option.IdleTimeout != 0 {
+		_ = client.Conn.SetDeadline(time.Now().Add(client.option.IdleTimeout))
 	}
-
 }
 
 func (client *Client) input() {
 	var err error
 
 	for err == nil {
-		var res = protocol.NewMessage()
-		if client.option.ReadTimeout != 0 {
-			client.Conn.SetReadDeadline(time.Now().Add(client.option.ReadTimeout))
+		res := protocol.NewMessage()
+		if client.option.IdleTimeout != 0 {
+			_ = client.Conn.SetDeadline(time.Now().Add(client.option.IdleTimeout))
 		}
 
 		err = res.Decode(client.r)
@@ -580,7 +581,7 @@ func (client *Client) input() {
 			break
 		}
 		if client.Plugins != nil {
-			client.Plugins.DoClientAfterDecode(res)
+			_ = client.Plugins.DoClientAfterDecode(res)
 		}
 
 		seq := res.Seq()
@@ -593,11 +594,15 @@ func (client *Client) input() {
 			client.mutex.Unlock()
 		}
 
+		if share.Trace {
+			log.Debugf("client.input received %v", res)
+		}
+
 		switch {
 		case call == nil:
 			if isServerMessage {
 				if client.ServerMessageChan != nil {
-					go client.handleServerRequest(res)
+					client.handleServerRequest(res)
 				}
 				continue
 			}
@@ -611,6 +616,12 @@ func (client *Client) input() {
 			if call.Raw {
 				call.Metadata, call.Reply, _ = convertRes2Raw(res)
 				call.Metadata[XErrorMessage] = call.Error.Error()
+			} else if len(res.Payload) > 0 {
+				data := res.Payload
+				codec := share.Codecs[res.SerializeType()]
+				if codec != nil {
+					_ = codec.Decode(data, call.Reply)
+				}
 			}
 			call.done()
 		default:
@@ -651,7 +662,7 @@ func (client *Client) input() {
 			}
 		}
 		req.Metadata["server"] = client.Conn.RemoteAddr().String()
-		go client.handleServerRequest(req)
+		client.handleServerRequest(req)
 	}
 
 	client.mutex.Lock()
@@ -678,8 +689,8 @@ func (client *Client) input() {
 
 	client.mutex.Unlock()
 
-	if err != nil && err != io.EOF && !closing {
-		log.Error("rpcx: client protocol error:", err)
+	if err != nil && !closing {
+		log.Errorf("rpcx: client protocol error: %v", err)
 	}
 }
 
@@ -691,17 +702,26 @@ func (client *Client) handleServerRequest(msg *protocol.Message) {
 		}
 	}()
 
-	t := time.NewTimer(5 * time.Second)
-	select {
-	case client.ServerMessageChan <- msg:
-	case <-t.C:
-		log.Warnf("ServerMessageChan may be full so the server request %d has been dropped", msg.Seq())
+	serverMessageChan := client.ServerMessageChan
+	if serverMessageChan != nil {
+		if client.option.BidirectionalBlock {
+			serverMessageChan <- msg
+		} else {
+			select {
+			case serverMessageChan <- msg:
+			default:
+				log.Warnf("ServerMessageChan may be full so the server request %d has been dropped", msg.Seq())
+			}
+		}
 	}
-	t.Stop()
 }
 
 func (client *Client) heartbeat() {
 	t := time.NewTicker(client.option.HeartbeatInterval)
+
+	if client.option.MaxWaitForHeartbeat == 0 {
+		client.option.MaxWaitForHeartbeat = 30 * time.Second
+	}
 
 	for range t.C {
 		if client.IsShutdown() || client.IsClosing() {
@@ -709,9 +729,27 @@ func (client *Client) heartbeat() {
 			return
 		}
 
-		err := client.Call(context.Background(), "", "", nil, nil)
+		request := time.Now().UnixNano()
+		reply := int64(0)
+		ctx, cancel := context.WithTimeout(context.Background(), client.option.MaxWaitForHeartbeat)
+		err := client.Call(ctx, "", "", &request, &reply)
+		abnormal := false
+		if ctx.Err() != nil {
+			log.Warnf("failed to heartbeat to %s, context err: %v", client.Conn.RemoteAddr().String(), ctx.Err())
+			abnormal = true
+		}
+		cancel()
 		if err != nil {
-			log.Warnf("failed to heartbeat to %s", client.Conn.RemoteAddr().String())
+			log.Warnf("failed to heartbeat to %s: %v", client.Conn.RemoteAddr().String(), err)
+			abnormal = true
+		}
+
+		if reply != request {
+			log.Warnf("reply %d in heartbeat to %s is different from request %d", reply, client.Conn.RemoteAddr().String(), request)
+		}
+
+		if abnormal {
+			client.Close()
 		}
 	}
 }

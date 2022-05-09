@@ -22,6 +22,13 @@
 * 由于go的交叉编译特性,编译后可以快速在各个平台上运行,gochat架构及目录结构清晰。
 * 本项目贴心的提供了docker一键构建所有环境依赖,安装起来十分便捷。(如果是体验，强烈建议使用docker构建)
 
+### 更新
+* 2022年05月08日 
+  * 目前golang版本升级到了1.18，如果未使用docker，选择自己编译安装请确保自己的go版本是否符合要求
+  * vendor也打包到了仓库里，加上vendor整个项目大小约66M，理论git clone后就就可以使用，由于不可抗拒的网络因素，可能需要较长时间
+  * 升级了一些包依赖版本，不建议在低版本的golang上尝试编译本项目，尽量升级到1.18+
+  * 优化：watch etcd的中对应的kv变化，动态更新服务ip地址，确保新增/移除各层后其他层能够感知
+
 ### Websocket && Tcp消息互通 
 ```
 关于最新版本支持支持websocket,tcp消息互通部分的说明：
@@ -220,7 +227,7 @@ admin 111111
 
 
 如果你想自己构建一个镜像,那么只需要build docker文件下的Dockerfile
-docker build -f docker/Dockerfile . -t lockgit/gochat
+docker build -f docker/Dockerfile . -t lockgit/gochat:1.18 (这里的1.18就是run.sh中的镜像用到的版本）
 上面build过程可能需要翻墙且需要一定时间，完成后执行:
 1,git clone git@github.com:LockGit/gochat.git
 2,cd gochat && sh run.sh dev (该步骤需要一定时间编译各个模块，耐心等待即可,部分系统可能没有sh,如果执行报错,把sh run.sh dev改为./run.sh dev执行）

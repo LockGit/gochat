@@ -8,19 +8,41 @@ package task
 import (
 	"context"
 	"encoding/json"
+	"github.com/rpcxio/libkv/store"
+	etcdV3 "github.com/rpcxio/rpcx-etcd/client"
 	"github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/client"
 	"gochat/config"
 	"gochat/proto"
 	"gochat/tools"
 	"strings"
+	"sync"
+	"time"
 )
 
 var RpcConnectClientList map[string]client.XClient
 
 func (task *Task) InitConnectRpcClient() (err error) {
+	etcdConfigOption := &store.Config{
+		ClientTLS:         nil,
+		TLS:               nil,
+		ConnectionTimeout: time.Duration(config.Conf.Common.CommonEtcd.ConnectionTimeout) * time.Second,
+		Bucket:            "",
+		PersistConnection: true,
+		Username:          config.Conf.Common.CommonEtcd.UserName,
+		Password:          config.Conf.Common.CommonEtcd.Password,
+	}
 	etcdConfig := config.Conf.Common.CommonEtcd
-	d := client.NewEtcdV3Discovery(etcdConfig.BasePath, etcdConfig.ServerPathConnect, []string{etcdConfig.Host}, nil)
+	d, e := etcdV3.NewEtcdV3Discovery(
+		etcdConfig.BasePath,
+		etcdConfig.ServerPathConnect,
+		[]string{etcdConfig.Host},
+		true,
+		etcdConfigOption,
+	)
+	if e != nil {
+		logrus.Fatalf("init task rpc etcd discovery client fail:%s", e.Error())
+	}
 	if len(d.GetServices()) <= 0 {
 		logrus.Panicf("no etcd server find!")
 	}
@@ -33,12 +55,51 @@ func (task *Task) InitConnectRpcClient() (err error) {
 		if err != nil {
 			logrus.Panicf("InitConnect err，Can't find serverId. error: %s", err.Error())
 		}
-		d := client.NewPeer2PeerDiscovery(connectConf.Key, "")
+		d, e := client.NewPeer2PeerDiscovery(connectConf.Key, "")
+		if e != nil {
+			logrus.Errorf("init task client.NewPeer2PeerDiscovery client fail:%s", e.Error())
+		}
 		//under serverId
 		RpcConnectClientList[serverId] = client.NewXClient(etcdConfig.ServerPathConnect, client.Failtry, client.RandomSelect, d, client.DefaultOption)
 		logrus.Infof("InitConnectRpcClient addr %s, v %+v", connectConf.Key, RpcConnectClientList[serverId])
 	}
+	// watch connect server change && update RpcConnectClientList
+	go task.watchServicesChange(d)
 	return
+}
+
+func (task *Task) watchServicesChange(d client.ServiceDiscovery) {
+	etcdConfig := config.Conf.Common.CommonEtcd
+	var syncLock sync.Mutex
+	for kvChan := range d.WatchService() {
+		if len(kvChan) <= 0 {
+			logrus.Errorf("connect services change, connect alarm, no abailable ip")
+		}
+		logrus.Infof("connect services change trigger...")
+		newServerIdMap := make(map[string]struct{})
+		for _, kv := range kvChan {
+			logrus.Infof("connect services change,key is:%s,value is:%s", kv.Key, kv.Value)
+			serverId := strings.Replace(kv.Value, "=&tps=0", "", 1)
+			newServerIdMap[serverId] = struct{}{}
+			if _, ok := RpcConnectClientList[serverId]; ok {
+				continue
+			}
+			d, e := client.NewPeer2PeerDiscovery(kv.Key, "")
+			if e != nil {
+				logrus.Errorf("connect services change,init task client.NewPeer2PeerDiscovery client fail:%s", e.Error())
+			}
+			syncLock.Lock()
+			RpcConnectClientList[serverId] = client.NewXClient(etcdConfig.ServerPathConnect, client.Failtry, client.RandomSelect, d, client.DefaultOption)
+			syncLock.Unlock()
+		}
+		syncLock.Lock()
+		for oldServerId, _ := range RpcConnectClientList {
+			if _, ok := newServerIdMap[oldServerId]; !ok {
+				delete(RpcConnectClientList, oldServerId)
+			}
+		}
+		syncLock.Unlock()
+	}
 }
 
 func (task *Task) pushSingleToConnect(serverId string, userId int, msg []byte) {

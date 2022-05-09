@@ -8,6 +8,7 @@ import (
 
 	"github.com/lucas-clemente/quic-go/internal/protocol"
 	"github.com/lucas-clemente/quic-go/internal/utils"
+	"github.com/lucas-clemente/quic-go/quicvarint"
 )
 
 // ErrInvalidReservedBits is returned when the reserved bits are incorrect.
@@ -22,62 +23,93 @@ type ExtendedHeader struct {
 
 	typeByte byte
 
+	KeyPhase protocol.KeyPhaseBit
+
 	PacketNumberLen protocol.PacketNumberLen
 	PacketNumber    protocol.PacketNumber
 
-	KeyPhase protocol.KeyPhaseBit
+	parsedLen protocol.ByteCount
 }
 
-func (h *ExtendedHeader) parse(b *bytes.Reader, v protocol.VersionNumber) (*ExtendedHeader, error) {
+func (h *ExtendedHeader) parse(b *bytes.Reader, v protocol.VersionNumber) (bool /* reserved bits valid */, error) {
+	startLen := b.Len()
 	// read the (now unencrypted) first byte
 	var err error
 	h.typeByte, err = b.ReadByte()
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	if _, err := b.Seek(int64(h.ParsedLen())-1, io.SeekCurrent); err != nil {
-		return nil, err
+	if _, err := b.Seek(int64(h.Header.ParsedLen())-1, io.SeekCurrent); err != nil {
+		return false, err
 	}
+	var reservedBitsValid bool
 	if h.IsLongHeader {
-		return h.parseLongHeader(b, v)
+		reservedBitsValid, err = h.parseLongHeader(b, v)
+	} else {
+		reservedBitsValid, err = h.parseShortHeader(b, v)
 	}
-	return h.parseShortHeader(b, v)
+	if err != nil {
+		return false, err
+	}
+	h.parsedLen = protocol.ByteCount(startLen - b.Len())
+	return reservedBitsValid, err
 }
 
-func (h *ExtendedHeader) parseLongHeader(b *bytes.Reader, v protocol.VersionNumber) (*ExtendedHeader, error) {
+func (h *ExtendedHeader) parseLongHeader(b *bytes.Reader, _ protocol.VersionNumber) (bool /* reserved bits valid */, error) {
 	if err := h.readPacketNumber(b); err != nil {
-		return nil, err
+		return false, err
 	}
-	var err error
 	if h.typeByte&0xc != 0 {
-		err = ErrInvalidReservedBits
+		return false, nil
 	}
-	return h, err
+	return true, nil
 }
 
-func (h *ExtendedHeader) parseShortHeader(b *bytes.Reader, v protocol.VersionNumber) (*ExtendedHeader, error) {
+func (h *ExtendedHeader) parseShortHeader(b *bytes.Reader, _ protocol.VersionNumber) (bool /* reserved bits valid */, error) {
 	h.KeyPhase = protocol.KeyPhaseZero
 	if h.typeByte&0x4 > 0 {
 		h.KeyPhase = protocol.KeyPhaseOne
 	}
 
 	if err := h.readPacketNumber(b); err != nil {
-		return nil, err
+		return false, err
 	}
-	var err error
 	if h.typeByte&0x18 != 0 {
-		err = ErrInvalidReservedBits
+		return false, nil
 	}
-	return h, err
+	return true, nil
 }
 
 func (h *ExtendedHeader) readPacketNumber(b *bytes.Reader) error {
 	h.PacketNumberLen = protocol.PacketNumberLen(h.typeByte&0x3) + 1
-	pn, err := utils.BigEndian.ReadUintN(b, uint8(h.PacketNumberLen))
-	if err != nil {
-		return err
+	switch h.PacketNumberLen {
+	case protocol.PacketNumberLen1:
+		n, err := b.ReadByte()
+		if err != nil {
+			return err
+		}
+		h.PacketNumber = protocol.PacketNumber(n)
+	case protocol.PacketNumberLen2:
+		n, err := utils.BigEndian.ReadUint16(b)
+		if err != nil {
+			return err
+		}
+		h.PacketNumber = protocol.PacketNumber(n)
+	case protocol.PacketNumberLen3:
+		n, err := utils.BigEndian.ReadUint24(b)
+		if err != nil {
+			return err
+		}
+		h.PacketNumber = protocol.PacketNumber(n)
+	case protocol.PacketNumberLen4:
+		n, err := utils.BigEndian.ReadUint32(b)
+		if err != nil {
+			return err
+		}
+		h.PacketNumber = protocol.PacketNumber(n)
+	default:
+		return fmt.Errorf("invalid packet number length: %d", h.PacketNumberLen)
 	}
-	h.PacketNumber = protocol.PacketNumber(pn)
 	return nil
 }
 
@@ -89,17 +121,15 @@ func (h *ExtendedHeader) Write(b *bytes.Buffer, ver protocol.VersionNumber) erro
 	if h.SrcConnectionID.Len() > protocol.MaxConnIDLen {
 		return fmt.Errorf("invalid connection ID length: %d bytes", h.SrcConnectionID.Len())
 	}
-	if h.OrigDestConnectionID.Len() > protocol.MaxConnIDLen {
-		return fmt.Errorf("invalid connection ID length: %d bytes", h.OrigDestConnectionID.Len())
-	}
 	if h.IsLongHeader {
 		return h.writeLongHeader(b, ver)
 	}
 	return h.writeShortHeader(b, ver)
 }
 
-func (h *ExtendedHeader) writeLongHeader(b *bytes.Buffer, v protocol.VersionNumber) error {
+func (h *ExtendedHeader) writeLongHeader(b *bytes.Buffer, _ protocol.VersionNumber) error {
 	var packetType uint8
+	//nolint:exhaustive
 	switch h.Type {
 	case protocol.PacketTypeInitial:
 		packetType = 0x0
@@ -123,23 +153,20 @@ func (h *ExtendedHeader) writeLongHeader(b *bytes.Buffer, v protocol.VersionNumb
 	b.WriteByte(uint8(h.SrcConnectionID.Len()))
 	b.Write(h.SrcConnectionID.Bytes())
 
+	//nolint:exhaustive
 	switch h.Type {
 	case protocol.PacketTypeRetry:
-		b.WriteByte(uint8(h.OrigDestConnectionID.Len()))
-		b.Write(h.OrigDestConnectionID.Bytes())
 		b.Write(h.Token)
 		return nil
 	case protocol.PacketTypeInitial:
-		utils.WriteVarInt(b, uint64(len(h.Token)))
+		quicvarint.Write(b, uint64(len(h.Token)))
 		b.Write(h.Token)
 	}
-
-	utils.WriteVarInt(b, uint64(h.Length))
+	quicvarint.WriteWithLen(b, uint64(h.Length), 2)
 	return h.writePacketNumber(b)
 }
 
-// TODO: add support for the key phase
-func (h *ExtendedHeader) writeShortHeader(b *bytes.Buffer, v protocol.VersionNumber) error {
+func (h *ExtendedHeader) writeShortHeader(b *bytes.Buffer, _ protocol.VersionNumber) error {
 	typeByte := 0x40 | uint8(h.PacketNumberLen-1)
 	if h.KeyPhase == protocol.KeyPhaseOne {
 		typeByte |= byte(1 << 2)
@@ -151,19 +178,32 @@ func (h *ExtendedHeader) writeShortHeader(b *bytes.Buffer, v protocol.VersionNum
 }
 
 func (h *ExtendedHeader) writePacketNumber(b *bytes.Buffer) error {
-	if h.PacketNumberLen == protocol.PacketNumberLenInvalid || h.PacketNumberLen > protocol.PacketNumberLen4 {
+	switch h.PacketNumberLen {
+	case protocol.PacketNumberLen1:
+		b.WriteByte(uint8(h.PacketNumber))
+	case protocol.PacketNumberLen2:
+		utils.BigEndian.WriteUint16(b, uint16(h.PacketNumber))
+	case protocol.PacketNumberLen3:
+		utils.BigEndian.WriteUint24(b, uint32(h.PacketNumber))
+	case protocol.PacketNumberLen4:
+		utils.BigEndian.WriteUint32(b, uint32(h.PacketNumber))
+	default:
 		return fmt.Errorf("invalid packet number length: %d", h.PacketNumberLen)
 	}
-	utils.BigEndian.WriteUintN(b, uint8(h.PacketNumberLen), uint64(h.PacketNumber))
 	return nil
+}
+
+// ParsedLen returns the number of bytes that were consumed when parsing the header
+func (h *ExtendedHeader) ParsedLen() protocol.ByteCount {
+	return h.parsedLen
 }
 
 // GetLength determines the length of the Header.
 func (h *ExtendedHeader) GetLength(v protocol.VersionNumber) protocol.ByteCount {
 	if h.IsLongHeader {
-		length := 1 /* type byte */ + 4 /* version */ + 1 /* dest conn ID len */ + protocol.ByteCount(h.DestConnectionID.Len()) + 1 /* src conn ID len */ + protocol.ByteCount(h.SrcConnectionID.Len()) + protocol.ByteCount(h.PacketNumberLen) + utils.VarIntLen(uint64(h.Length))
+		length := 1 /* type byte */ + 4 /* version */ + 1 /* dest conn ID len */ + protocol.ByteCount(h.DestConnectionID.Len()) + 1 /* src conn ID len */ + protocol.ByteCount(h.SrcConnectionID.Len()) + protocol.ByteCount(h.PacketNumberLen) + 2 /* length */
 		if h.Type == protocol.PacketTypeInitial {
-			length += utils.VarIntLen(uint64(len(h.Token))) + protocol.ByteCount(len(h.Token))
+			length += quicvarint.Len(uint64(len(h.Token))) + protocol.ByteCount(len(h.Token))
 		}
 		return length
 	}
@@ -184,12 +224,12 @@ func (h *ExtendedHeader) Log(logger utils.Logger) {
 				token = fmt.Sprintf("Token: %#x, ", h.Token)
 			}
 			if h.Type == protocol.PacketTypeRetry {
-				logger.Debugf("\tLong Header{Type: %s, DestConnectionID: %s, SrcConnectionID: %s, %sOrigDestConnectionID: %s, Version: %s}", h.Type, h.DestConnectionID, h.SrcConnectionID, token, h.OrigDestConnectionID, h.Version)
+				logger.Debugf("\tLong Header{Type: %s, DestConnectionID: %s, SrcConnectionID: %s, %sVersion: %s}", h.Type, h.DestConnectionID, h.SrcConnectionID, token, h.Version)
 				return
 			}
 		}
-		logger.Debugf("\tLong Header{Type: %s, DestConnectionID: %s, SrcConnectionID: %s, %sPacketNumber: %#x, PacketNumberLen: %d, Length: %d, Version: %s}", h.Type, h.DestConnectionID, h.SrcConnectionID, token, h.PacketNumber, h.PacketNumberLen, h.Length, h.Version)
+		logger.Debugf("\tLong Header{Type: %s, DestConnectionID: %s, SrcConnectionID: %s, %sPacketNumber: %d, PacketNumberLen: %d, Length: %d, Version: %s}", h.Type, h.DestConnectionID, h.SrcConnectionID, token, h.PacketNumber, h.PacketNumberLen, h.Length, h.Version)
 	} else {
-		logger.Debugf("\tShort Header{DestConnectionID: %s, PacketNumber: %#x, PacketNumberLen: %d, KeyPhase: %s}", h.DestConnectionID, h.PacketNumber, h.PacketNumberLen, h.KeyPhase)
+		logger.Debugf("\tShort Header{DestConnectionID: %s, PacketNumber: %d, PacketNumberLen: %d, KeyPhase: %s}", h.DestConnectionID, h.PacketNumber, h.PacketNumberLen, h.KeyPhase)
 	}
 }

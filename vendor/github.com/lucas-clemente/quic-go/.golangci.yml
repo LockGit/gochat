@@ -1,9 +1,14 @@
 run:
   skip-files:
-    - http3/response_writer_closenotifier.go
-    - internal/handshake/unsafe_test.go
+    - internal/qtls/structs_equal_test.go
 
 linters-settings:
+  depguard:
+    type: blacklist
+    packages:
+      - github.com/marten-seemann/qtls
+    packages-with-error-message:
+      - github.com/marten-seemann/qtls: "importing qtls only allowed in internal/qtls"
   misspell:
     ignore-words:
       - ect
@@ -11,15 +16,29 @@ linters-settings:
 linters:
   disable-all: true
   enable:
+    - asciicheck
     - deadcode
-    - goconst
+    - depguard
+    - exhaustive
+    - exportloopref
     - goimports
+    - gofmt # redundant, since gofmt *should* be a no-op after gofumpt
+    - gofumpt
     - gosimple
     - ineffassign
     - misspell
+    - prealloc
     - staticcheck
+    - stylecheck
     - structcheck
     - unconvert
+    - unparam
     - unused
     - varcheck
     - vet
+
+issues:
+  exclude-rules:
+    - path: internal/qtls
+      linters:
+        - depguard

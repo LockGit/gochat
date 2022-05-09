@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/rs/cors"
@@ -33,8 +34,9 @@ func (s *Server) jsonrpcHandler(w http.ResponseWriter, r *http.Request) {
 		writeResponse(w, res)
 		return
 	}
+	conn := r.Context().Value(HttpConnContextKey).(net.Conn)
 
-	ctx := context.WithValue(r.Context(), RemoteConnContextKey, r.RemoteAddr)
+	ctx := share.WithValue(r.Context(), RemoteConnContextKey, conn)
 
 	if req.ID != nil {
 		res := s.handleJSONRPCRequest(ctx, req, r.Header)
@@ -53,6 +55,9 @@ func (s *Server) handleJSONRPCRequest(ctx context.Context, r *jsonrpcRequest, he
 	res.ID = r.ID
 
 	req := protocol.GetPooledMsg()
+	if req.Metadata == nil {
+		req.Metadata = make(map[string]string)
+	}
 
 	if r.ID == nil {
 		req.SetOneway(true)
@@ -60,23 +65,31 @@ func (s *Server) handleJSONRPCRequest(ctx context.Context, r *jsonrpcRequest, he
 	req.SetMessageType(protocol.Request)
 	req.SetSerializeType(protocol.JSON)
 
-	pathAndMethod := strings.SplitN(r.Method, ".", 2)
-	if len(pathAndMethod) != 2 {
+	lastDot := strings.LastIndex(r.Method, ".")
+	if lastDot <= 0 {
 		res.Error = &JSONRPCError{
 			Code:    CodeMethodNotFound,
 			Message: "must contains servicepath and method",
 		}
 		return res
 	}
-	req.ServicePath = pathAndMethod[0]
-	req.ServiceMethod = pathAndMethod[1]
+	req.ServicePath = r.Method[:lastDot]
+	req.ServiceMethod = r.Method[lastDot+1:]
 	req.Payload = *r.Params
+
+	// meta
+	meta := header.Get(XMeta)
+	if meta != "" {
+		metadata, _ := url.ParseQuery(meta)
+		for k, v := range metadata {
+			if len(v) > 0 {
+				req.Metadata[k] = v[0]
+			}
+		}
+	}
 
 	auth := header.Get("Authorization")
 	if auth != "" {
-		if req.Metadata == nil {
-			req.Metadata = make(map[string]string)
-		}
 		req.Metadata[share.AuthKey] = auth
 	}
 
@@ -91,7 +104,7 @@ func (s *Server) handleJSONRPCRequest(ctx context.Context, r *jsonrpcRequest, he
 
 	err = s.auth(ctx, req)
 	if err != nil {
-		s.Plugins.DoPreWriteResponse(ctx, req, nil)
+		s.Plugins.DoPreWriteResponse(ctx, req, nil, err)
 		res.Error = &JSONRPCError{
 			Code:    CodeInternalJSONRPCError,
 			Message: err.Error(),
@@ -100,17 +113,18 @@ func (s *Server) handleJSONRPCRequest(ctx context.Context, r *jsonrpcRequest, he
 		return res
 	}
 
-	resp, err := s.handleRequest(context.Background(), req)
+	resp, err := s.handleRequest(ctx, req)
 	if r.ID == nil {
 		return nil
 	}
 
-	s.Plugins.DoPreWriteResponse(ctx, req, nil)
+	s.Plugins.DoPreWriteResponse(ctx, req, nil, err)
 	if err != nil {
 		res.Error = &JSONRPCError{
 			Code:    CodeInternalJSONRPCError,
 			Message: err.Error(),
 		}
+		s.Plugins.DoPostWriteResponse(ctx, req, req.Clone(), err)
 		return res
 	}
 
@@ -143,7 +157,7 @@ type CORSOptions struct {
 	// as argument and returns true if allowed or false otherwise. If this option is
 	// set, the content of AllowedOrigins is ignored.
 	AllowOriginFunc func(origin string) bool
-	// AllowOriginFunc is a custom function to validate the origin. It takes the HTTP Request object and the origin as
+	// AllowOriginRequestFunc is a custom function to validate the origin. It takes the HTTP Request object and the origin as
 	// argument and returns true if allowed or false otherwise. If this option is set, the content of `AllowedOrigins`
 	// and `AllowOriginFunc` is ignored.
 	AllowOriginRequestFunc func(r *http.Request, origin string) bool
@@ -167,6 +181,9 @@ type CORSOptions struct {
 	// OptionsPassthrough instructs preflight to let other potential next handlers to
 	// process the OPTIONS method. Turn this on if your application handles OPTIONS.
 	OptionsPassthrough bool
+	// Provides a status code to use for successful OPTIONS requests.
+	// Default value is http.StatusNoContent (204).
+	OptionsSuccessStatus int
 	// Debugging flag adds additional output to debug server side CORS issues
 	Debug bool
 }
@@ -205,13 +222,20 @@ func (s *Server) startJSONRPC2(ln net.Listener) {
 	newServer := http.NewServeMux()
 	newServer.HandleFunc("/", s.jsonrpcHandler)
 
+	srv := http.Server{ConnContext: func(ctx context.Context, c net.Conn) context.Context {
+		return context.WithValue(ctx, HttpConnContextKey, c)
+	}}
+
 	if s.corsOptions != nil {
 		opt := cors.Options(*s.corsOptions)
 		c := cors.New(opt)
 		mux := c.Handler(newServer)
-		go http.Serve(ln, mux)
+		srv.Handler = mux
+
+		go srv.Serve(ln)
 	} else {
-		go http.Serve(ln, newServer)
+		srv.Handler = newServer
+		go srv.Serve(ln)
 	}
 
 }
