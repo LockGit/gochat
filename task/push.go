@@ -47,7 +47,7 @@ func (task *Task) Push(msg string) {
 	if err := json.Unmarshal([]byte(msg), m); err != nil {
 		logrus.Infof(" json.Unmarshal err:%v ", err)
 	}
-	logrus.Infof("push msg info %v", m)
+	logrus.Infof("push msg info %d,op is:%d", m.RoomId, m.Op)
 	switch m.Op {
 	case config.OpSingleSend:
 		pushChannel[rand.Int()%config.Conf.Task.TaskBase.PushChan] <- &PushParams{
