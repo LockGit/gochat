@@ -220,7 +220,7 @@ go build -o gochat.bin -tags=etcd main.go
 demo  111111
 test  111111
 admin 111111
-1,docker pull lockgit/gochat:latest
+1,docker pull lockgit/gochat:1.18 (目前使用的是1.18版本)
 2,git clone git@github.com:LockGit/gochat.git
 3,cd gochat && sh run.sh dev (该步骤需要一定时间编译各个模块，耐心等待即可,部分系统可能没有sh,如果执行报错,把sh run.sh dev改为./run.sh dev执行）
 4,访问 http://127.0.0.1:8080 开启聊天室

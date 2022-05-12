@@ -237,7 +237,7 @@ username  password
 demo        111111
 test        111111
 admin       111111
-1,docker pull lockgit/gochat:latest
+1,docker pull lockgit/gochat:1.18 (version 1.18 is currently used)
 2,git clone git@github.com:LockGit/gochat.git
 3,cd gochat && sh run.sh dev (This step requires a certain time to compile each module and wait patiently. Some systems may not have sh. if an error is reported during execution, change sh run.sh dev to ./ run.sh dev for execution)
 4,visit http://127.0.0.1:8080 to open the chat room
