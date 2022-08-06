@@ -28,6 +28,8 @@
   * vendor也打包到了仓库里，加上vendor整个项目大小约66M，理论git clone后就就可以使用，由于不可抗拒的网络因素，可能需要较长时间
   * 升级了一些包依赖版本，不建议在低版本的golang上尝试编译本项目，尽量升级到1.18+
   * 优化：watch etcd的中对应的kv变化，动态更新服务ip地址，确保新增/移除各层后其他层能够感知
+* 2022年08月06日
+  * 更新了gochat-ui
 
 ### Websocket && Tcp消息互通 
 ```
@@ -95,7 +97,8 @@ connect层:
 ```
 
 ### 聊天室预览
-![](./architecture/gochat.gif)
+用TypeScript + React 糊了一个稍微看上去正常一些的前端UI，UI项目地址：https://github.com/LockGit/gochat-ui
+![](./architecture/gochat-new.png)
 
 ### 用户长链接会话内部结构
 ![](./architecture/session.png)
@@ -184,7 +187,7 @@ create table user(
 ### 安装
 ```
 在启动各层之前,请确保已经启动了etcd与redis服务以及以上数据库表,
-并确保7000, 7070, 8080端口没有被占用。（测试tcp端口使用7001，7002，如果要使用tcp,那么防火墙也需要放行这两个端口）
+并确保【7000, 7070, 8080】端口没有被占用。（测试tcp端口使用7001，7002，如果要使用tcp,那么防火墙也需要放行这两个端口）
 然后按照以下顺序启动各层,如果要扩容connect层,
 请确保connect层配置中各个serverId不一样!
 
@@ -222,7 +225,7 @@ test  111111
 admin 111111
 1,docker pull lockgit/gochat:1.18 (目前使用的是1.18版本)
 2,git clone git@github.com:LockGit/gochat.git
-3,cd gochat && sh run.sh dev (该步骤需要一定时间编译各个模块，耐心等待即可,部分系统可能没有sh,如果执行报错,把sh run.sh dev改为./run.sh dev执行）
+3,cd gochat && sh run.sh dev 127.0.0.1 (该步骤需要一定时间编译各个模块，耐心等待即可,部分系统可能没有sh,如果执行报错,把sh run.sh dev改为./run.sh dev 127.0.0.1执行）
 4,访问 http://127.0.0.1:8080 开启聊天室
 
 
@@ -230,10 +233,10 @@ admin 111111
 docker build -f docker/Dockerfile . -t lockgit/gochat:1.18 (这里的1.18就是run.sh中的镜像用到的版本）
 上面build过程可能需要翻墙且需要一定时间，完成后执行:
 1,git clone git@github.com:LockGit/gochat.git
-2,cd gochat && sh run.sh dev (该步骤需要一定时间编译各个模块，耐心等待即可,部分系统可能没有sh,如果执行报错,把sh run.sh dev改为./run.sh dev执行）
+2,cd gochat && sh run.sh dev 127.0.0.1 (该步骤需要一定时间编译各个模块，耐心等待即可,部分系统可能没有sh,如果执行报错,把sh run.sh dev改为./run.sh dev 127.0.0.1执行）
 3,访问 http://127.0.0.1:8080 开启聊天室
 
-如果你要部署在个人vps上,记得修改site/js/common.js中socketUrl与apiUrl的地址为你的vps的ip地址,
+如果你要部署在个人vps等公网上，让别人也能访问使用，执行 （sh run.sh dev 需要暴露的公网ip地址）即可
 并确保vps上没有针对相关端口的防火墙限制。
 ```
 

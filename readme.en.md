@@ -103,7 +103,8 @@ Connect layer:
 ```
 
 ### Chat room preview
-![](./architecture/gochat.gif)
+Use typescript + react to paste a slightly normal front-end UI. UI project address: https://github.com/LockGit/gochat-ui
+![](./architecture/gochat-new.png)
 
 ### Internal structure of user long connect session
 ![](./architecture/session.png)
@@ -239,7 +240,7 @@ test        111111
 admin       111111
 1,docker pull lockgit/gochat:1.18 (version 1.18 is currently used)
 2,git clone git@github.com:LockGit/gochat.git
-3,cd gochat && sh run.sh dev (This step requires a certain time to compile each module and wait patiently. Some systems may not have sh. if an error is reported during execution, change sh run.sh dev to ./ run.sh dev for execution)
+3,cd gochat && sh run.sh dev 127.0.0.1 (This step requires a certain time to compile each module and wait patiently. Some systems may not have sh. if an error is reported during execution, change sh run.sh dev to ./ run.sh dev 127.0.0.1 for execution)
 4,visit http://127.0.0.1:8080 to open the chat room
 
 
@@ -248,11 +249,10 @@ you only need to build the Dockerfile under the docker file.
 Docker build -f docker/Dockerfile . -t lockgit/gochat
 then execute:
 1,git clone git@github.com:LockGit/gochat.git
-2,cd gochat && sh run.sh dev (This step requires a certain time to compile each module and wait patiently. Some systems may not have sh. if an error is reported during execution, change sh run.sh dev to ./ run.sh dev for execution)
+2,cd gochat && sh run.sh dev 127.0.0.1 (This step requires a certain time to compile each module and wait patiently. Some systems may not have sh. if an error is reported during execution, change sh run.sh dev to ./ run.sh dev 127.0.0.1 for execution)
 3,visit http://127.0.0.1:8080 to open the chat room
 
-If you want to deploy on personal vps, 
-remember to change the address of socketUrl and apiUrl in site/js/common.js to your ip address of vps.
+If you want to deploy on personal vps, you can execute: sh run.sh dev vps_ip
 And make sure there are no firewall restrictions on the relevant ports on the vps.
 ```
 
