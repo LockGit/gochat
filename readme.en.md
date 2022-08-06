@@ -24,10 +24,13 @@
 * This project provides docker with one click to build all environment dependencies, which is very convenient to install. (if it's an experience, we strongly recommend using docker to build)
 
 ### Renew
-* At present, the version of golang has been upgraded to 1.18. If docker is not used, choose to compile and install by yourself. Please ensure whether your own version of go meets the requirements
-* The vendor is also packaged in the warehouse. In addition, the size of the whole vendor project is about 66m. It can be used after git clone. Due to irresistible network factors, it may take a long time
-* Some package dependent versions have been upgraded. It is not recommended to try to compile this project on a lower version of golang, and try to upgrade to 1.18+
-* Optimization: dynamically update the service IP address according to the kV change in watch etcd to ensure that other layers can perceive after adding / removing each layer
+* August 6, 2022
+  * Although UI is not very important in this system, it does look awkward. Typescript + react is used to paste a slightly normal front-end UI interface. UI project address: https://github.com/LockGit/gochat-ui
+* May 8, 2022
+  * At present, the version of golang has been upgraded to 1.18. If you do not use docker, choose to compile and install it yourself. Please ensure that your go version meets the requirements
+  * The vendor is also packaged in the warehouse. In addition, the entire project size of the vendor is about 66m, which can be used after git clone. Due to irresistible network factors, it may take a long time
+  * Some package dependent versions have been upgraded. It is not recommended to try to compile this project on a lower version of golang. Try to upgrade to 1.18+
+  * Optimization: dynamically update the service IP address according to the corresponding kV change in the watch etcd to ensure that other layers can perceive the added / removed layers
 
 ### About Websocket && Tcp Support
 ```
