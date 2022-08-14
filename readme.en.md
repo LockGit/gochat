@@ -104,6 +104,8 @@ Connect layer:
          Room: (room)
              Channel: (user session)
 ```
+### timing
+![](./architecture/timing.png)
 
 ### Chat room preview
 Use typescript + react to paste a slightly normal front-end UI. UI project address: https://github.com/LockGit/gochat-ui

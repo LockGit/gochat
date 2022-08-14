@@ -96,6 +96,9 @@ connect层:
             channel: (用户会话)
 ```
 
+### 时序图
+![](./architecture/timing.png)
+
 ### 聊天室预览
 用TypeScript + React 糊了一个稍微看上去正常一些的前端UI，UI项目地址：https://github.com/LockGit/gochat-ui
 ![](./architecture/gochat-new.png)
