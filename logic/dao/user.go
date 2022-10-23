@@ -6,9 +6,10 @@
 package dao
 
 import (
-	"github.com/pkg/errors"
 	"gochat/db"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 var dbIns = db.GetDb("gochat")
@@ -47,6 +48,6 @@ func (u *User) CheckHaveUserName(userName string) (data User) {
 
 func (u *User) GetUserNameByUserId(userId int) (userName string) {
 	var data User
-	dbIns.Table(u.TableName()).Where("user_id=?", userId).First(&data)
+	dbIns.Table(u.TableName()).Where("id=?", userId).First(&data)
 	return data.UserName
 }
