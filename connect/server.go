@@ -129,7 +129,7 @@ func (s *Server) readPump(ch *Channel, c *Connect) {
 		if err := json.Unmarshal([]byte(message), &connReq); err != nil {
 			logrus.Errorf("message struct %+v", connReq)
 		}
-		if connReq.AuthToken == "" {
+		if connReq == nil || connReq.AuthToken == "" {
 			logrus.Errorf("s.operator.Connect no authToken")
 			return
 		}
