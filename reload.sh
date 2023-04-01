@@ -6,8 +6,8 @@ echo "replace api and websocket ip address..."
 addr_http=${HOST_IP}:7070
 addr_ws=${HOST_IP}:7000
 
-sed -r -i "s/\/\/(\b[0-9]{1,3}\.){3}[0-9]{1,3}\b:[0-9]+/\/\/${addr_http}/g" site/static/js/main.5216e7a9.js
-sed -r -i "s/\/\/(\b[0-9]{1,3}\.){3}[0-9]{1,3}\b:[0-9]+\/ws/\/\/${addr_ws}\/ws/g" site/static/js/main.5216e7a9.js
+sed -r -i "s/\/\/(\b[0-9]{1,3}\.){3}[0-9]{1,3}\b:[0-9]+/\/\/${addr_http}/g" site/static/js/main.06044d49.js
+sed -r -i "s/\/\/(\b[0-9]{1,3}\.){3}[0-9]{1,3}\b:[0-9]+\/ws/\/\/${addr_ws}\/ws/g" site/static/js/main.06044d49.js
 
 echo "build gochat.bin ..."
 # CGO_CFLAGS="-g -O2 -Wno-return-local-addr" fix compile sqlite3 warning
