@@ -1,8 +1,8 @@
 # 🚀 gochat
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/LockGit/gochat/issues)
 <img src="https://img.shields.io/badge/gochat-im-green">
 <img src="https://img.shields.io/badge/documentation-yes-brightgreen.svg">
 <img src="https://img.shields.io/github/license/LockGit/gochat">
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/LockGit/gochat/issues)
 <img src="https://img.shields.io/github/contributors/LockGit/gochat">
 <img src="https://img.shields.io/github/last-commit/LockGit/gochat">
 <img src="https://img.shields.io/github/issues/LockGit/gochat"> 
