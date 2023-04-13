@@ -1,5 +1,4 @@
-# 🚀 gochat 
-[![Build Status](https://travis-ci.org/LockGit/gochat.svg?branch=master)](https://travis-ci.org/LockGit/gochat)
+# 🚀 gochat
 <img src="https://img.shields.io/badge/gochat-im-green">
 <img src="https://img.shields.io/badge/documentation-yes-brightgreen.svg">
 <img src="https://img.shields.io/github/license/LockGit/gochat">
