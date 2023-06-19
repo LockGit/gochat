@@ -232,6 +232,9 @@ or
 ```
 
 ### Start with a docker
+
+#### Use existing image
+amd64 x86 architecture
 ```
 If you feel that the above steps are too cumbersome, 
 you can use the following docker image to build all the dependencies and quickly start a chat room.
@@ -245,16 +248,22 @@ admin       111111
 1,docker pull lockgit/gochat:1.18 (version 1.18 is currently used)
 2,git clone git@github.com:LockGit/gochat.git
 3,cd gochat && sh run.sh dev 127.0.0.1 (This step requires a certain time to compile each module and wait patiently. Some systems may not have sh. if an error is reported during execution, change sh run.sh dev to ./ run.sh dev 127.0.0.1 for execution)
-4,visit http://127.0.0.1:8080 to open the chat room
+4,visit http://127.0.0.1:8080/login; enter username/password to access the chat room
+5,visit http://127.0.0.1:8080 to open the chat room
+```
 
 
+#### Building a new image
+For other platforms, such as arm or m1 chips
+```
 If you want to build an image yourself, 
 you only need to build the Dockerfile under the docker file.
 Docker build -f docker/Dockerfile . -t lockgit/gochat
 then execute:
 1,git clone git@github.com:LockGit/gochat.git
 2,cd gochat && sh run.sh dev 127.0.0.1 (This step requires a certain time to compile each module and wait patiently. Some systems may not have sh. if an error is reported during execution, change sh run.sh dev to ./ run.sh dev 127.0.0.1 for execution)
-3,visit http://127.0.0.1:8080 to open the chat room
+3,visit http://127.0.0.1:8080/login; enter username/password to access the chat room
+4,visit http://127.0.0.1:8080 to open the chat room
 
 If you want to deploy on personal vps, you can execute: sh run.sh dev vps_ip
 And make sure there are no firewall restrictions on the relevant ports on the vps.
