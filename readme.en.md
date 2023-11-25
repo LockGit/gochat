@@ -234,7 +234,6 @@ or
 ### Start with a docker
 
 #### Use existing image
-amd64 x86 architecture
 ```
 If you feel that the above steps are too cumbersome, 
 you can use the following docker image to build all the dependencies and quickly start a chat room.

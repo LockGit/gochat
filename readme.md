@@ -236,7 +236,6 @@ admin 111111
 ```
 
 #### 构建新镜像
-针对其他平台,如arm或m1芯片
 ```
 如果你想自己构建一个镜像,那么只需要build docker文件下的Dockerfile
 make build TAG=1.18(这里的1.18就是run.sh中的镜像用到的版本）
