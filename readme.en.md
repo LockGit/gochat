@@ -14,6 +14,12 @@
 
 ### [中文版本(Chinese version)](readme.md)
 
+### Subscribe
+```
+Share architecture design, research and development, network security, hacker culture, and Internet knowledge
+```
+![](./architecture/wx.jpg)
+
 ### gochat is a lightweight im server implemented using pure go
 * gochat is an instant messaging system based on go. It supports private message messages and room broadcast messages. It communicates with each other through RPC and supports horizontal expansion.
 * Support websocket and TCP access, and support websocket and TCP message interworking in the latest version.
