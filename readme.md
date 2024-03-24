@@ -305,3 +305,5 @@ jetbranins官方在赠送license的时候会请求提议加入他们的品牌log
 gochat is licensed under the MIT License. 
 
 
+### Star History
+[![Star History Chart](https://api.star-history.com/svg?repos=LockGit/gochat&type=Date)](https://star-history.com/#LockGit/gochat&Date)

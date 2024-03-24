@@ -318,3 +318,6 @@ you can also scan the WeChat QR code below to support the author to continue to 
 
 ### License
 gochat is licensed under the MIT License. 
+
+### Star History
+[![Star History Chart](https://api.star-history.com/svg?repos=LockGit/gochat&type=Date)](https://star-history.com/#LockGit/gochat&Date)
