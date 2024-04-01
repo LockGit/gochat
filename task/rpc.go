@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/rpcxio/libkv/store"
 	etcdV3 "github.com/rpcxio/rpcx-etcd/client"
 	"github.com/sirupsen/logrus"
@@ -188,6 +189,9 @@ func (task *Task) pushSingleToConnect(serverId string, userId int, msg []byte) {
 	connectRpc, err := RClient.GetRpcClientByServerId(serverId)
 	if err != nil {
 		logrus.Infof("get rpc client err %v", err)
+		userKey := fmt.Sprintf("gochat_%d", userId)
+		serverId = RedisClient.Get(userKey).Val()
+		logrus.Infof("change serverId: ", serverId)
 	}
 	err = connectRpc.Call(context.Background(), "PushSingleMsg", pushMsgReq, reply)
 	if err != nil {
