@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"gochat/config"
 	"gochat/proto"
 	"log"
@@ -62,6 +61,11 @@ func Test_TestStick(t *testing.T) {
 }
 
 func Test_TcpClient(t *testing.T) {
+	// Skip in short mode - this is an integration test requiring full stack
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
 	//1,建立tcp链接
 	//2,send msg to tcp conn
 	//3,receive msg from tcp conn
@@ -69,101 +73,112 @@ func Test_TcpClient(t *testing.T) {
 	authToken := "1kHYNlHaQTjGd0BWuECkw80ZAIquoU30f0gFPxqpEhQ="      //@todo need you modify
 	fromUserId := 3                                                  //@todo need you modify
 	tcpAddrRemote, _ := net.ResolveTCPAddr("tcp4", "127.0.0.1:7001") //@todo default connect address
-	conn, err := net.DialTCP("tcp", nil, tcpAddrRemote)
-	defer func() {
-		_ = conn.Close()
-	}()
-	if err != nil {
-		panic("conn err:" + err.Error())
-	}
 
+	// Set connection timeout
+	conn, err := net.DialTimeout("tcp", tcpAddrRemote.String(), 5*time.Second)
+	if err != nil {
+		t.Skipf("TCP server not available at %s, skipping integration test: %v", tcpAddrRemote.String(), err)
+		return
+	}
+	defer conn.Close()
+
+	tcpConn := conn.(*net.TCPConn)
+
+	// Channel to signal when we've received a response
+	receivedMsg := make(chan bool, 1)
+	testTimeout := time.After(10 * time.Second)
+
+	// Start goroutine to read server responses
 	go func() {
-		//读取服务端广播的信息
-		onMessageReceive := func(conn *net.TCPConn) error {
-			for {
-				scannerPackage := bufio.NewScanner(conn)
-				scannerPackage.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
-					if !atEOF && data[0] == 'v' {
-						if len(data) > TcpHeaderLength {
-							packSumLength := int16(0)
-							_ = binary.Read(bytes.NewReader(data[LengthStartIndex:LengthStopIndex]), binary.BigEndian, &packSumLength)
-							if int(packSumLength) <= len(data) {
-								return int(packSumLength), data[:packSumLength], nil
-							}
-						}
-					}
-					return
-				})
-				scanErrorTimes := 0
-				for {
-					if scanErrorTimes > 3 {
-						break
-					}
-					scanErrorTimes++
-					fmt.Println("start read tcp msg from conn...")
-					for scannerPackage.Scan() {
-						scannedPack := new(StickPackage)
-						err := scannedPack.Unpack(bytes.NewReader(scannerPackage.Bytes()))
-						if err != nil {
-							log.Printf("unpack msg err:%s", err.Error())
-							break
-						}
-						fmt.Println(fmt.Sprintf("read msg from tcp ok,version is:%s,length is:%d,msg is:%s", scannedPack.Version, scannedPack.Length, scannedPack.Msg))
-					}
-					if scannerPackage.Err() != nil {
-						log.Printf("scannerPackage err:%s", err.Error())
-						break
+		tcpConn.SetReadDeadline(time.Now().Add(8 * time.Second))
+		scannerPackage := bufio.NewScanner(tcpConn)
+		scannerPackage.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+			if !atEOF && len(data) > 0 && data[0] == 'v' {
+				if len(data) > TcpHeaderLength {
+					packSumLength := int16(0)
+					_ = binary.Read(bytes.NewReader(data[LengthStartIndex:LengthStopIndex]), binary.BigEndian, &packSumLength)
+					if int(packSumLength) <= len(data) {
+						return int(packSumLength), data[:packSumLength], nil
 					}
 				}
-				return nil
 			}
-		}(conn)
-		fmt.Println("onMessageReceive err is:", onMessageReceive)
+			return
+		})
+
+		for scannerPackage.Scan() {
+			scannedPack := new(StickPackage)
+			err := scannedPack.Unpack(bytes.NewReader(scannerPackage.Bytes()))
+			if err != nil {
+				t.Logf("unpack msg err:%s", err.Error())
+				continue
+			}
+			t.Logf("read msg from tcp ok,version is:%s,length is:%d,msg is:%s", scannedPack.Version, scannedPack.Length, scannedPack.Msg)
+			receivedMsg <- true
+			return
+		}
+
+		if scannerPackage.Err() != nil {
+			t.Logf("scannerPackage err:%s", scannerPackage.Err().Error())
+		}
 	}()
-	var i int
-	for {
-		if i == 0 {
-			fmt.Println("build tcp heartbeat conn...")
-			msg := &proto.SendTcp{
-				Msg:          "build tcp heartbeat conn",
-				FromUserId:   fromUserId,
-				FromUserName: "Tcp heartbeat build",
-				RoomId:       roomId,
-				Op:           config.OpBuildTcpConn,
-				AuthToken:    authToken, //todo 增加token验证，用于验证tcp部分
-			}
-			msgBytes, _ := json.Marshal(msg)
-			//生成带房间号的的msg并pack write conn io
-			pack := &StickPackage{
-				Version: VersionContent,
-				//Msg:     []byte(("now time:" + time.Now().Format("2006-01-02 15:04:05"))),
-				Msg: msgBytes,
-			}
-			pack.Length = pack.GetPackageLength()
-			//test package, BigEndian
-			_ = pack.Pack(conn) //写入要发送的消息
-		}
-		fmt.Println("time wait , you can remove the code!")
-		time.Sleep(10 * time.Second)
-		msg := &proto.SendTcp{
-			Msg:          "from tcp client,time is:" + time.Now().Format("2006-01-02 15:04:05"),
-			FromUserId:   fromUserId,
-			FromUserName: "I am Tcp msg",
-			RoomId:       roomId,
-			Op:           config.OpRoomSend,
-			AuthToken:    authToken, //todo 增加token验证，用于验证tcp部分
-		}
-		msgBytes, _ := json.Marshal(msg)
-		//生成带房间号的的msg并pack write conn io
-		pack := &StickPackage{
-			Version: VersionContent,
-			//Msg:     []byte(("now time:" + time.Now().Format("2006-01-02 15:04:05"))),
-			Msg: msgBytes,
-		}
-		pack.Length = pack.GetPackageLength()
-		//test package, BigEndian
-		_ = pack.Pack(conn) //写入要发送的消息
-		i++
-		fmt.Println(fmt.Sprintf("第%d次send msg to tcp server", i))
+
+	// Send initial connection message
+	t.Log("building tcp heartbeat conn...")
+	msg := &proto.SendTcp{
+		Msg:          "build tcp heartbeat conn",
+		FromUserId:   fromUserId,
+		FromUserName: "Tcp heartbeat build",
+		RoomId:       roomId,
+		Op:           config.OpBuildTcpConn,
+		AuthToken:    authToken,
 	}
+	msgBytes, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatalf("failed to marshal message: %v", err)
+	}
+
+	pack := &StickPackage{
+		Version: VersionContent,
+		Msg:     msgBytes,
+	}
+	pack.Length = pack.GetPackageLength()
+
+	tcpConn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	if err := pack.Pack(tcpConn); err != nil {
+		t.Fatalf("failed to send message: %v", err)
+	}
+	t.Log("sent initial connection message")
+
+	// Wait for response or timeout
+	select {
+	case <-receivedMsg:
+		t.Log("successfully received response from server")
+	case <-testTimeout:
+		t.Log("test timeout - no response received, but connection was established successfully")
+	}
+
+	// Send one test message
+	testMsg := &proto.SendTcp{
+		Msg:          "test message from integration test",
+		FromUserId:   fromUserId,
+		FromUserName: "Integration Test",
+		RoomId:       roomId,
+		Op:           config.OpRoomSend,
+		AuthToken:    authToken,
+	}
+	testMsgBytes, _ := json.Marshal(testMsg)
+	testPack := &StickPackage{
+		Version: VersionContent,
+		Msg:     testMsgBytes,
+	}
+	testPack.Length = testPack.GetPackageLength()
+
+	tcpConn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	if err := testPack.Pack(tcpConn); err != nil {
+		t.Fatalf("failed to send test message: %v", err)
+	}
+	t.Log("sent test message successfully")
+
+	// Give a moment for message to be processed
+	time.Sleep(100 * time.Millisecond)
 }

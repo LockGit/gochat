@@ -1,0 +1,44 @@
+# Git files
+.git
+.gitignore
+.github
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Docker files (dev/prod configs not needed in image)
+docker/dev/
+docker/prod/
+
+# Environment files
+.env
+.env.*
+
+# Build artifacts
+bin/
+*.bin
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+*_test.go
+test/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/

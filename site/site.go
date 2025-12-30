@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"gochat/config"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -24,7 +23,7 @@ func New() *Site {
 
 func notFound(w http.ResponseWriter, r *http.Request) {
 	// Here you can send your custom 404 back.
-	data, _ := ioutil.ReadFile("./site/index.html")
+	data, _ := os.ReadFile("./site/index.html")
 	_, _ = fmt.Fprintf(w, string(data))
 	return
 }

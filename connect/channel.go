@@ -11,7 +11,7 @@ import (
 	"net"
 )
 
-//in fact, Channel it's a user Connect session
+// in fact, Channel it's a user Connect session
 type Channel struct {
 	Room      *Room
 	Next      *Channel

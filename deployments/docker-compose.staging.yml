@@ -1,0 +1,35 @@
+version: '3.8'
+
+# Staging-specific overrides for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.staging.yml up
+
+services:
+  logic:
+    environment:
+      - RUN_MODE=staging
+      - LOG_LEVEL=info
+
+  connect-ws:
+    environment:
+      - RUN_MODE=staging
+      - LOG_LEVEL=info
+
+  connect-tcp:
+    environment:
+      - RUN_MODE=staging
+      - LOG_LEVEL=info
+
+  task:
+    environment:
+      - RUN_MODE=staging
+      - LOG_LEVEL=info
+
+  api:
+    environment:
+      - RUN_MODE=staging
+      - LOG_LEVEL=info
+
+  site:
+    environment:
+      - RUN_MODE=staging
+      - LOG_LEVEL=info

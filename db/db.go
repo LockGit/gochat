@@ -37,7 +37,7 @@ func initDB(dbName string) {
 	}
 	syncLock.Unlock()
 	if e != nil {
-		logrus.Error("connect db fail:%s", e.Error())
+		logrus.Errorf("connect db fail:%s", e.Error())
 	}
 }
 

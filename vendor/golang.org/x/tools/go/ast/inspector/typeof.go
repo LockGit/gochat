@@ -11,8 +11,7 @@ package inspector
 
 import (
 	"go/ast"
-
-	"golang.org/x/tools/internal/typeparams"
+	"math"
 )
 
 const (
@@ -77,12 +76,14 @@ const (
 // typeOf returns a distinct single-bit value that represents the type of n.
 //
 // Various implementations were benchmarked with BenchmarkNewInspector:
-//								GOGC=off
-// - type switch				4.9-5.5ms	2.1ms
-// - binary search over a sorted list of types  5.5-5.9ms	2.5ms
-// - linear scan, frequency-ordered list 	5.9-6.1ms	2.7ms
-// - linear scan, unordered list		6.4ms		2.7ms
-// - hash table					6.5ms		3.1ms
+//
+//	                                                                GOGC=off
+//	- type switch					4.9-5.5ms	2.1ms
+//	- binary search over a sorted list of types	5.5-5.9ms	2.5ms
+//	- linear scan, frequency-ordered list		5.9-6.1ms	2.7ms
+//	- linear scan, unordered list			6.4ms		2.7ms
+//	- hash table					6.5ms		3.1ms
+//
 // A perfect hash seemed like overkill.
 //
 // The compiler's switch statement is the clear winner
@@ -90,7 +91,6 @@ const (
 // with constant conditions and good branch prediction.
 // (Sadly it is the most verbose in source code.)
 // Binary search suffered from poor branch prediction.
-//
 func typeOf(n ast.Node) uint64 {
 	// Fast path: nearly half of all nodes are identifiers.
 	if _, ok := n.(*ast.Ident); ok {
@@ -169,7 +169,7 @@ func typeOf(n ast.Node) uint64 {
 		return 1 << nIncDecStmt
 	case *ast.IndexExpr:
 		return 1 << nIndexExpr
-	case *typeparams.IndexListExpr:
+	case *ast.IndexListExpr:
 		return 1 << nIndexListExpr
 	case *ast.InterfaceType:
 		return 1 << nInterfaceType
@@ -217,7 +217,7 @@ func typeOf(n ast.Node) uint64 {
 
 func maskOf(nodes []ast.Node) uint64 {
 	if nodes == nil {
-		return 1<<64 - 1 // match all node types
+		return math.MaxUint64 // match all node types
 	}
 	var mask uint64
 	for _, n := range nodes {

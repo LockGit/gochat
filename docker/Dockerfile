@@ -1,29 +1,49 @@
-FROM golang:1.18
+# Multi-stage Dockerfile for GoChat
+# Stage 1: Builder - Build the Go binary
+FROM golang:1.23 AS builder
 
-MAINTAINER Lock <lockexit@gmail.com>
+LABEL maintainer="Lock <lockexit@gmail.com>"
 
-WORKDIR /go/src/gochat
+WORKDIR /build
 
+# Copy go mod files first for better layer caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
 COPY . .
 
-RUN apt-get update && apt-get install -y  gcc automake autoconf libtool make supervisor
+# Build the binary with CGO enabled for SQLite support
+# CGO_CFLAGS fix compile sqlite3 warning
+RUN CGO_ENABLED=1 GOOS=linux CGO_CFLAGS="-g -O2 -Wno-return-local-addr" \
+    go build -tags=etcd -ldflags="-w -s" -o gochat main.go
 
-# etcd redis sqlite3
-RUN cd /tmp && wget https://github.com/etcd-io/etcd/releases/download/v3.4.3/etcd-v3.4.3-linux-amd64.tar.gz \
-    && tar -zxvf etcd-v3.4.3-linux-amd64.tar.gz \
-    && cp etcd-v3.4.3-linux-amd64/etcd /bin/ \
-    && cp etcd-v3.4.3-linux-amd64/etcdctl /bin/ \
-    && rm -rf etcd-v3.4.3-linux-amd64.tar.gz && rm -rf etcd-v3.4.3-linux-amd64
+# Stage 2: Runtime - Minimal runtime image
+FROM debian:bullseye-slim
 
+WORKDIR /app
 
-RUN cd /tmp && wget http://download.redis.io/releases/redis-5.0.9.tar.gz -O redis.tar.gz \
-    && tar -zxvf redis.tar.gz \
-    && cd redis-5.0.9 && make \
-    && cp ./src/redis-server /bin/ \
-    && cp ./src/redis-cli /bin/ \
-    && rm -rf redis.tar.gz && rm -rf redis-5.0.9
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    sqlite3 \
+    netcat \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
 
-# default eq dev , you can change this to prod , then will use prod dir config file
-ENV RUN_MODE dev
+# Copy binary from builder stage
+COPY --from=builder /build/gochat /app/
 
+# Copy application files
+COPY --from=builder /build/config /app/config
+COPY --from=builder /build/site /app/site
+COPY --from=builder /build/db /app/db
 
+# Create symlink so config.go can find config files at build path
+RUN mkdir -p /build && ln -s /app/config /build/config
+
+# Default environment
+ENV RUN_MODE=dev
+
+# Default command (can be overridden by docker-compose)
+CMD ["/app/gochat", "-module", "api"]

@@ -41,7 +41,7 @@ func main() {
 		return
 	}
 	fmt.Println(fmt.Sprintf("run %s module done!", module))
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	<-quit
 	fmt.Println("Server exiting")

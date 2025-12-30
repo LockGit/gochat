@@ -1,0 +1,22 @@
+version: '3.8'
+
+# Docker Compose configuration for running integration tests
+# Tests run on host machine against containerized services via exposed ports
+# Usage: docker compose -f docker-compose.yml -f deployments/docker-compose.test.yml up -d
+
+services:
+  # Expose etcd port for host access
+  etcd:
+    ports:
+      - "2379:2379"
+
+  # Expose redis port for host access
+  redis:
+    ports:
+      - "6379:6379"
+
+  # Expose connect-tcp port for integration tests
+  connect-tcp:
+    ports:
+      - "7001:7001"
+      - "7002:7002"

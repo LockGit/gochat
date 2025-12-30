@@ -1,7 +1,7 @@
 [task-base]
 cpuNum = 4
-redisAddr = "localhost:6379"
+redisAddr = "redis:6379"
 redisPassword = ""
-rpcAddress = "tcp@localhost:6923"
+rpcAddress = "tcp@0.0.0.0:6923"
 pushChan = 2
 pushChanSize = 50

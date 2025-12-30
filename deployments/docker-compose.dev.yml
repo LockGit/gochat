@@ -1,0 +1,37 @@
+version: '3.8'
+
+# Development-specific overrides for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  etcd:
+    ports:
+      - "2379:2379"  # Expose etcd for debugging
+
+  redis:
+    ports:
+      - "6379:6379"  # Expose Redis for debugging
+
+  logic:
+    environment:
+      - LOG_LEVEL=debug
+
+  connect-ws:
+    environment:
+      - LOG_LEVEL=debug
+
+  connect-tcp:
+    environment:
+      - LOG_LEVEL=debug
+
+  task:
+    environment:
+      - LOG_LEVEL=debug
+
+  api:
+    environment:
+      - LOG_LEVEL=debug
+
+  site:
+    environment:
+      - LOG_LEVEL=debug

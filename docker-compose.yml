@@ -1,0 +1,206 @@
+version: '3.8'
+
+services:
+  # Infrastructure Services
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.9
+    container_name: gochat-etcd
+    environment:
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd:2380
+      - ETCD_INITIAL_CLUSTER=default=http://etcd:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_INITIAL_CLUSTER_TOKEN=gochat-etcd-cluster
+      - ETCD_NAME=default
+    volumes:
+      - etcd-data:/etcd-data
+    networks:
+      - gochat-network
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:5.0.9-alpine
+    container_name: gochat-redis
+    command: redis-server
+    volumes:
+      - redis-data:/data
+    networks:
+      - gochat-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  # Application Services
+  logic:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: gochat:latest
+    command: ["/app/gochat", "-module", "logic"]
+    environment:
+      - RUN_MODE=dev
+    depends_on:
+      etcd:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gochat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'gochat.*logic' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  connect-ws:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: gochat:latest
+    command: ["/app/gochat", "-module", "connect_websocket"]
+    environment:
+      - RUN_MODE=dev
+    ports:
+      - "7000:7000"
+    depends_on:
+      etcd:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      logic:
+        condition: service_healthy
+    networks:
+      - gochat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'gochat.*connect_websocket' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  connect-tcp:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: gochat:latest
+    command: ["/app/gochat", "-module", "connect_tcp"]
+    environment:
+      - RUN_MODE=dev
+    ports:
+      - "7001:7001"
+      - "7002:7002"
+    depends_on:
+      etcd:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      logic:
+        condition: service_healthy
+    networks:
+      - gochat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'gochat.*connect_tcp' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  task:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: gochat:latest
+    command: ["/app/gochat", "-module", "task"]
+    environment:
+      - RUN_MODE=dev
+    depends_on:
+      etcd:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      connect-ws:
+        condition: service_healthy
+      connect-tcp:
+        condition: service_healthy
+    networks:
+      - gochat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'gochat.*task' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: gochat:latest
+    command: ["/app/gochat", "-module", "api"]
+    environment:
+      - RUN_MODE=dev
+    ports:
+      - "7070:7070"
+    depends_on:
+      etcd:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      logic:
+        condition: service_healthy
+    networks:
+      - gochat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'gochat.*api' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  site:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: gochat:latest
+    command: ["/app/gochat", "-module", "site"]
+    environment:
+      - RUN_MODE=dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+      connect-ws:
+        condition: service_healthy
+    networks:
+      - gochat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'gochat.*site' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  gochat-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  etcd-data:
+    driver: local
+  redis-data:
+    driver: local
